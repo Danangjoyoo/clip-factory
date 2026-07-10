@@ -184,9 +184,11 @@ Every new project offers two source methods.
 - Native worker resolves the real path and verifies it is a regular readable file inside a configured allowed root.
 - The source is opened read-only and never modified or copied to MinIO.
 - PostgreSQL first stores the submitted display path with a null resolved path
-  while native validation is pending. After validation, an authenticated
-  worker-only update persists the resolved path, size, modification time,
-  media probe, health, and lightweight fingerprint atomically.
+  while native validation is pending. Validation is staged: an authenticated
+  worker-only locator update persists resolved path, size, modification time,
+  and lightweight fingerprint and marks the source `LOCATED`; the subsequent
+  media-validation update persists the probe and marks it `HEALTHY`. Each
+  transition is atomic, and `HEALTHY` is impossible until both stages finish.
 - The lightweight fingerprint combines stable file metadata with sampled content hashes. It avoids hashing an entire 10-GB file during normal validation.
 - On later access, a missing or changed file pauses the workflow as `SOURCE_MISSING` or `SOURCE_CHANGED` and offers Relink Source.
 - Relinking requires media compatibility and explicit user confirmation when the fingerprint differs.
