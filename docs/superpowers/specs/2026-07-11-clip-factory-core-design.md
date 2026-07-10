@@ -256,6 +256,9 @@ For Manual mode, model, reasoning, budget, and maximum-candidate controls are hi
 
 - Audio is extracted locally to a normalized mono speech-analysis stream.
 - The quality profile uses an Apple-optimized Whisper large-v3-equivalent model through MLX.
+- The model is downloaded/cached from an immutable reviewed revision and its
+  weight hash is verified before use; a mutable `main` label is never recorded
+  as the runtime revision.
 - The user-selected language is passed explicitly; automatic language detection is not the primary MVP flow.
 - Output contains transcript text, segments, and word-level timestamps.
 - Captions remain in the source language; no translation is performed.
