@@ -232,7 +232,7 @@ Every clip has a separate workflow. One upload failure does not stop other selec
 | `PublicationAttempt` | Resumable session reference, attempt number, stage, progress, sanitized error, timestamps |
 | `AIUsageEvent` | Exact cost and token usage for metadata generation |
 
-A clip may have multiple historical publication attempts, but only one active publication per connection/video intent. Uniqueness and idempotency keys prevent duplicate uploads after retries or restarts.
+A clip may have multiple historical publication attempts, but only one active publication per connection/video intent. Uniqueness and idempotency keys prevent duplicate local intents and repeated local mutations. The design does not claim provider-level exactly-once upload when YouTube has not returned a video ID.
 
 ## 14. Publication States
 
@@ -244,6 +244,7 @@ METADATA_DRAFT
 AWAITING_APPROVAL
 READY_TO_UPLOAD
 UPLOADING
+UPLOAD_OUTCOME_UNCERTAIN
 YOUTUBE_PROCESSING
 PRIVATE_REVIEW
 SCHEDULED
@@ -253,6 +254,8 @@ CANCELLED
 ```
 
 Cancellation before YouTube returns a video ID stops the resumable session where possible. After a video ID exists, cancellation stops local polling but does not delete the remote video automatically.
+
+Before transmitting the final resumable chunk, the attempt durably records that final dispatch is beginning. If the final response or returned video ID is lost, or a later session probe returns `404` after that marker, the publication enters `UPLOAD_OUTCOME_UNCERTAIN`. It does not automatically create a replacement session. The UI asks the user to inspect/reconcile the channel first; a replacement upload requires explicit acknowledgement that a duplicate remote video may exist. A `404` before any final-chunk dispatch may start a bounded replacement attempt because no completed-upload response is ambiguous.
 
 ## 15. Thumbnail Behavior
 
@@ -327,6 +330,7 @@ Cancellation before YouTube returns a video ID stops the resumable session where
 11. Disconnect revokes/deletes credentials and leaves nonsecret history intact.
 12. Architecture checks prove that Google/OpenAI SDK types, OAuth/token payloads, persistence records, and HTTP DTOs do not leak into domain or application boundaries.
 13. Ambiguous OpenAI metadata-generation outcomes pause without an automatic retry or draft overwrite and require explicit authorization for a newly reserved attempt.
+14. A lost final-upload result cannot start a replacement session automatically; it enters `UPLOAD_OUTCOME_UNCERTAIN` and requires reconciliation plus explicit duplicate-risk acknowledgement.
 
 ## 19. Clean Architecture and Boundary Rules
 
