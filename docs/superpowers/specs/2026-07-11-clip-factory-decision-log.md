@@ -69,6 +69,7 @@
 | 59 | CI strength? | Web/worker quality, contracts, migrations, real infrastructure integration, synthetic media, Playwright E2E, Docker builds, CodeQL, and Dependabot. |
 | 60 | Continuous deployment? | Explicitly excluded. No deploy, registry push, production migration, release, or production/external secrets in CI. |
 | 61 | Code architecture and quality principles? | Clean Architecture, Clean Code, SOLID, and DRY are mandatory across TypeScript and Python. Dependency direction, boundary-specific DTOs/converters, narrow ports, layer ownership, cycles, and provider/framework leakage are enforced by tests, import rules, and CI before implementation is accepted. |
+| 62 | Can a paid OpenAI call be retried automatically after an ambiguous timeout or worker crash? | No. The design does not rely on undocumented provider idempotency. It durably reserves before sending, records received usage before validation retries, and enters `PAID_CALL_UNCERTAIN` after an ambiguous post-transmission outcome. A fresh attempt requires explicit authorization and a new reservation with possible prior spend disclosed. |
 
 ## Superseded or Clarified Ideas
 

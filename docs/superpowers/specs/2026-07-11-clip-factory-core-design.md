@@ -322,6 +322,16 @@ This value is labeled `allocated estimate` with method `equal_share`. Clip-speci
 
 The application-level cap does not inspect or control OpenAI usage from other applications on the same account.
 
+### 13.6 Ambiguous paid-call outcomes
+
+The design does not assume an undocumented provider idempotency guarantee. Every planned OpenAI request receives a durable reservation before any request bytes are sent.
+
+- A failure proven to occur before the request is transmitted may retry under the existing reservation and bounded retry policy.
+- Once a response is received, its provider response ID and usage are durably recorded before any schema-validation retry is considered.
+- A disconnect, timeout, worker crash, or cancellation after transmission but before durable response recording is an ambiguous paid-call outcome. It enters `PAID_CALL_UNCERTAIN` and never retries automatically.
+- The UI explains that the provider may have charged the first attempt. The user may abandon analysis or explicitly authorize a fresh reservation and retry; the possible unreported first-attempt charge is shown separately and is not presented as known actual usage.
+- If a later provider capability supplies a documented idempotency or reconciliation contract, it may be added through the OpenAI adapter without weakening this conservative application policy.
+
 ## 14. Smart Vertical Reframing
 
 - Default output canvas: 1080×1920 (9:16).
@@ -463,6 +473,7 @@ PREPROCESSING
 TRANSCRIBING
 VERIFYING_BUDGET
 AWAITING_BUDGET
+PAID_CALL_UNCERTAIN
 ANALYZING
 GENERATING_PREVIEWS
 AWAITING_REVIEW
@@ -476,7 +487,7 @@ SOURCE_NOT_ALLOWED
 RELINKING_SOURCE
 ```
 
-Waiting states are not failures. They preserve artifacts and expose the exact user action required.
+Waiting states are not failures. They preserve artifacts and expose the exact user action required. `PAID_CALL_UNCERTAIN` is a waiting state, not permission to retry.
 
 ## 21. Progress and ETA
 
@@ -494,7 +505,7 @@ Measured progress sources:
 
 Temporal activity heartbeats carry raw progress. Redis stores the latest live snapshot and event stream. Next.js streams updates using server-sent events. Terminal timing observations are persisted to PostgreSQL.
 
-ETA uses current throughput and hardware/backend-specific historical observations. The first run is low confidence. OpenAI stages display ranges because provider latency and reasoning duration vary. `AWAITING_BUDGET` and `AWAITING_REVIEW` have no ETA. Queued jobs derive a range from the active job and queue position.
+ETA uses current throughput and hardware/backend-specific historical observations. The first run is low confidence. OpenAI stages display ranges because provider latency and reasoning duration vary. `AWAITING_BUDGET`, `PAID_CALL_UNCERTAIN`, and `AWAITING_REVIEW` have no ETA. Queued jobs derive a range from the active job and queue position.
 
 The UI uses wording such as “estimated 8–12 minutes remaining,” never a guaranteed completion time.
 
@@ -512,9 +523,9 @@ The UI uses wording such as “estimated 8–12 minutes remaining,” never a gu
 
 ### Retryable failures
 
-- Temporary MinIO, Redis, Temporal, Next.js internal API, OpenAI, or process I/O failures.
+- Temporary MinIO, Redis, Temporal, Next.js internal API, or process I/O failures.
 - Bounded exponential backoff with jitter.
-- OpenAI retry is allowed only when its worst-case cost fits the remaining budget.
+- OpenAI retry is allowed only when its worst-case cost fits the remaining budget and the adapter proves the prior attempt was not transmitted or records a completed response before a validation retry.
 - Finished idempotent activity outputs are reused.
 
 ### Non-retryable failures
@@ -732,6 +743,7 @@ On an Apple Silicon Mac:
 11. Both input methods, all three platform safe-area presets, persistent projects, deletion, and relinking pass E2E tests.
 12. All required CI checks pass on `master` with no real external API secrets or CD steps.
 13. CI rejects forbidden outward-to-inward imports, dependency cycles, generated/SDK type leakage, and missing boundary-converter tests.
+14. An ambiguous paid-call outcome pauses without an automatic provider retry, discloses possible spend, and requires explicit user authorization before a newly reserved attempt.
 
 ## 30. Mandatory Architecture and Code Quality Principles
 
