@@ -90,6 +90,8 @@ The result is a draft only. Existing reviewed fields are never overwritten silen
 
 Each call creates an exact `AIUsageEvent` linked to the clip and metadata draft. Manual metadata editing has no OpenAI cost.
 
+Metadata generation inherits the core design's paid-call reservation and `PAID_CALL_UNCERTAIN` policy. An ambiguous post-transmission outcome never regenerates automatically, never overwrites the current draft, and requires a separately confirmed fresh reservation with possible prior spend disclosed.
+
 Hashtag generation follows YouTube policy:
 
 - Hashtags must relate directly to clip content.
@@ -324,6 +326,7 @@ Cancellation before YouTube returns a video ID stops the resumable session where
 10. A failed upload or thumbnail attempt does not corrupt other publication records.
 11. Disconnect revokes/deletes credentials and leaves nonsecret history intact.
 12. Architecture checks prove that Google/OpenAI SDK types, OAuth/token payloads, persistence records, and HTTP DTOs do not leak into domain or application boundaries.
+13. Ambiguous OpenAI metadata-generation outcomes pause without an automatic retry or draft overwrite and require explicit authorization for a newly reserved attempt.
 
 ## 19. Clean Architecture and Boundary Rules
 
