@@ -183,7 +183,10 @@ Every new project offers two source methods.
 - User enters an absolute macOS filepath.
 - Native worker resolves the real path and verifies it is a regular readable file inside a configured allowed root.
 - The source is opened read-only and never modified or copied to MinIO.
-- PostgreSQL stores the display path, resolved path, source kind, size, modification time, media probe, and lightweight fingerprint.
+- PostgreSQL first stores the submitted display path with a null resolved path
+  while native validation is pending. After validation, an authenticated
+  worker-only update persists the resolved path, size, modification time,
+  media probe, health, and lightweight fingerprint atomically.
 - The lightweight fingerprint combines stable file metadata with sampled content hashes. It avoids hashing an entire 10-GB file during normal validation.
 - On later access, a missing or changed file pauses the workflow as `SOURCE_MISSING` or `SOURCE_CHANGED` and offers Relink Source.
 - Relinking requires media compatibility and explicit user confirmation when the fingerprint differs.
@@ -520,12 +523,16 @@ The UI uses wording such as “estimated 8–12 minutes remaining,” never a gu
 - Contract generation is deterministic; CI fails on uncommitted generated diffs.
 - Next.js internal worker endpoints require a service credential available only to the container and native worker.
 - Internal endpoints accept idempotency keys and reject duplicate terminal result mutations.
-- A worker-only source-locator endpoint resolves a `SourceAsset` ID to either
-  the local resolved path or MinIO object reference. It is called and consumed
-  entirely inside a native activity: the locator is never returned from the
-  activity, placed in workflow history, exposed by a public API, or written to
-  logs/diagnostics. Activity results contain only sanitized probes, hashes,
-  identifiers, and object references allowed by their contract.
+- Worker-only source-locator read/update endpoints resolve a `SourceAsset` ID
+  to either the submitted/resolved local path or MinIO object reference and
+  persist native validation results. They require the service credential,
+  closed schemas, and body/access-log suppression. The locator is consumed
+  inside a native activity or adapter and is never returned from the activity,
+  placed in workflow history, exposed by a public API, or written to
+  logs/diagnostics. An uploaded object is materialized only into a private
+  worker temp/cache path for the duration required by the media adapter.
+  Activity results contain only sanitized probes, hashes, identifiers, and
+  object references allowed by their contract.
 - Large media and transcript payloads travel by MinIO object reference, never Temporal payload bodies or Redis values.
 
 ## 23. Failure Handling and Recovery
