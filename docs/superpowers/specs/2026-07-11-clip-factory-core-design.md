@@ -248,6 +248,13 @@ Defaults:
 - Maximum clip length: 60 seconds.
 - Platform: YouTube Shorts safe-area guide.
 
+The initial allowlist contains the approved quality default `gpt-5.6-sol`
+and `gpt-5.5` as an explicit quality fallback. GPT-5.6 access may require an
+account entitlement beyond having credits, so the native adapter performs a
+non-inference model-access check after the key is configured. Unavailable
+options are labeled/disabled; the application never substitutes a model or
+reasoning effort silently.
+
 The maximum number is an upper bound; the model may return fewer candidates when the transcript does not support enough coherent clips. AI candidates target coherent segments of at least 15 seconds unless the available complete thought is shorter. Manual clips require `end > start` and may be shorter.
 
 For Manual mode, model, reasoning, budget, and maximum-candidate controls are hidden. Language and maximum clip length remain available.
@@ -300,6 +307,12 @@ Before transcription, the application estimates transcript size from source dura
 - A 1.5× safety factor.
 
 The UI shows the estimate, pricing snapshot date/version, expected full-video coverage, and an expected candidate range. It never states that a dollar amount guarantees a number of good clips.
+
+For GPT-5.6 in the MVP, requests use explicit prompt-cache mode with no cache
+breakpoints. This disables provider cache reads/writes and their separate
+cache-write charge, making the verified cap predictable. The pricing/usage
+model still understands cache detail so a future explicitly approved caching
+strategy can be added without rewriting provenance.
 
 ### 13.4 Verified cost gate
 
