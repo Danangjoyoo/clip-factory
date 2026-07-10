@@ -517,16 +517,16 @@ import { assertYouTubeShortsEligible } from './upload-eligibility';
 
 it('requires a successful 9:16 render no longer than 180 seconds', () => {
   expect(() =>
-    assertYouTubeShortsEligible({ status: 'SUCCEEDED', width: 1080, height: 1920, durationMs: 180_000 }),
+    assertYouTubeShortsEligible({ status: 'COMPLETED', width: 1080, height: 1920, durationMs: 180_000 }),
   ).not.toThrow();
   expect(() =>
     assertYouTubeShortsEligible({ status: 'FAILED', width: 1080, height: 1920, durationMs: 60_000 }),
-  ).toThrow('render is not successful');
+  ).toThrow('render is not completed');
   expect(() =>
-    assertYouTubeShortsEligible({ status: 'SUCCEEDED', width: 1920, height: 1080, durationMs: 60_000 }),
+    assertYouTubeShortsEligible({ status: 'COMPLETED', width: 1920, height: 1080, durationMs: 60_000 }),
   ).toThrow('render must be 9:16');
   expect(() =>
-    assertYouTubeShortsEligible({ status: 'SUCCEEDED', width: 1080, height: 1920, durationMs: 180_001 }),
+    assertYouTubeShortsEligible({ status: 'COMPLETED', width: 1080, height: 1920, durationMs: 180_001 }),
   ).toThrow('render exceeds 180 seconds');
 });
 ```
@@ -595,7 +595,7 @@ export function assertYouTubeShortsEligible(render: {
   height: number;
   durationMs: number;
 }): void {
-  if (render.status !== 'SUCCEEDED') throw new Error('render is not successful');
+  if (render.status !== 'COMPLETED') throw new Error('render is not completed');
   if (render.width * 16 !== render.height * 9) throw new Error('render must be 9:16');
   if (render.durationMs > 180_000) throw new Error('render exceeds 180 seconds');
 }

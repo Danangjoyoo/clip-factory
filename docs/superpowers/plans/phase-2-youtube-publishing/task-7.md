@@ -202,7 +202,13 @@ class MacOSKeychainCredentialVault:
                 connection_id,
             )
         except PasswordDeleteError:
-            return
+            remaining = await asyncio.to_thread(
+                self._backend.get_password,
+                SERVICE_NAME,
+                connection_id,
+            )
+            if remaining is not None:
+                raise
 ```
 
 The composition root selects and verifies the backend before constructing the vault:
@@ -235,10 +241,17 @@ def test_secret_values_are_absent_from_repr_and_logs(caplog) -> None:
     assert 'sentinel-refresh-token' not in repr(token)
     assert 'sentinel-refresh-token' not in repr(vault)
     assert 'sentinel-refresh-token' not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_delete_reraises_when_backend_retains_the_credential() -> None:
+    vault = MacOSKeychainCredentialVault(RetainingDeleteFailureBackend())
+    with pytest.raises(PasswordDeleteError):
+        await vault.delete('connection-1')
 ```
 
 ```bash
-uv run --directory apps/worker pytest tests/adapters/youtube/test_macos_keychain_vault.py -q
+uv run --directory apps/worker pytest tests/adapters/youtube/test_keychain_credential_vault.py -q
 uv run --directory apps/worker lint-imports
 ```
 
@@ -446,7 +459,7 @@ Map `invalid_grant` to `ReauthRequiredError`; map policy denials and other provi
 
 ```python
 async def refresh_and_check(self, connection_id: str) -> SanitizedChannelConnection:
-    refresh_token = await self._vault.read(connection_id)
+    refresh_token = await self._vault.read_refresh_token(connection_id)
     response = await self._request(
         'POST',
         self._config.token_endpoint,

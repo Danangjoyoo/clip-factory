@@ -23,7 +23,7 @@ Store every manual or OpenAI-generated publishing-metadata version, its approval
 
 - Create: `prisma/migrations/20260712000200_phase_2_publishing_metadata_drafts/migration.sql`
 - Modify: `prisma/schema.prisma`
-- Create: `apps/web/src/modules/youtube-publishing/application/ports/record/publishing-metadata-draft-record.dto.ts`
+- Create: `apps/web/src/modules/youtube-publishing/adapters/persistence/dto/record/publishing-metadata-draft-record.dto.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/ports/publishing-metadata-draft.repository.ts`
 - Create: `apps/web/src/modules/youtube-publishing/converters/entity-record/publishing-metadata-draft.converter.ts`
 - Create: `apps/web/src/modules/youtube-publishing/converters/entity-record/publishing-metadata-draft.converter.test.ts`
@@ -45,22 +45,27 @@ Store every manual or OpenAI-generated publishing-metadata version, its approval
 Application-owned `PublishingMetadataDraftRepositoryPort`:
 
 ```ts
+export type InsertPublishingMetadataDraftEntityDto = Omit<
+  PublishingMetadataDraftEntityDto,
+  'createdAt' | 'updatedAt'
+>;
+
 export interface PublishingMetadataDraftRepositoryPort {
-  findById(id: string): Promise<PublishingMetadataDraftRecordDto | null>;
-  findLatestForClip(clipId: string): Promise<PublishingMetadataDraftRecordDto | null>;
-  listForClip(clipId: string): Promise<readonly PublishingMetadataDraftRecordDto[]>;
-  insertVersion(record: InsertPublishingMetadataDraftRecordDto): Promise<PublishingMetadataDraftRecordDto>;
+  findById(id: PublishingMetadataDraftId): Promise<PublishingMetadataDraftEntityDto | null>;
+  findLatestForClip(clipId: ClipId): Promise<PublishingMetadataDraftEntityDto | null>;
+  listForClip(clipId: ClipId): Promise<readonly PublishingMetadataDraftEntityDto[]>;
+  insertVersion(input: InsertPublishingMetadataDraftEntityDto): Promise<PublishingMetadataDraftEntityDto>;
   updateEditableRevision(
-    id: string,
+    id: PublishingMetadataDraftId,
     expectedRevision: number,
-    metadata: PublishingMetadataRecordFields,
-  ): Promise<PublishingMetadataDraftRecordDto | null>;
+    metadata: PublishingMetadataEntityDto,
+  ): Promise<PublishingMetadataDraftEntityDto | null>;
   updateStateRevision(
-    id: string,
+    id: PublishingMetadataDraftId,
     expectedRevision: number,
-    state: PublishingMetadataDraftRecordState,
+    state: MetadataDraftState,
     approvedAt: Date | null,
-  ): Promise<PublishingMetadataDraftRecordDto | null>;
+  ): Promise<PublishingMetadataDraftEntityDto | null>;
 }
 ```
 
@@ -93,26 +98,26 @@ describe('PrismaPublishingMetadataDraftRepository', () => {
 
   it('keeps an earlier approved draft when regeneration inserts version two', async () => {
     const repository = new PrismaPublishingMetadataDraftRepository(database.prisma);
-    const first = await repository.insertVersion(makeDraftRecord({
+    const first = await repository.insertVersion(makeDraftEntity({
       id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb52',
       version: 1,
       state: 'APPROVED',
       source: 'MANUAL',
-      ai_usage_event_id: null,
-      actual_cost_microusd: 0n,
+      aiUsageEventId: null,
+      actualCostMicrousd: 0n,
     }));
-    const second = await repository.insertVersion(makeDraftRecord({
+    const second = await repository.insertVersion(makeDraftEntity({
       id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb53',
       version: 2,
       state: 'AWAITING_APPROVAL',
       source: 'OPENAI',
-      ai_usage_event_id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb54',
-      actual_cost_microusd: 12_345n,
+      aiUsageEventId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb54',
+      actualCostMicrousd: 12_345n,
     }));
 
     expect(first.state).toBe('APPROVED');
     expect(second.version).toBe(2);
-    await expect(repository.listForClip(first.clip_id)).resolves.toHaveLength(2);
+    await expect(repository.listForClip(first.clipId)).resolves.toHaveLength(2);
   });
 
   it('rejects duplicate clip version and negative money', async () => {
@@ -212,7 +217,7 @@ create index "publishing_metadata_drafts_project_clip_created_idx"
   on "publishing_metadata_drafts" ("project_id", "clip_id", "created_at" desc);
 ```
 
-Add the matching Prisma model with explicit mapped names and relations. The reverse Prisma relation on `AIUsageEvent` is persistence-only and is not added to `AIUsageEventEntityDto`. Create the complete Record DTO using snake-case fields and distinct literal unions for state/source. Implement repository selects with explicit fields and optimistic update predicates `{ id, revision }`; successful edit increments `revision` by one.
+Add the matching Prisma model with explicit mapped names and relations. The reverse Prisma relation on `AIUsageEvent` is persistence-only and is not added to `AIUsageEventEntityDto`. The Prisma adapter owns the complete snake-case Record DTO, distinct state/source unions, and Entity↔Record converter. Its Entity-oriented port implementation uses explicit selects and optimistic predicates `{ id, revision }`; successful edit increments `revision` by one. Record/Prisma values never appear in the application port.
 
 Run:
 
@@ -231,17 +236,17 @@ Name methods `insertVersion` and `updateEditableRevision`; never update `version
 ```ts
 it('rejects a stale editable revision without overwriting the winner', async () => {
   const repository = new PrismaPublishingMetadataDraftRepository(database.prisma);
-  const draft = await repository.insertVersion(makeDraftRecord({ version: 7, revision: 1 }));
+  const draft = await repository.insertVersion(makeDraftEntity({ version: 7, revision: 1 }));
   await expect(
-    repository.updateEditableRevision(draft.id, 1, makeMetadataRecordFields({ title: 'Winner' })),
-  ).resolves.toMatchObject({ revision: 2, title: 'Winner' });
+    repository.updateEditableRevision(draft.id, 1, makePublishingMetadataEntity({ title: 'Winner' })),
+  ).resolves.toMatchObject({ revision: 2, metadata: { title: 'Winner' } });
   await expect(
-    repository.updateEditableRevision(draft.id, 1, makeMetadataRecordFields({ title: 'Stale' })),
+    repository.updateEditableRevision(draft.id, 1, makePublishingMetadataEntity({ title: 'Stale' })),
   ).resolves.toBeNull();
   await expect(repository.findById(draft.id)).resolves.toMatchObject({
     version: 7,
     revision: 2,
-    title: 'Winner',
+    metadata: { title: 'Winner' },
   });
 });
 ```
@@ -418,7 +423,7 @@ Expected RED: the data-service signature shell collects; a null optimistic updat
 
 - [ ] **GREEN 3.3 — Implement table-level mapping only.**
 
-The data service imports exactly application-owned `PublishingMetadataDraftRepositoryPort`, its converter, Entity DTOs, and typed data errors. `PrismaPublishingMetadataDraftRepository` is wired only in composition. The service delegates six repository methods, converts inputs/results, and maps `null` optimistic updates to `MetadataDraftRevisionConflictDataError`. It does not choose versions, approve, supersede, call OpenAI, or write `AIUsageEvent`.
+The data service imports exactly Entity-oriented `PublishingMetadataDraftRepositoryPort` and typed data errors. `PrismaPublishingMetadataDraftRepository`, Record DTO, and converter are wired/used only behind the adapter in composition. The service delegates six repository methods and maps `null` optimistic updates to `MetadataDraftRevisionConflictDataError`. It does not choose versions, approve, supersede, call OpenAI, or write `AIUsageEvent`.
 
 Run the focused test. Expected GREEN: PASS.
 
@@ -428,13 +433,9 @@ async updateEditableRevision(
   expectedRevision: number,
   metadata: PublishingMetadataEntityDto,
 ): Promise<PublishingMetadataDraftEntityDto> {
-  const record = await this.repository.updateEditableRevision(
-    id,
-    expectedRevision,
-    metadataDraftEntityToRecordPatch(metadata),
-  );
-  if (!record) throw new MetadataDraftRevisionConflictDataError(id, expectedRevision);
-  return metadataDraftRecordToEntity(record);
+  const draft = await this.repository.updateEditableRevision(id, expectedRevision, metadata);
+  if (!draft) throw new MetadataDraftRevisionConflictDataError(id, expectedRevision);
+  return draft;
 }
 ```
 

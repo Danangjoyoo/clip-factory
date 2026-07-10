@@ -34,6 +34,7 @@ Add a project-level `YouTube` tab that shows every successfully rendered clip in
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-workspace.vm.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/use-youtube-workspace-view.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-workspace.tsx`
+- Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-workspace.module.css`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-workspace.test.tsx`
 - Create: `apps/web/src/app/projects/[projectId]/youtube/page.tsx`
 - Modify: `apps/web/src/app/projects/[projectId]/layout.tsx`
@@ -70,7 +71,7 @@ export type CompletedRenderedClipReadDto = Pick<
 >;
 ```
 
-`RenderedClipReadPort.listLatestCompletedByProject(projectId)` filters the Phase 1 persisted state `COMPLETED` and returns exactly one latest completed render per clip, ordered by Phase 1 clip order then creation ID. Its adapter belongs to the core rendering boundary/composition and returns `CompletedRenderedClipReadDto`; it never fabricates the nonexistent `SUCCEEDED` state.
+`RenderedClipReadPort.listLatestCompletedByProject(projectId)` filters the Phase 1 persisted state `COMPLETED`, selects each clip's latest render by `Render.createdAt DESC, Render.id DESC`, then orders rows by `Clip.createdAt ASC, Clip.id ASC`. Its adapter belongs to the core rendering boundary/composition and returns `CompletedRenderedClipReadDto`; it never fabricates the nonexistent `SUCCEEDED` state or relies on database iteration order.
 
 ## RED-GREEN-REFACTOR cycle 1: complete read model and state projection
 
@@ -234,12 +235,24 @@ API DTO includes project/connection and clip rows with poster URL, duration, ori
 Controller parses project ID, calls one service, converts once, and returns 200. Run focused tests. Expected GREEN: PASS.
 
 ```ts
-function safeYouTubeUrl(value: string | null): string | null {
-  if (!value) return null;
-  const url = new URL(value);
-  return ['youtube.com', 'www.youtube.com', 'youtu.be'].includes(url.hostname)
-    ? url.toString()
-    : null;
+function safeYouTubeUrl(value: string | null): {
+  url: string | null;
+  errorCode: 'INVALID_STORED_YOUTUBE_URL' | null;
+} {
+  if (!value) return { url: null, errorCode: null };
+  try {
+    const url = new URL(value);
+    const valid = url.protocol === 'https:'
+      && url.username === ''
+      && url.password === ''
+      && (url.port === '' || url.port === '443')
+      && ['youtube.com', 'www.youtube.com', 'youtu.be'].includes(url.hostname);
+    return valid
+      ? { url: url.toString(), errorCode: null }
+      : { url: null, errorCode: 'INVALID_STORED_YOUTUBE_URL' };
+  } catch {
+    return { url: null, errorCode: 'INVALID_STORED_YOUTUBE_URL' };
+  }
 }
 
 async get(request: AuthenticatedRequest): Promise<ApiResponse> {
@@ -371,10 +384,23 @@ export function useYouTubeWorkspaceView(storage: Pick<Storage, 'getItem' | 'setI
   {(['gallery', 'list'] as const).map((value) => (
     <label key={value}>
       <input type="radio" checked={view === value} onChange={() => select(value)} />
-      {value === 'gallery' ? 'Gallery' : 'List'}
+      {value === 'gallery' ? 'Gallery view' : 'List view'}
     </label>
   ))}
 </fieldset>
+```
+
+```css
+.workspace { display: grid; min-inline-size: 0; gap: var(--space-6); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.card { min-inline-size: 0; padding: var(--space-4); border-radius: var(--radius-panel); background: var(--color-surface); overflow-wrap: anywhere; }
+.tableViewport { max-inline-size: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.table { inline-size: max(100%, 64rem); border-collapse: collapse; }
+.table th, .table td { padding: var(--space-3); text-align: start; vertical-align: top; }
+@media (min-width: 64rem) { .workspace { gap: var(--space-8); } }
+@media (max-width: 47.99rem) { .tableViewport { border: 1px solid var(--color-surface-raised); } }
+@media (prefers-reduced-motion: reduce) { .workspace * { scroll-behavior: auto; transition-duration: 0.01ms; } }
 ```
 
 ```bash
@@ -398,7 +424,7 @@ it.each([
 });
 ```
 
-Add one keyboard test for gallery/list and sort, and class assertions `youtube-workspace--narrow` at 768 and `youtube-workspace--desktop` at 1024 through the existing viewport hook fake. Long title/error fixtures must remain visible or expose full text via accessible name. Rerun component tests; Task 16 performs real browser layout checks.
+Add one keyboard test for gallery/list and sort. Assert the Gallery DOM uses `.gallery`, List wraps the table in `.tableViewport`, and long title/error fixtures remain visible or expose full text via accessible name. Task 16 performs real 768/1024/1440 browser layout checks against the CSS media rules.
 
 ## RED-GREEN-REFACTOR cycle 4: project navigation integration
 

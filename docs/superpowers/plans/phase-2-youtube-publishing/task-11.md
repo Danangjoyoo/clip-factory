@@ -178,14 +178,16 @@ Create `artifact_byte_source.py`:
 ```python
 from typing import Protocol
 
+from clip_factory.ports.artifact_store import ObjectReference
+
 
 class ArtifactByteSourcePort(Protocol):
-    async def size(self, object_key: str) -> int:
+    async def size(self, reference: ObjectReference) -> int:
         raise NotImplementedError
 
     async def read_range(
         self,
-        object_key: str,
+        reference: ObjectReference,
         start: int,
         end_exclusive: int,
     ) -> bytes:
@@ -467,10 +469,10 @@ Create `test_minio_artifact_byte_source.py` with exact half-open range behavior:
 ```python
 @pytest.mark.asyncio
 async def test_reads_only_the_requested_half_open_range(minio_fixture) -> None:
-    await minio_fixture.put('renders/clip-1/final.mp4', b'0123456789')
+    reference = await minio_fixture.put('renders/clip-1/final.mp4', b'0123456789')
     source = MinioArtifactByteSource(minio_fixture.client, minio_fixture.bucket)
-    assert await source.size('renders/clip-1/final.mp4') == 10
-    assert await source.read_range('renders/clip-1/final.mp4', 3, 7) == b'3456'
+    assert await source.size(reference) == 10
+    assert await source.read_range(reference, 3, 7) == b'3456'
     assert minio_fixture.last_get == {
         'object_key': 'renders/clip-1/final.mp4', 'offset': 3, 'length': 4,
     }
@@ -488,7 +490,7 @@ Expected RED: the publisher signature shell collects; the successful create-sess
 
 Use the Task 7 memory-token provider for every request. Create sessions with JSON body plus exact upload headers. Validate the returned `Location` is HTTPS under `www.googleapis.com` in production; fake configuration explicitly allowlists its loopback origin. Probe with empty `PUT` and `Content-Range: bytes */TOTAL`. Upload exact byte ranges, require fixed `8 * 1024 * 1024` nonfinal chunks in production (a multiple of 256 KiB), and accept the shorter final chunk. Return immutable application values; never parse provider query fields into them.
 
-`MinioArtifactByteSource.read_range` rejects `start < 0` or `endExclusive <= start`, calls the Phase 1-constructed MinIO client's `get_object(bucket, key, offset=start, length=endExclusive-start)`, reads exactly that length in `asyncio.to_thread`, and always closes/releases the response in `finally`. It returns bytes only; it never materializes a local path.
+`MinioArtifactByteSource.read_range` rejects `start < 0` or `endExclusive <= start`, verifies the full Phase 1 `ObjectReference` bucket/version/hash metadata, calls the Phase 1-constructed MinIO client's `get_object(reference.bucket, reference.key, version_id=reference.version_id, offset=start, length=endExclusive-start)`, reads exactly that length in `asyncio.to_thread`, and always closes/releases the response in `finally`. It returns bytes only; it never materializes a local path.
 
 Map responses exactly:
 

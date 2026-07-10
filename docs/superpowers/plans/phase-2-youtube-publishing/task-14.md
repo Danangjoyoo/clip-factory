@@ -22,13 +22,14 @@ Let users choose per-clip private review or verified scheduling, assign independ
 
 ## Files
 
-- Modify: `packages/contracts/schema/youtube-publishing.schema.json`
+- Modify: `packages/contracts/schema/schema-bodies.mjs`
+- Regenerate: `packages/contracts/schema/youtube-publishing.schema.json`
 - Regenerate: `packages/contracts/src/generated/youtube-publishing.ts`
 - Regenerate: `apps/worker/src/clip_factory/entrypoints/contracts/generated/youtube_publishing.py`
 - Create: `prisma/migrations/20260712000500_phase_2_publication_cover/migration.sql`
 - Modify: `prisma/schema.prisma`
 - Modify: `apps/web/src/modules/youtube-publishing/application/dto/entity/youtube-publishing-entity.dto.ts`
-- Modify: `apps/web/src/modules/youtube-publishing/application/ports/record/publication-record.dto.ts`
+- Modify: `apps/web/src/modules/youtube-publishing/adapters/persistence/dto/record/publication-record.dto.ts`
 - Modify: `apps/web/src/modules/youtube-publishing/application/ports/publication.repository.ts`
 - Modify: `apps/web/src/modules/youtube-publishing/adapters/persistence/repositories/prisma-publication.repository.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/ports/publication-cover-workflow-scheduler.ts`
@@ -45,8 +46,10 @@ Let users choose per-clip private review or verified scheduling, assign independ
 - Create: `apps/web/src/modules/youtube-publishing/delivery/http/publication-controls.controller.test.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publication-controls.vm.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publication-controls.tsx`
+- Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publication-controls.module.css`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publication-controls.test.tsx`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publication-progress-list.tsx`
+- Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publication-progress-list.module.css`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publication-progress-list.test.tsx`
 - Modify: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-workspace.tsx`
 - Modify: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.tsx`
@@ -131,7 +134,7 @@ it('accepts an in-range frame and schedules a token-free local cover workflow', 
   expect(dependencies.scheduler.start).toHaveBeenCalledWith({
     contractVersion: 1,
     clipId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb71',
-    renderObjectKey: 'renders/clip-1/final.mp4',
+    renderObject: makeObjectReference('renders/clip-1/final.mp4'),
     outputObjectKey: expect.stringMatching(/^covers\/clip-1\/[a-f0-9]{64}\.png$/),
     selectedFrameMs: 30_000,
     text: 'One useful idea',
@@ -319,6 +322,17 @@ const timeZones = [
 </select>
 ```
 
+```css
+.controls { display: grid; min-inline-size: 0; gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-panel); background: var(--color-surface); }
+.schedule { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.reason, .error { overflow-wrap: anywhere; }
+.error { color: var(--color-danger); }
+@media (min-width: 64rem) { .schedule { grid-template-columns: minmax(14rem, 1fr) minmax(14rem, 1fr); } }
+@media (max-width: 47.99rem) { .actions > button { inline-size: 100%; } }
+@media (prefers-reduced-motion: reduce) { .controls * { transition-duration: 0.01ms; } }
+```
+
 ```bash
 pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/delivery/ui/publication-controls.test.tsx
 ```
@@ -490,7 +504,13 @@ it('explains cancellation before and after a YouTube video ID', async () => {
 it('offers retry only for failed publication and keeps the same remote intent', async () => {
   const onRetry = vi.fn();
   render(<PublicationProgressList
-    items={[makeProgressItem({ state: 'FAILED', attemptNumber: 1 })]}
+    items={[makeProgressItem({
+      state: 'FAILED',
+      attemptNumber: 1,
+      youtubeVideoId: null,
+      finalChunkDispatchStartedAt: null,
+      outcomeUncertainAt: null,
+    })]}
     onRetry={onRetry}
   />);
   await user.click(screen.getByRole('button', { name: 'Retry failed upload' }));
@@ -498,6 +518,45 @@ it('offers retry only for failed publication and keeps the same remote intent', 
     publicationId: expect.any(String),
     expectedAttemptNumber: 1,
   }));
+});
+
+it('hides ordinary retry when a failed row has any remote/final-dispatch evidence', () => {
+  render(<PublicationProgressList items={[
+    makeProgressItem({ state: 'FAILED', youtubeVideoId: 'video-safe-1' }),
+    makeProgressItem({ state: 'FAILED', finalChunkDispatchStartedAt: fixedTime.toISOString() }),
+  ]} />);
+  expect(screen.queryByRole('button', { name: 'Retry failed upload' }))
+    .not.toBeInTheDocument();
+});
+
+it('refuses retry/replacement after VIDEO_FOUND without inserting an attempt', async () => {
+  const service = makePublicationControlsService({
+    publication: makePublicationEntity({
+      state: 'UPLOAD_OUTCOME_UNCERTAIN',
+      youtubeVideoId: 'video-safe-1',
+    }),
+    attempt: makePublicationAttemptEntity({
+      reconciliationResult: 'VIDEO_FOUND',
+      finalChunkDispatchStartedAt: fixedTime,
+    }),
+  });
+  await expect(service.retryFailed({ publicationId, expectedAttemptNumber: 1, confirmed: true }))
+    .rejects.toMatchObject({ code: 'REMOTE_VIDEO_ALREADY_FOUND' });
+  expect(attempts.insert).not.toHaveBeenCalled();
+});
+
+it('keeps the durable attempt count after a VIDEO_FOUND replacement request', async () => {
+  const seeded = await integrationHarness.seedReconciledPublication({ result: 'VIDEO_FOUND' });
+  const before = await integrationHarness.database.publicationAttempt.count({
+    where: { publicationId: seeded.publicationId },
+  });
+  await integrationHarness.api
+    .post(`/api/v1/youtube/publications/${seeded.publicationId}/acknowledge-duplicate-risk`)
+    .send({ expectedAttemptNumber: 1, duplicateRiskAcknowledged: true, confirmed: true })
+    .expect(409, expect.objectContaining({ code: 'REMOTE_VIDEO_ALREADY_FOUND' }));
+  await expect(integrationHarness.database.publicationAttempt.count({
+    where: { publicationId: seeded.publicationId },
+  })).resolves.toBe(before);
 });
 
 it('shows thumbnail warning without marking upload failed', () => {
@@ -568,7 +627,7 @@ Expected RED: `getByRole('button', { name: 'Check the connected channel' })` fai
 
 - [ ] **GREEN 4.3 — Implement explicit recovery actions.**
 
-Cancel uses Task 12 endpoint and confirmation text based on remote ID. Ordinary retry is enabled only for `FAILED`; it appends a bounded attempt under the same Publication after safe pre-final expiry/failure. `UPLOAD_OUTCOME_UNCERTAIN` has no ordinary retry: Reconcile calls the dedicated endpoint and shows `VIDEO_FOUND`, `NO_MATCH_FOUND`, or `INCONCLUSIVE`. `VIDEO_FOUND` attaches the remote identity and can never expose replacement. Only `NO_MATCH_FOUND` or `INCONCLUSIVE` exposes the acknowledged-risk replacement path. The replacement endpoint requires `{ expectedAttemptNumber, duplicateRiskAcknowledged: true, confirmed: true }`, persists acknowledgement, and warns that a duplicate remote video may already exist. `REAUTH_REQUIRED` shows reconnect action and resumes only after connection signal. Thumbnail warning stays secondary to success. `PAID_CALL_UNCERTAIN` links to Task 10's possible-spend acknowledgement/new reservation; it cannot invoke the old generation request.
+Cancel uses Task 12 endpoint and confirmation text based on remote ID. Ordinary retry is enabled only when all durable predicates hold: publication state `FAILED`, no `youtubeVideoId`, attempt `finalChunkDispatchStartedAt/outcomeUncertainAt/reconciliationResult` are null, and attempt number is below the bound. The server reloads and checks those fields in one transaction before inserting an attempt; UI state alone never authorizes retry. `UPLOAD_OUTCOME_UNCERTAIN` has no ordinary retry: Reconcile calls the dedicated endpoint and shows `VIDEO_FOUND`, `NO_MATCH_FOUND`, or `INCONCLUSIVE`. `VIDEO_FOUND` attaches the remote identity and can never expose replacement. Only `NO_MATCH_FOUND` or `INCONCLUSIVE` exposes the acknowledged-risk replacement path. The replacement endpoint requires `{ expectedAttemptNumber, duplicateRiskAcknowledged: true, confirmed: true }`, persists acknowledgement, and warns that a duplicate remote video may already exist. `REAUTH_REQUIRED` shows reconnect action and resumes only after connection signal. Thumbnail warning stays secondary to success. `PAID_CALL_UNCERTAIN` links to Task 10's possible-spend acknowledgement/new reservation; it cannot invoke the old generation request.
 
 ```tsx
 it('never offers replacement after reconciliation finds the remote video', () => {
@@ -611,6 +670,17 @@ await controls.acknowledgeDuplicateRisk({
   duplicateRiskAcknowledged: body.duplicateRiskAcknowledged,
   confirmed: body.confirmed,
 });
+```
+
+```css
+.list { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.item { display: grid; min-inline-size: 0; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-panel); background: var(--color-surface); }
+.progress { inline-size: 100%; accent-color: var(--color-accent); }
+.recoveryActions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.warning { color: var(--color-warning); overflow-wrap: anywhere; }
+@media (min-width: 64rem) { .item { grid-template-columns: minmax(0, 1fr) auto; align-items: center; } }
+@media (max-width: 47.99rem) { .recoveryActions > button { inline-size: 100%; } }
+@media (prefers-reduced-motion: reduce) { .item * { transition-duration: 0.01ms; } }
 ```
 
 ```bash

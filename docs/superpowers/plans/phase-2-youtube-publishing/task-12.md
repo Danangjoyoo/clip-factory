@@ -23,7 +23,8 @@ Create one independently durable Temporal workflow per clip publication. Before 
 
 ## Files
 
-- Modify: `packages/contracts/schema/youtube-publishing.schema.json`
+- Modify: `packages/contracts/schema/schema-bodies.mjs`
+- Regenerate: `packages/contracts/schema/youtube-publishing.schema.json`
 - Regenerate: `packages/contracts/src/generated/youtube-publishing.ts`
 - Regenerate: `apps/worker/src/clip_factory/entrypoints/contracts/generated/youtube_publishing.py`
 - Create: `apps/web/src/modules/youtube-publishing/application/ports/youtube-publication-workflow-scheduler.ts`
@@ -198,7 +199,7 @@ it('atomically snapshots approved metadata and starts one UUID-only workflow', a
     expect.objectContaining({
       contractVersion: 1,
       connectionId: dependencies.connection.id,
-      renderObjectKey: 'renders/clip-1/final.mp4',
+      renderObject: makeObjectReference('renders/clip-1/final.mp4'),
     }),
   );
   expect(JSON.stringify(dependencies.scheduler.start.mock.calls)).not.toMatch(/token|Prisma|Google/);
@@ -404,6 +405,21 @@ async def test_reconciliation_no_match_waits_for_durable_duplicate_risk_acknowle
     await handle.signal(YouTubePublicationWorkflow.acknowledge_duplicate_risk)
     await harness.wait_for_attempt_number(2)
     assert harness.checkpoints.replacement_attempt_count == 1
+
+
+@pytest.mark.asyncio
+async def test_restart_between_ack_commit_and_signal_recovers_from_checkpoint() -> None:
+    harness = await PublicationWorkflowHarness.start(
+        checkpoint=make_uncertain_checkpoint(),
+        reconciliation_result=UploadReconciliationResult('INCONCLUSIVE', None, None),
+    )
+    await harness.start_workflow(make_publication_workflow_input())
+    await harness.wait_for_state('UPLOAD_OUTCOME_UNCERTAIN')
+    await harness.record_duplicate_risk_acknowledgement()
+    await harness.restart_worker()  # intentionally do not deliver the wake-up signal
+    await harness.advance_time(seconds=31)
+    await harness.wait_for_attempt_number(2)
+    assert harness.checkpoints.replacement_attempt_count == 1
 ```
 
 Witness RED on automatic replacement or ignored acknowledgement, implement the guard, and rerun.
@@ -428,7 +444,7 @@ class YouTubePublicationWorkflow:
     def __init__(self) -> None:
         self._cancel_requested = False
         self._credentials_reconnected = False
-        self._duplicate_risk_acknowledged = False
+        self._duplicate_risk_wakeup = False
 
     @workflow.signal
     def request_cancel(self) -> None:
@@ -440,7 +456,7 @@ class YouTubePublicationWorkflow:
 
     @workflow.signal
     def acknowledge_duplicate_risk(self) -> None:
-        self._duplicate_risk_acknowledged = True
+        self._duplicate_risk_wakeup = True
 
     @workflow.run
     async def run(self, payload: PublicationWorkflowInputV1) -> PublicationWorkflowResultV1:
@@ -458,9 +474,18 @@ class YouTubePublicationWorkflow:
                     )
                     break
                 await report_upload_outcome_uncertain(payload, checkpoint, reconciliation)
-                await workflow.wait_condition(
-                    lambda: self._duplicate_risk_acknowledged or self._cancel_requested
-                )
+                while not checkpoint.duplicate_risk_acknowledged:
+                    try:
+                        await workflow.wait_condition(
+                            lambda: self._duplicate_risk_wakeup or self._cancel_requested,
+                            timeout=timedelta(seconds=30),
+                        )
+                    except TimeoutError:
+                        pass
+                    if self._cancel_requested:
+                        break
+                    self._duplicate_risk_wakeup = False
+                    checkpoint = await load_checkpoint(payload.publication_id)
                 if self._cancel_requested:
                     return await report_cancelled(
                         payload,
@@ -471,7 +496,7 @@ class YouTubePublicationWorkflow:
                     payload.publication_id,
                     checkpoint.attempt_id,
                 )
-                self._duplicate_risk_acknowledged = False
+                self._duplicate_risk_wakeup = False
             try:
                 checkpoint = await upload_next_verified_chunk(payload, checkpoint)
             except ResumableSessionExpired:

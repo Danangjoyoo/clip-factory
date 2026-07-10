@@ -258,7 +258,7 @@ for (const viewport of [
     await page.goto('/projects/project-phase2/youtube');
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     expect(viewport.width >= 1024 ? overflow : 0).toBe(0);
-    await page.getByRole('radio', { name: 'List' }).press('Space');
+    await page.getByRole('radio', { name: 'List view' }).press('Space');
     await page.getByRole('button', { name: 'Sort by upload state' }).press('Enter');
     await expect(page.getByRole('button', { name: 'Review upload' })).toBeInViewport();
     await page.keyboard.press('Tab');
@@ -288,10 +288,15 @@ test('default CI runs Phase 2 fakes/security and never real smoke or external se
   const workflow = YAML.parse(source);
   assert.ok(workflow.jobs['youtube-security']);
   assert.match(source, /pnpm test:youtube-security/u);
+  assert.match(source, /pnpm compose:up/u);
+  assert.match(source, /pnpm compose:down/u);
   assert.match(source, /playwright test tests\/e2e\/youtube-publishing\.spec\.ts/u);
   assert.doesNotMatch(source, /CLIP_FACTORY_REAL_(?:YOUTUBE|OPENAI)_SMOKE/u);
   assert.doesNotMatch(source, /YOUTUBE_OAUTH_CLIENT_CONFIG_PATH|OPENAI_API_KEY/u);
-  assert.doesNotMatch(source, /deploy|release|docker\/login-action|packages:\s*write/iu);
+  assert.equal(workflow.jobs.deploy, undefined);
+  assert.equal(workflow.jobs.release, undefined);
+  assert.doesNotMatch(source, /(?:docker\/login-action|actions\/deploy-pages|packages:\s*write|deployments:\s*write)/iu);
+  assert.match(source, /pnpm db:migrate:deploy/u); // local disposable DB migration is required
   for (const match of source.matchAll(/uses:\s+[^\s]+@([^\s]+)/gu)) {
     assert.match(match[1], /^[a-f0-9]{40}$/u);
   }
@@ -341,7 +346,11 @@ youtube-security:
       with: { version: "0.11.28", python-version: "3.12.11", enable-cache: true }
     - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
     - run: pnpm install --frozen-lockfile && uv sync --directory apps/worker --frozen
+    - run: cp .env.example .env && pnpm compose:up
+    - run: pnpm prisma:generate && pnpm db:migrate:deploy
     - run: pnpm test:youtube-security
+    - if: always()
+      run: pnpm compose:down
 ```
 
 Extend existing `integration`/`e2e` jobs with:
@@ -351,7 +360,7 @@ Extend existing `integration`/`e2e` jobs with:
 - run: pnpm exec playwright test tests/e2e/youtube-publishing.spec.ts --project=chromium
 ```
 
-The test overlay sets fake endpoints/backends and no external secret. Existing CodeQL lines, if touched, use `github/codeql-action/{init,analyze}@99df26d4f13ea111d4ec1a7dddef6063f76b97e9`. Add no deployment/release/registry/migration-to-production job.
+The test overlay sets fake endpoints/backends and no external secret. `compose:up` starts PostgreSQL, Redis, MinIO, and Temporal with Phase 1 health checks before migrations/security tests; `compose:down` always runs, including failures. Existing CodeQL lines, if touched, use `github/codeql-action/{init,analyze}@99df26d4f13ea111d4ec1a7dddef6063f76b97e9`. Add no deployment/release/registry/migration-to-production job.
 
 Run policy/integration/Playwright tests. Expected GREEN: PASS.
 
@@ -510,7 +519,7 @@ Expected: both SKIP with explicit reasons and zero network calls. A skip is corr
 
 - [ ] **GREEN 4.3 — Implement minimal private/provider smoke paths.**
 
-OpenAI smoke uses a generated two-sentence transcript, selected `gpt-5.6-sol`/high, a fresh reservation under the <=$0.10 cap, validates structured metadata/usage/cost, records no user media, and cleans local records. It inherits `PAID_CALL_UNCERTAIN` and never auto-retries ambiguity.
+OpenAI smoke performs the non-inference access check first, requires explicitly selected `gpt-5.6-sol`/high, and skips safely when that exact model is unavailable—never substituting GPT-5.5. It uses a generated two-sentence transcript, explicit cache-disabled/no-breakpoint policy, a fresh reservation under the <=$0.10 cap, validates structured metadata/complete usage/cost, records no user media, and cleans local records. It inherits `PAID_CALL_UNCERTAIN` and never auto-retries ambiguity.
 
 YouTube smoke requires an already connected dedicated test channel in Keychain and `YOUTUBE_OAUTH_CLIENT_CONFIG_PATH` outside the repo, uploads `tests/fixtures/media/vertical-12s.mp4` with manually approved metadata and `privacyStatus=private`, records sanitized video ID/URL for manual Studio inspection, and does not schedule/publicize/delete the remote video. If final result is ambiguous, it enters `UPLOAD_OUTCOME_UNCERTAIN` and does not create a replacement.
 

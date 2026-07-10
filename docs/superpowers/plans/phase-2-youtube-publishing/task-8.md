@@ -35,6 +35,7 @@ Let the user connect, inspect, reconnect, and disconnect one channel from the lo
 - Create: `apps/web/src/modules/youtube-publishing/delivery/http/youtube-connection.controller.test.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-connection.vm.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-connection-panel.tsx`
+- Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-connection-panel.module.css`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-connection-panel.test.tsx`
 - Create: `apps/worker/src/clip_factory/entrypoints/temporal/youtube_publishing/oauth_workflow.py`
 - Create: `apps/worker/src/clip_factory/entrypoints/temporal/youtube_publishing/oauth_activities.py`
@@ -125,6 +126,19 @@ it('rejects connect while the worker is offline', async () => {
   await expect(service.connect()).rejects.toMatchObject({ code: 'YOUTUBE_WORKER_OFFLINE' });
 });
 
+it('reuses the same opaque UUID when reconnecting', async () => {
+  const existing = makeConnectionEntity({ id: connectionId, state: 'REAUTH_REQUIRED' });
+  const dataService = makeConnectionDataServiceFake({ connected: existing });
+  const scheduler = makeConnectionSchedulerFake();
+  const service = makeConnectionService({
+    dataService,
+    scheduler,
+    idGenerator: { randomId: vi.fn(() => 'new-id-must-not-be-used') },
+  });
+  await expect(service.connect()).resolves.toMatchObject({ connectionId });
+  expect(scheduler.startConnect).toHaveBeenCalledWith({ connectionId });
+});
+
 it('persists sanitized invalid_grant without losing the channel record', async () => {
   const dataService = makeConnectionDataServiceFake({ connected: makeConnectionEntity() });
   const service = makeConnectionService({ dataService });
@@ -159,7 +173,17 @@ Expected RED: service/port signature shells collect; duplicate `connect` calls s
 
 - [ ] **GREEN 1.3 — Implement four use cases behind one cohesive service.**
 
-Implement `get`, `connect`, `disconnect`, and `acceptWorkerEvent`. `connect` checks worker availability, creates one `YouTubeConnectionId`, and schedules Task 1's exact two-scope payload. `disconnect` requires an existing non-disconnected connection and schedules only its UUID. `acceptWorkerEvent` exhaustively handles:
+Implement `get`, `connect`, `disconnect`, and `acceptWorkerEvent`. `connect` checks worker availability, reuses the primary row's opaque `YouTubeConnectionId` for reconnect/disconnected history, and generates a new ID only when no row exists. It schedules Task 1's exact two-scope payload; a duplicate running workflow ID is idempotent. `disconnect` requires an existing non-disconnected connection and schedules only its UUID. `acceptWorkerEvent` exhaustively handles:
+
+```ts
+async connect(): Promise<YouTubeConnectionStartEntityDto> {
+  if (!await this.workerAvailability.isAvailable()) throw new YouTubeWorkerOfflineError();
+  const existing = await this.connections.getPrimary();
+  const connectionId = existing?.id ?? this.ids.randomId();
+  const workflowId = await this.scheduler.startConnect({ connectionId });
+  return { connectionId, workflowId };
+}
+```
 
 ```ts
 export type YouTubeConnectionWorkerEventEntity =
@@ -401,17 +425,17 @@ API DTOs are closed Zod/Phase 1 validator schemas. `YouTubeConnectionController`
 
 ```ts
 export class YouTubeConnectionController {
-  constructor(private readonly service: YouTubeConnectionService) {}
+  constructor(private readonly service: ManageYouTubeConnectionService) {}
 
   async connect(request: AuthenticatedRequest): Promise<ApiResponse> {
-    const input = connectYouTubeApiToEntity(connectYouTubeRequestSchema.parse(request.body));
-    const result = await this.service.connect(input);
+    connectYouTubeRequestSchema.parse(request.body);
+    const result = await this.service.connect();
     return { status: 202, body: youtubeConnectionStartEntityToApi(result) };
   }
 
   async acceptInternalEvent(request: WorkerAuthenticatedRequest): Promise<ApiResponse> {
     const event = parseYouTubeConnectionEventV1(request.body);
-    await this.service.acceptConnectionEvent(event);
+    await this.service.acceptWorkerEvent(connectionEventContractToEntity(event));
     return { status: 204, body: null };
   }
 }
@@ -530,6 +554,26 @@ export function YouTubeConnectionPanel({ connection, onConnect, onDisconnect }: 
       />
     </section>
   );
+}
+```
+
+```css
+.panel {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+}
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.warning { color: var(--color-warning); overflow-wrap: anywhere; }
+@media (max-width: 47.99rem) {
+  .panel { padding: var(--space-4); }
+  .actions > button { inline-size: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel * { scroll-behavior: auto; transition-duration: 0.01ms; }
 }
 ```
 

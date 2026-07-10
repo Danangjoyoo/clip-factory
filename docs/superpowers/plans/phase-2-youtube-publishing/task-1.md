@@ -31,6 +31,7 @@ Establish the token-free cross-runtime payloads and executable dependency rules 
 - Create: `apps/worker/tests/entrypoints/contracts/test_youtube_publishing_contract.py`
 - Create: `tests/architecture/fixtures/ts/youtube-sdk-leak.ts`
 - Create: `scripts/check-youtube-boundaries.test.mjs`
+- Modify: `apps/web/src/shared/domain/identifiers.ts`
 - Modify: `packages/contracts/src/index.ts`
 - Modify: `packages/contracts/src/validate.ts`
 - Modify: `packages/contracts/package.json`
@@ -50,7 +51,7 @@ Do not hand-edit generated files. Change the schema/generator inputs and run the
 
 ## Interfaces
 
-**Consumes:** Phase 1 `ProjectId`, `ClipId`, `RenderId`, `AIUsageEventId`, `WorkflowId`, object-reference rules, generated-contract tooling, and internal service authentication.
+**Consumes:** Phase 1 `ProjectId`, common-contract `ObjectReference`, generated-contract tooling, and internal service authentication. Phase 1 persists clip/render/workflow/usage IDs as strings but does not define their shared branded TypeScript values, so this task adds those missing brands without changing persistence.
 
 **Produces:**
 
@@ -63,6 +64,11 @@ export type PublicationId = string & { readonly __brand: 'PublicationId' };
 export type PublicationAttemptId = string & {
   readonly __brand: 'PublicationAttemptId';
 };
+export type ClipId = string & { readonly __brand: 'ClipId' };
+export type RenderId = string & { readonly __brand: 'RenderId' };
+export type AIUsageEventId = string & { readonly __brand: 'AIUsageEventId' };
+export type WorkflowId = string & { readonly __brand: 'WorkflowId' };
+export type PaidCallReservationId = string & { readonly __brand: 'PaidCallReservationId' };
 
 export type OAuthConnectionWorkflowInputV1 = {
   contractVersion: 1;
@@ -73,14 +79,73 @@ export type OAuthConnectionWorkflowInputV1 = {
   ];
 };
 
+export type OAuthConnectionWorkflowResultV1 = {
+  contractVersion: 1;
+  connectionId: YouTubeConnectionId;
+  status: 'CONNECTED' | 'DISCONNECTED' | 'REAUTH_REQUIRED';
+  safeReasonCode:
+    | 'CONSENT_DENIED'
+    | 'STATE_MISMATCH'
+    | 'STATE_EXPIRED'
+    | 'MISSING_SCOPE'
+    | 'CALLBACK_TIMEOUT'
+    | 'GOOGLE_POLICY_DENIED'
+    | 'INVALID_GRANT'
+    | null;
+};
+
+export type YouTubeConnectionEventV1 =
+  | {
+      contractVersion: 1;
+      type: 'CONNECTED';
+      connectionId: YouTubeConnectionId;
+      channelId: string;
+      channelTitle: string;
+      channelHandle: string | null;
+      avatarUrl: string | null;
+      grantedScopes: readonly string[];
+      oauthMode: 'TESTING' | 'PRODUCTION' | 'UNKNOWN';
+      refreshTokenExpiresAt: string | null;
+    }
+  | {
+      contractVersion: 1;
+      type: 'REAUTH_REQUIRED';
+      connectionId: YouTubeConnectionId;
+      reasonCode: 'INVALID_GRANT';
+    }
+  | {
+      contractVersion: 1;
+      type: 'DISCONNECTED';
+      connectionId: YouTubeConnectionId;
+      revocationUncertain: boolean;
+    }
+  | {
+      contractVersion: 1;
+      type: 'FAILED';
+      connectionId: YouTubeConnectionId;
+      reasonCode:
+        | 'CONSENT_DENIED'
+        | 'STATE_MISMATCH'
+        | 'STATE_EXPIRED'
+        | 'MISSING_SCOPE'
+        | 'CALLBACK_TIMEOUT'
+        | 'GOOGLE_POLICY_DENIED';
+    };
+
 export type MetadataGenerationWorkflowInputV1 = {
   contractVersion: 1;
   projectId: ProjectId;
   clipId: ClipId;
   draftId: PublishingMetadataDraftId;
-  transcriptObjectKey: string;
-  modelId: string;
-  reasoningLevel: string;
+  callId: PaidCallReservationId;
+  requestHash: string;
+  transcriptObject: ObjectReference;
+  modelId: 'gpt-5.6-sol' | 'gpt-5.5';
+  reasoningLevel: 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+  modelCatalogVersion: string;
+  pricingVersion: string;
+  maxGeneratedTokens: number;
+  promptCachePolicy: 'EXPLICIT_DISABLED' | 'LEGACY_AUTOMATIC_NO_WRITE_FEE';
   maxCostMicrousd: string;
   instruction: string | null;
 };
@@ -92,8 +157,8 @@ export type PublicationWorkflowInputV1 = {
   connectionId: YouTubeConnectionId;
   clipId: ClipId;
   renderId: RenderId;
-  renderObjectKey: string;
-  coverObjectKey: string | null;
+  renderObject: ObjectReference;
+  coverObject: ObjectReference | null;
   totalBytes: number;
   metadataSnapshot: PublishingMetadataSnapshotV1;
   visibility: 'PRIVATE_REVIEW' | 'SCHEDULED';
@@ -190,8 +255,13 @@ describe('YouTube publishing Temporal contract', () => {
         connectionId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb42',
         clipId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb45',
         renderId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb46',
-        renderObjectKey: 'renders/clip-1/final.mp4',
-        coverObjectKey: null,
+        renderObject: {
+          bucket: 'clip-factory',
+          key: 'renders/clip-1/final.mp4',
+          versionId: 'render-version-1',
+          sha256: 'a'.repeat(64),
+        },
+        coverObject: null,
         totalBytes: 1048576,
         metadataSnapshot: {
           title: 'A concise title',
@@ -372,6 +442,86 @@ Add the following object as `youtubePublishingSchema` in `packages/contracts/sch
         "requestedScopes": { "$ref": "#/$defs/requiredScopes" }
       }
     },
+    "oauthConnectionWorkflowResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "connectionId", "status", "safeReasonCode"],
+      "properties": {
+        "contractVersion": { "const": 1 },
+        "connectionId": { "$ref": "#/$defs/uuid" },
+        "status": { "enum": ["CONNECTED", "DISCONNECTED", "REAUTH_REQUIRED"] },
+        "safeReasonCode": {
+          "type": ["string", "null"],
+          "enum": [
+            "CONSENT_DENIED", "STATE_MISMATCH", "STATE_EXPIRED", "MISSING_SCOPE",
+            "CALLBACK_TIMEOUT", "GOOGLE_POLICY_DENIED", "INVALID_GRANT", null
+          ]
+        }
+      }
+    },
+    "youTubeConnectionEventV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contractVersion", "type", "connectionId", "channelId", "channelTitle",
+            "channelHandle", "avatarUrl", "grantedScopes", "oauthMode",
+            "refreshTokenExpiresAt"
+          ],
+          "properties": {
+            "contractVersion": { "const": 1 },
+            "type": { "const": "CONNECTED" },
+            "connectionId": { "$ref": "#/$defs/uuid" },
+            "channelId": { "type": "string", "minLength": 1 },
+            "channelTitle": { "type": "string", "minLength": 1 },
+            "channelHandle": { "type": ["string", "null"] },
+            "avatarUrl": { "type": ["string", "null"], "format": "uri" },
+            "grantedScopes": { "$ref": "#/$defs/requiredScopes" },
+            "oauthMode": { "enum": ["TESTING", "PRODUCTION", "UNKNOWN"] },
+            "refreshTokenExpiresAt": { "type": ["string", "null"], "format": "date-time" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contractVersion", "type", "connectionId", "reasonCode"],
+          "properties": {
+            "contractVersion": { "const": 1 },
+            "type": { "const": "REAUTH_REQUIRED" },
+            "connectionId": { "$ref": "#/$defs/uuid" },
+            "reasonCode": { "const": "INVALID_GRANT" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contractVersion", "type", "connectionId", "revocationUncertain"],
+          "properties": {
+            "contractVersion": { "const": 1 },
+            "type": { "const": "DISCONNECTED" },
+            "connectionId": { "$ref": "#/$defs/uuid" },
+            "revocationUncertain": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contractVersion", "type", "connectionId", "reasonCode"],
+          "properties": {
+            "contractVersion": { "const": 1 },
+            "type": { "const": "FAILED" },
+            "connectionId": { "$ref": "#/$defs/uuid" },
+            "reasonCode": {
+              "enum": [
+                "CONSENT_DENIED", "STATE_MISMATCH", "STATE_EXPIRED", "MISSING_SCOPE",
+                "CALLBACK_TIMEOUT", "GOOGLE_POLICY_DENIED"
+              ]
+            }
+          }
+        }
+      ]
+    },
     "metadataGenerationWorkflowInputV1": {
       "type": "object",
       "additionalProperties": false,
@@ -380,9 +530,15 @@ Add the following object as `youtubePublishingSchema` in `packages/contracts/sch
         "projectId",
         "clipId",
         "draftId",
-        "transcriptObjectKey",
+        "callId",
+        "requestHash",
+        "transcriptObject",
         "modelId",
         "reasoningLevel",
+        "modelCatalogVersion",
+        "pricingVersion",
+        "maxGeneratedTokens",
+        "promptCachePolicy",
         "maxCostMicrousd",
         "instruction"
       ],
@@ -391,9 +547,19 @@ Add the following object as `youtubePublishingSchema` in `packages/contracts/sch
         "projectId": { "$ref": "#/$defs/uuid" },
         "clipId": { "$ref": "#/$defs/uuid" },
         "draftId": { "$ref": "#/$defs/uuid" },
-        "transcriptObjectKey": { "$ref": "#/$defs/objectKey" },
-        "modelId": { "type": "string", "minLength": 1 },
-        "reasoningLevel": { "type": "string", "minLength": 1 },
+        "callId": { "$ref": "#/$defs/uuid" },
+        "requestHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "transcriptObject": {
+          "$ref": "https://clip-factory.local/contracts/common/1.0.0#/$defs/objectReference"
+        },
+        "modelId": { "enum": ["gpt-5.6-sol", "gpt-5.5"] },
+        "reasoningLevel": { "enum": ["none", "low", "medium", "high", "xhigh", "max"] },
+        "modelCatalogVersion": { "type": "string", "minLength": 1 },
+        "pricingVersion": { "type": "string", "minLength": 1 },
+        "maxGeneratedTokens": { "type": "integer", "minimum": 1 },
+        "promptCachePolicy": {
+          "enum": ["EXPLICIT_DISABLED", "LEGACY_AUTOMATIC_NO_WRITE_FEE"]
+        },
         "maxCostMicrousd": { "$ref": "#/$defs/moneyMicrousd" },
         "instruction": { "type": ["string", "null"], "maxLength": 2000 }
       }
@@ -408,8 +574,8 @@ Add the following object as `youtubePublishingSchema` in `packages/contracts/sch
         "connectionId",
         "clipId",
         "renderId",
-        "renderObjectKey",
-        "coverObjectKey",
+        "renderObject",
+        "coverObject",
         "totalBytes",
         "metadataSnapshot",
         "visibility",
@@ -424,10 +590,14 @@ Add the following object as `youtubePublishingSchema` in `packages/contracts/sch
         "connectionId": { "$ref": "#/$defs/uuid" },
         "clipId": { "$ref": "#/$defs/uuid" },
         "renderId": { "$ref": "#/$defs/uuid" },
-        "renderObjectKey": { "$ref": "#/$defs/objectKey" },
-        "coverObjectKey": {
+        "renderObject": {
+          "$ref": "https://clip-factory.local/contracts/common/1.0.0#/$defs/objectReference"
+        },
+        "coverObject": {
           "oneOf": [
-            { "$ref": "#/$defs/objectKey" },
+            {
+              "$ref": "https://clip-factory.local/contracts/common/1.0.0#/$defs/objectReference"
+            },
             { "type": "null" }
           ]
         },
@@ -564,8 +734,10 @@ Create `packages/contracts/src/youtube-publishing.ts` with named wrappers:
 ```ts
 import type {
   OAuthConnectionWorkflowInputV1,
+  OAuthConnectionWorkflowResultV1,
   PublicationProgressEventV1,
   PublicationWorkflowInputV1,
+  YouTubeConnectionEventV1,
 } from './generated/youtube-publishing';
 import { validateContractDefinition } from './validate';
 
@@ -573,6 +745,20 @@ export const parseOAuthConnectionWorkflowInputV1 = (value: unknown) =>
   validateContractDefinition<OAuthConnectionWorkflowInputV1>(
     'youtube-publishing',
     'oauthConnectionWorkflowInputV1',
+    value,
+  );
+
+export const parseOAuthConnectionWorkflowResultV1 = (value: unknown) =>
+  validateContractDefinition<OAuthConnectionWorkflowResultV1>(
+    'youtube-publishing',
+    'oauthConnectionWorkflowResultV1',
+    value,
+  );
+
+export const parseYouTubeConnectionEventV1 = (value: unknown) =>
+  validateContractDefinition<YouTubeConnectionEventV1>(
+    'youtube-publishing',
+    'youTubeConnectionEventV1',
     value,
   );
 

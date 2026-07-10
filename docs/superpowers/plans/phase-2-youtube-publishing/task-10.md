@@ -21,6 +21,8 @@ Provide manual zero-cost metadata creation, safe editing of generated/manual ver
 
 ## Files
 
+- Create: `prisma/migrations/20260712000400_phase_2_metadata_approval/migration.sql`
+- Modify: `prisma/schema.prisma`
 - Create: `apps/web/src/modules/youtube-publishing/application/services/manage-publishing-metadata.service.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/services/manage-publishing-metadata.service.test.ts`
 - Modify: `apps/web/src/modules/youtube-publishing/application/ports/publishing-metadata-draft.repository.ts`
@@ -36,6 +38,7 @@ Provide manual zero-cost metadata creation, safe editing of generated/manual ver
 - Create: `apps/web/src/modules/youtube-publishing/delivery/http/publishing-metadata.controller.test.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.vm.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.tsx`
+- Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.module.css`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.test.tsx`
 - Modify: `apps/web/src/modules/youtube-publishing/composition/youtube-publishing.module.ts`
 
@@ -119,12 +122,12 @@ it('preserves generated provenance while saving reviewed fields', async () => {
     expectedRevision: 3,
     metadata: makePublishingMetadataEntity({ title: 'Reviewed title' }),
   });
-  expect(dependencies.drafts.updateEditable).toHaveBeenCalledWith(
+  expect(dependencies.drafts.updateEditableRevision).toHaveBeenCalledWith(
     draft.id,
     3,
     expect.objectContaining({ title: 'Reviewed title' }),
   );
-  expect(dependencies.drafts.updateEditable.mock.calls[0]).not.toContain('gpt-5.6-sol');
+  expect(dependencies.drafts.updateEditableRevision.mock.calls[0]).not.toContain('gpt-5.6-sol');
 });
 
 it('rejects stale edits and already-approved mutation', async () => {
@@ -145,7 +148,7 @@ it('approves the exact revision and supersedes only the prior approved version',
   const service = new ManagePublishingMetadataService(dependencies);
   await service.approve({ clipId: candidate.clipId, draftId: candidate.id, expectedRevision: 5 });
   expect(dependencies.unitOfWork.execute).toHaveBeenCalledOnce();
-  expect(dependencies.drafts.supersede).toHaveBeenCalledWith(previous.id);
+  expect(dependencies.drafts.supersede).toHaveBeenCalledWith(previous.id, expect.any(Date));
   expect(dependencies.drafts.approve).toHaveBeenCalledWith(candidate.id, 5, expect.any(Date));
 });
 ```
@@ -165,7 +168,7 @@ Expected RED: service/repository signature shells collect; approving revision 3 
 Add repository operations with these update predicates:
 
 ```ts
-async approve(id: string, revision: number, approvedAt: Date): Promise<PublishingMetadataDraftRecordDto | null> {
+async approve(id: PublishingMetadataDraftId, revision: number, approvedAt: Date): Promise<PublishingMetadataDraftEntityDto | null> {
   const result = await this.prisma.publishingMetadataDraft.updateMany({
     where: { id, revision, state: { in: ['METADATA_DRAFT', 'AWAITING_APPROVAL'] } },
     data: { state: 'APPROVED', approvedAt, revision: { increment: 1 }, updatedAt: approvedAt },
@@ -173,10 +176,10 @@ async approve(id: string, revision: number, approvedAt: Date): Promise<Publishin
   return result.count === 1 ? this.findById(id) : null;
 }
 
-async supersede(id: string, supersededAt: Date): Promise<PublishingMetadataDraftRecordDto | null> {
+async supersede(id: PublishingMetadataDraftId, supersededAt: Date): Promise<PublishingMetadataDraftEntityDto | null> {
   const result = await this.prisma.publishingMetadataDraft.updateMany({
     where: { id, state: 'APPROVED' },
-    data: { state: 'SUPERSEDED', approvedAt: null, supersededAt, revision: { increment: 1 } },
+    data: { state: 'SUPERSEDED', supersededAt, revision: { increment: 1 } },
   });
   return result.count === 1 ? this.findById(id) : null;
 }
@@ -296,7 +299,8 @@ export const approvePublishingMetadataSchema = z.object({
 
 async update(request: AuthenticatedRequest): Promise<ApiResponse> {
   const body = updatePublishingMetadataSchema.parse(request.body);
-  const result = await this.service.update({
+  const result = await this.service.save({
+    clipId: parseClipId(request.params.clipId),
     draftId: parsePublishingMetadataDraftId(request.params.draftId),
     expectedRevision: body.revision,
     metadata: publishingMetadataApiToEntity(body.metadata),
@@ -386,6 +390,22 @@ it('requires paid-generation confirmation and never overwrites the selected vers
   expect(onGenerate).toHaveBeenCalledOnce();
 });
 
+it('labels unavailable GPT-5.6 and requires explicit GPT-5.5 selection', async () => {
+  const onSelectModel = vi.fn();
+  render(<MetadataEditorHarness
+    selectedModelId="gpt-5.6-sol"
+    modelOptions={[
+      { id: 'gpt-5.6-sol', label: 'GPT-5.6 (not enabled for this API project)', available: false },
+      { id: 'gpt-5.5', label: 'GPT-5.5', available: true },
+    ]}
+    onSelectModel={onSelectModel}
+  />);
+  expect(screen.getByRole('option', { name: /GPT-5.6.*not enabled/ })).toBeDisabled();
+  expect(onSelectModel).not.toHaveBeenCalled();
+  await user.selectOptions(screen.getByLabelText('OpenAI model'), 'gpt-5.5');
+  expect(onSelectModel).toHaveBeenCalledWith('gpt-5.5');
+});
+
 it('requires explicit approval and locks the approved revision', async () => {
   const onApprove = vi.fn();
   render(<MetadataEditorHarness onApprove={onApprove} />);
@@ -426,7 +446,22 @@ Expected RED: editor/view-model shells render; `getByLabelText('YouTube title')`
 
 - [ ] **GREEN 3.3 — Implement controlled semantic form.**
 
-Render labeled native inputs for title, description, hashtags, keyword tags, category, default language, made-for-kids, and synthetic-media declaration. Do not render visibility or schedule controls in this component; Task 14 owns those controls in the publication panel. Show title code-point and description UTF-8-byte counters, 500-character YouTube keyword accounting, field errors linked with `aria-describedby`, version selector/history, model/reasoning/exact cost, and manual `$0.000000`. `PAID_CALL_UNCERTAIN` shows the possible-spend amount, states that the current draft was not changed, disables automatic retry, and requires a checked acknowledgement before emitting a new request/reservation. Use Phase 1 buttons/dialog/tokens and live save/generation states.
+Render labeled native inputs for title, description, hashtags, keyword tags, category, default language, made-for-kids, and synthetic-media declaration. Do not render visibility or schedule controls in this component; Task 14 owns those controls in the publication panel. Build model/reasoning options from the Phase 1 catalog plus access projection: GPT-5.6/high remains the default label, unavailable options are disabled with the safe access reason, GPT-5.5 is selectable only by an explicit user action, and no effect silently changes either model or reasoning. Show title code-point and description UTF-8-byte counters, 500-character YouTube keyword accounting, field errors linked with `aria-describedby`, version selector/history, model/reasoning/exact cost, and manual `$0.000000`. `PAID_CALL_UNCERTAIN` shows the possible-spend amount, states that the current draft was not changed, disables automatic retry, and requires a checked acknowledgement before emitting a new request/reservation. Use Phase 1 buttons/dialog/tokens and live save/generation states.
+
+```tsx
+<label htmlFor="metadata-model">OpenAI model</label>
+<select
+  id="metadata-model"
+  value={viewModel.selectedModelId}
+  onChange={(event) => onSelectModel(event.currentTarget.value as CompatibleModelId)}
+>
+  {viewModel.modelOptions.map((option) => (
+    <option key={option.id} value={option.id} disabled={!option.available}>
+      {option.label}
+    </option>
+  ))}
+</select>
+```
 
 ```tsx
 const descriptionBytes = new TextEncoder().encode(form.description).byteLength;
@@ -466,6 +501,20 @@ The uncertainty dialog controls the emitted acknowledgement directly:
 >
   Reserve and generate again
 </button>
+```
+
+```css
+.editor { display: grid; min-inline-size: 0; gap: var(--space-6); }
+.fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+.history { min-inline-size: 0; overflow-x: auto; background: var(--color-surface); }
+.actions { position: sticky; inset-block-end: 0; display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface-raised); }
+.error { color: var(--color-danger); overflow-wrap: anywhere; }
+@media (min-width: 64rem) {
+  .editor { grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr); align-items: start; }
+  .actions { grid-column: 1 / -1; }
+}
+@media (max-width: 47.99rem) { .actions > button { flex: 1 1 100%; } }
+@media (prefers-reduced-motion: reduce) { .editor * { transition-duration: 0.01ms; } }
 ```
 
 ```bash

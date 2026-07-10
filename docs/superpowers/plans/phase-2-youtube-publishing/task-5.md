@@ -16,7 +16,7 @@ Persist an immutable approved metadata snapshot and one logical remote-video int
 
 - **Affected layers:** Entity DTOs from Task 2, Record DTOs, entity-record converters, repositories, data services.
 - **Owned tables:** `publications` and `publication_attempts`; each has its own repository and data service.
-- **Repository rule:** application owns one repository port/Record DTO per table; neither Prisma implementation imports the other.
+- **Repository rule:** application owns one Entity-oriented repository port per table; each Prisma adapter owns its Record DTO/converter and neither implementation imports the other.
 - **Data-service rule:** each data service imports exactly its matching application-owned port and no adapter.
 - **Deferred to Task 12:** cross-table creation transaction, state orchestration, Temporal start, retry/cancel business policy.
 
@@ -25,8 +25,8 @@ Persist an immutable approved metadata snapshot and one logical remote-video int
 - Create: `prisma/migrations/20260712000300_phase_2_publications/migration.sql`
 - Modify: `prisma/schema.prisma`
 - Modify: `apps/web/src/modules/youtube-publishing/application/dto/entity/youtube-publishing-entity.dto.ts`
-- Create: `apps/web/src/modules/youtube-publishing/application/ports/record/publication-record.dto.ts`
-- Create: `apps/web/src/modules/youtube-publishing/application/ports/record/publication-attempt-record.dto.ts`
+- Create: `apps/web/src/modules/youtube-publishing/adapters/persistence/dto/record/publication-record.dto.ts`
+- Create: `apps/web/src/modules/youtube-publishing/adapters/persistence/dto/record/publication-attempt-record.dto.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/ports/publication.repository.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/ports/publication-attempt.repository.ts`
 - Create: `apps/web/src/modules/youtube-publishing/converters/entity-record/publication.converter.ts`
@@ -90,21 +90,48 @@ export type PublicationAttemptEntityDto = {
 Repository contracts are persistence-focused:
 
 ```ts
+export type UpdatePublicationStateEntityDto = {
+  publicationId: PublicationId;
+  expectedState: PublicationState;
+  nextState: PublicationState;
+  thumbnailWarningCode: string | null;
+  sanitizedErrorCode: string | null;
+  sanitizedErrorMessage: string | null;
+  updatedAt: Date;
+};
+
+export type AttachRemoteVideoEntityDto = {
+  publicationId: PublicationId;
+  youtubeVideoId: string;
+  youtubeUrl: string;
+  remoteVideoCreatedAt: Date;
+};
+
+export type SaveAttemptProgressEntityDto = Pick<
+  PublicationAttemptEntityDto,
+  'id' | 'acknowledgedBytes' | 'totalBytes' | 'progressPercent' | 'stage' | 'updatedAt'
+>;
+
+export type FinishAttemptEntityDto = Pick<
+  PublicationAttemptEntityDto,
+  'id' | 'stage' | 'completedAt' | 'sanitizedErrorCode' | 'sanitizedErrorMessage' | 'updatedAt'
+>;
+
 export interface PublicationRepositoryPort {
-  findById(id: string): Promise<PublicationRecordDto | null>;
-  findByIdempotencyKey(key: string): Promise<PublicationRecordDto | null>;
-  listByProject(projectId: string): Promise<readonly PublicationRecordDto[]>;
-  insert(record: InsertPublicationRecordDto): Promise<PublicationRecordDto>;
-  updateState(input: UpdatePublicationStateRecordDto): Promise<PublicationRecordDto | null>;
-  attachRemoteVideo(input: AttachRemoteVideoRecordDto): Promise<PublicationRecordDto | null>;
+  findById(id: PublicationId): Promise<PublicationEntityDto | null>;
+  findByIdempotencyKey(key: string): Promise<PublicationEntityDto | null>;
+  listByProject(projectId: ProjectId): Promise<readonly PublicationEntityDto[]>;
+  insert(input: PublicationEntityDto): Promise<PublicationEntityDto>;
+  updateState(input: UpdatePublicationStateEntityDto): Promise<PublicationEntityDto | null>;
+  attachRemoteVideo(input: AttachRemoteVideoEntityDto): Promise<PublicationEntityDto | null>;
 }
 
 export interface PublicationAttemptRepositoryPort {
-  findById(id: string): Promise<PublicationAttemptRecordDto | null>;
-  listByPublication(publicationId: string): Promise<readonly PublicationAttemptRecordDto[]>;
-  insert(record: InsertPublicationAttemptRecordDto): Promise<PublicationAttemptRecordDto>;
-  saveProgress(input: SaveAttemptProgressRecordDto): Promise<PublicationAttemptRecordDto | null>;
-  finish(input: FinishAttemptRecordDto): Promise<PublicationAttemptRecordDto | null>;
+  findById(id: PublicationAttemptId): Promise<PublicationAttemptEntityDto | null>;
+  listByPublication(publicationId: PublicationId): Promise<readonly PublicationAttemptEntityDto[]>;
+  insert(input: PublicationAttemptEntityDto): Promise<PublicationAttemptEntityDto>;
+  saveProgress(input: SaveAttemptProgressEntityDto): Promise<PublicationAttemptEntityDto | null>;
+  finish(input: FinishAttemptEntityDto): Promise<PublicationAttemptEntityDto | null>;
 }
 ```
 
@@ -132,10 +159,10 @@ describe('publication repositories', () => {
 
   it('prevents duplicate remote-video intent and idempotency key', async () => {
     const repository = new PrismaPublicationRepository(database.prisma);
-    const first = makePublicationRecord({
+    const first = makePublicationEntity({
       id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb60',
-      intent_key: 'clip-1-primary-upload-1',
-      idempotency_key: 'publish:clip-1:primary:1',
+      intentKey: 'clip-1-primary-upload-1',
+      idempotencyKey: 'publish:clip-1:primary:1',
     });
     await repository.insert(first);
     await expect(repository.insert({ ...first, id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb61' }))
@@ -143,25 +170,27 @@ describe('publication repositories', () => {
     await expect(repository.insert({
       ...first,
       id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb62',
-      intent_key: 'clip-1-primary-upload-2',
+      intentKey: 'clip-1-primary-upload-2',
     })).rejects.toMatchObject({ code: 'P2002' });
   });
 
   it('persists independent timezone schedules as UTC instants', async () => {
     const repository = new PrismaPublicationRepository(database.prisma);
-    const tokyo = await repository.insert(makePublicationRecord({
+    const tokyo = await repository.insert(makePublicationEntity({
       id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb63',
-      clip_id: youtubeSeed.clipTwoId,
-      intent_key: 'clip-2-primary-upload-1',
-      idempotency_key: 'publish:clip-2:primary:1',
-      visibility: 'SCHEDULED',
-      api_project_verified_snapshot: true,
-      source_local_datetime: '2026-07-12T09:30:00',
-      source_timezone: 'Asia/Tokyo',
-      schedule_at_utc: new Date('2026-07-12T00:30:00.000Z'),
+      clipId: youtubeSeed.clipTwoId,
+      intentKey: 'clip-2-primary-upload-1',
+      idempotencyKey: 'publish:clip-2:primary:1',
+      visibility: PublicationVisibility.Scheduled,
+      apiProjectVerifiedSnapshot: true,
+      schedule: {
+        sourceLocalDateTime: '2026-07-12T09:30:00',
+        sourceTimezone: 'Asia/Tokyo',
+        publishAtUtc: '2026-07-12T00:30:00.000Z',
+      },
     }));
-    expect(tokyo.source_timezone).toBe('Asia/Tokyo');
-    expect(tokyo.schedule_at_utc?.toISOString()).toBe('2026-07-12T00:30:00.000Z');
+    expect(tokyo.schedule?.sourceTimezone).toBe('Asia/Tokyo');
+    expect(tokyo.schedule?.publishAtUtc).toBe('2026-07-12T00:30:00.000Z');
   });
 
   it('rejects schedule fields for private review and scheduling for unverified projects', async () => {
@@ -176,14 +205,14 @@ describe('publication repositories', () => {
 
   it('bounds attempt progress and numbers attempts per publication', async () => {
     const repository = new PrismaPublicationAttemptRepository(database.prisma);
-    const attempt = makePublicationAttemptRecord({
-      publication_id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb60',
-      attempt_number: 1,
-      acknowledged_bytes: 524_288n,
-      total_bytes: 1_048_576n,
-      progress_percent: 50,
+    const attempt = makePublicationAttemptEntity({
+      publicationId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb60',
+      attemptNumber: 1,
+      acknowledgedBytes: 524_288n,
+      totalBytes: 1_048_576n,
+      progressPercent: 50,
     });
-    await expect(repository.insert(attempt)).resolves.toMatchObject({ progress_percent: 50 });
+    await expect(repository.insert(attempt)).resolves.toMatchObject({ progressPercent: 50 });
     await expect(database.query(
       `update publication_attempts set acknowledged_bytes = total_bytes + 1 where id = $1`,
       [attempt.id],
@@ -393,7 +422,7 @@ model PublicationAttempt {
 }
 ```
 
-Implement the two application ports in explicit-select `PrismaPublicationRepository`/`PrismaPublicationAttemptRepository` adapters returning complete application-owned snake-case Record DTOs. `saveProgress` updates only when the new acknowledged byte count is greater than or equal to the persisted count; stale heartbeats return the current row without decreasing progress. Add `markFinalChunkDispatchStarted`, `markOutcomeUncertain`, `recordReconciliation`, and `acknowledgeDuplicateRisk` to `PublicationAttemptRepositoryPort`; the Prisma implementation uses guarded `updateMany` predicates so timestamps are monotonic and duplicate-risk acknowledgement is impossible before reconciliation.
+Implement the two Entity-oriented application ports in explicit-select `PrismaPublicationRepository`/`PrismaPublicationAttemptRepository` adapters. Each adapter owns its complete snake-case Record DTO and Entity↔Record converter; Record/Prisma values never cross the adapter boundary. `saveProgress` updates only when the new acknowledged byte count is greater than or equal to the persisted count; stale heartbeats return the current Entity without decreasing progress. Add Entity-oriented `markFinalChunkDispatchStarted`, `markOutcomeUncertain`, `recordReconciliation`, and `acknowledgeDuplicateRisk` to `PublicationAttemptRepositoryPort`; the Prisma implementation uses guarded `updateMany` predicates so timestamps are monotonic and duplicate-risk acknowledgement is impossible before reconciliation.
 
 Run:
 
@@ -539,7 +568,7 @@ Create `publication-data-services.test.ts` with two tests:
 ```ts
 it('publication data service returns the existing idempotent row', async () => {
   const publicationRepository = makePublicationRepositoryFake({
-    findByIdempotencyKey: makePublicationRecord(),
+    findByIdempotencyKey: makePublicationEntity(),
   });
   const service = new PublicationDataService(publicationRepository);
   await expect(service.findByIdempotencyKey('publish:clip-1:primary:1'))
@@ -548,10 +577,10 @@ it('publication data service returns the existing idempotent row', async () => {
 
 it('attempt data service does not decrease acknowledged progress', async () => {
   const attemptRepository = makePublicationAttemptRepositoryFake({
-    saveProgress: makePublicationAttemptRecord({
-      acknowledged_bytes: 700n,
-      total_bytes: 1_000n,
-      progress_percent: 70,
+    saveProgress: makePublicationAttemptEntity({
+      acknowledgedBytes: 700n,
+      totalBytes: 1_000n,
+      progressPercent: 70,
     }),
   });
   const service = new PublicationAttemptDataService(attemptRepository);
@@ -570,7 +599,7 @@ Expected RED: data-service signature shells collect; stale progress returns `600
 
 - [ ] **GREEN 3.3 — Implement table-scoped mapping.**
 
-`PublicationDataService` imports only `PublicationRepositoryPort`; `PublicationAttemptDataService` imports only `PublicationAttemptRepositoryPort`. Concrete Prisma adapters are injected in composition. Each delegates persistence operations and converts Record/Entity DTOs. They map not-found and unique-conflict outcomes to typed data errors but contain no state-transition, schedule, retry, or workflow logic.
+`PublicationDataService` imports only Entity-oriented `PublicationRepositoryPort`; `PublicationAttemptDataService` imports only Entity-oriented `PublicationAttemptRepositoryPort`. Concrete Prisma adapters, Record DTOs, and converters remain behind composition/adapter boundaries. Each service delegates Entity operations and maps not-found/conflict outcomes to typed data errors but contains no state-transition, schedule, retry, or workflow logic.
 
 Run focused tests. Expected GREEN: PASS.
 
@@ -579,8 +608,7 @@ export class PublicationDataService {
   constructor(private readonly repository: PublicationRepositoryPort) {}
 
   async findByIdempotencyKey(key: string): Promise<PublicationEntityDto | null> {
-    const record = await this.repository.findByIdempotencyKey(key);
-    return record ? publicationRecordToEntity(record) : null;
+    return this.repository.findByIdempotencyKey(key);
   }
 }
 
@@ -588,9 +616,9 @@ export class PublicationAttemptDataService {
   constructor(private readonly repository: PublicationAttemptRepositoryPort) {}
 
   async saveProgress(input: PublicationAttemptProgressEntityDto): Promise<PublicationAttemptEntityDto> {
-    return publicationAttemptRecordToEntity(
-      await this.repository.saveProgress(publicationAttemptProgressEntityToRecord(input)),
-    );
+    const attempt = await this.repository.saveProgress(input);
+    if (!attempt) throw new PublicationAttemptNotFoundDataError(input.id);
+    return attempt;
   }
 }
 ```

@@ -22,9 +22,18 @@ Generate one new, editable metadata-draft version from clip transcript text only
 
 ## Files
 
-- Modify: `packages/contracts/schema/youtube-publishing.schema.json`
+- Modify: `packages/contracts/schema/schema-bodies.mjs`
+- Regenerate: `packages/contracts/schema/youtube-publishing.schema.json`
 - Regenerate: `packages/contracts/src/generated/youtube-publishing.ts`
 - Regenerate: `apps/worker/src/clip_factory/entrypoints/contracts/generated/youtube_publishing.py`
+- Create: `prisma/migrations/20260712000350_phase_2_metadata_usage_scope/migration.sql`
+- Modify: `prisma/schema.prisma`
+- Modify: `apps/web/src/modules/analysis/application/dto/entity/ai-usage-event-entity.dto.ts`
+- Modify: `apps/web/src/modules/analysis/application/ports/ai-usage-event.repository.ts`
+- Modify: `apps/web/src/modules/analysis/application/data-services/ai-usage-event.data-service.ts`
+- Modify: `apps/web/src/modules/analysis/adapters/persistence/dto/record/ai-usage-event-record.dto.ts`
+- Modify: `apps/web/src/modules/analysis/adapters/persistence/repositories/prisma-ai-usage-event.repository.ts`
+- Modify: `apps/web/src/modules/analysis/converters/entity-record/ai-usage-event.converter.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/ports/publishing-metadata-workflow-scheduler.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/services/generate-publishing-metadata.service.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/services/generate-publishing-metadata.service.test.ts`
@@ -38,6 +47,7 @@ Generate one new, editable metadata-draft version from clip transcript text only
 - Create: `apps/web/src/app/api/v1/clips/[clipId]/youtube/metadata-generations/estimate/route.ts`
 - Create: `apps/web/src/app/api/v1/clips/[clipId]/youtube/metadata-generations/route.ts`
 - Create: `apps/web/src/app/api/internal/v1/youtube/metadata-generations/results/route.ts`
+- Create: `apps/web/src/app/api/internal/v1/youtube/metadata-generations/usage/route.ts`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/http/publishing-metadata-generation.controller.test.ts`
 - Create: `apps/worker/src/clip_factory/application/youtube_publishing/metadata_generation_service.py`
 - Create: `apps/worker/src/clip_factory/ports/youtube_publishing/publishing_metadata_generator.py`
@@ -46,6 +56,7 @@ Generate one new, editable metadata-draft version from clip transcript text only
 - Create: `apps/worker/src/clip_factory/converters/youtube_publishing/client_entity/openai_metadata.py`
 - Create: `apps/worker/src/clip_factory/entrypoints/temporal/youtube_publishing/metadata_workflow.py`
 - Create: `apps/worker/src/clip_factory/entrypoints/temporal/youtube_publishing/metadata_activities.py`
+- Create: `apps/worker/src/clip_factory/ports/youtube_publishing/metadata_usage_recorder.py`
 - Create: `apps/worker/tests/application/youtube_publishing/test_metadata_generation_service.py`
 - Create: `apps/worker/tests/adapters/youtube/test_openai_metadata_generator.py`
 - Create: `apps/worker/tests/entrypoints/temporal/youtube_publishing/test_metadata_workflow.py`
@@ -90,16 +101,9 @@ class MetadataGenerationRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class GeneratedPublishingMetadata:
+class PublishingMetadataProviderResponse:
     provider_response_id: str
-    title: str
-    description: str
-    hashtags: tuple[str, ...]
-    keyword_tags: tuple[str, ...]
-    category_id: str
-    default_language: str
-    made_for_kids: bool
-    contains_synthetic_media: bool
+    output: object
     input_tokens: int
     cached_input_tokens: int
     cache_write_input_tokens: int
@@ -111,7 +115,18 @@ class PublishingMetadataGenerator(Protocol):
     async def generate(
         self,
         request: MetadataGenerationRequest,
-    ) -> GeneratedPublishingMetadata:
+    ) -> PublishingMetadataProviderResponse:
+        raise NotImplementedError
+
+
+class MetadataUsageRecorder(Protocol):
+    async def record_before_output_validation(
+        self,
+        draft_id: str,
+        call_id: str,
+        request_hash: str,
+        response: PublishingMetadataProviderResponse,
+    ) -> None:
         raise NotImplementedError
 ```
 
@@ -177,9 +192,20 @@ it('creates version two and starts one token-free workflow', async () => {
     contractVersion: 1,
     projectId: request.projectId,
     clipId: request.clipId,
-    transcriptObjectKey: 'transcripts/project-1/v1.json',
+    callId: expect.any(String),
+    requestHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+    transcriptObject: {
+      bucket: 'clip-factory',
+      key: 'transcripts/project-1/v1.json',
+      versionId: 'transcript-version-1',
+      sha256: 'a'.repeat(64),
+    },
     modelId: 'gpt-5.6-sol',
     reasoningLevel: 'high',
+    modelCatalogVersion: '2026-07-11.1',
+    pricingVersion: 'openai-2026-07-11.1',
+    maxGeneratedTokens: 32_768,
+    promptCachePolicy: 'EXPLICIT_DISABLED',
     maxCostMicrousd: '50000',
   }));
   expect(JSON.stringify(dependencies.scheduler.start.mock.calls)).not.toContain('transcript text');
@@ -349,8 +375,29 @@ async def test_reads_transcript_range_and_never_media() -> None:
     fakes = make_metadata_generation_fakes()
     service = MetadataGenerationService(**fakes.dependencies)
     await service.generate(fakes.input)
-    assert fakes.object_store.read_keys == ['transcripts/project-1/v1.json']
+    assert fakes.object_store.read_references == [make_transcript_object_reference()]
     assert fakes.object_store.media_reads == []
+
+
+@pytest.mark.asyncio
+async def test_persists_response_usage_before_rejecting_invalid_metadata_output() -> None:
+    fakes = make_metadata_generation_fakes(
+        provider_response=make_provider_response(
+            provider_response_id='resp_invalid_metadata_1',
+            output={'title': 7},
+            input_tokens=1200,
+            cached_input_tokens=0,
+            cache_write_input_tokens=0,
+            output_tokens=160,
+            reasoning_tokens=80,
+        ),
+    )
+    service = MetadataGenerationService(**fakes.dependencies)
+    with pytest.raises(MetadataSchemaError):
+        await service.generate(fakes.input)
+    assert fakes.operation_order == ['provider_response', 'usage_recorded', 'output_validation']
+    assert fakes.usage_recorder.events[0].provider_response_id == 'resp_invalid_metadata_1'
+    assert fakes.usage_recorder.events[0].output_tokens == 160
 ```
 
 - [ ] **RED 2.2 — Witness missing worker service.**
@@ -377,7 +424,22 @@ def assert_exact_metadata_budget(
         raise MetadataGenerationBudgetError('exact metadata plan exceeds confirmed cap')
 ```
 
-Only after that check calls `PublishingMetadataGenerator.generate`. Validate output with the metadata policy equivalent: title 100 code points, description 5000 UTF-8 bytes, at most eight relevant no-space hashtags, keyword accounting at most 500, category/language/audience booleans. Provider output never selects visibility/schedule.
+Only after that check call `PublishingMetadataGenerator.generate`. On a received response, durably record provider response ID, complete token categories, calculated cost, and reservation completion through `MetadataUsageRecorder` before parsing or validating `response.output`. Only after the recorder acknowledges may `parsePublishingMetadataProviderOutput` validate title 100 code points, description 5000 UTF-8 bytes, at most eight relevant no-space hashtags, keyword accounting at most 500, category/language/audience booleans. Provider output never selects visibility/schedule. A schema-invalid response therefore still has exact immutable usage; any permitted validation retry requires a separately reserved Phase 1 call.
+
+```python
+response = await self._generator.generate(request)
+await self._usage_recorder.record_before_output_validation(
+    input.draft_id,
+    input.call_id,
+    input.request_hash,
+    response,
+)
+metadata = parse_publishing_metadata_provider_output(response.output)
+return GeneratedPublishingMetadataResult(
+    provider_response_id=response.provider_response_id,
+    metadata=metadata,
+)
+```
 
 Run the worker service test. Expected GREEN: PASS.
 
@@ -423,7 +485,6 @@ Append this parameterized adapter test:
 @pytest.mark.parametrize(
     ('response', 'error_type'),
     [
-        (make_metadata_response(output={'title': 7}), MetadataSchemaError),
         (make_metadata_response(usage=None), MetadataUsageMissingError),
         (make_metadata_response(refusal='policy refusal'), MetadataRefusalError),
         (PreSendConnectError('connection not established'), MetadataPreSendError),
@@ -529,9 +590,18 @@ const result = {
   contractVersion: 1,
   draftId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb72',
   expectedRevision: 1,
+  providerResponseId: 'resp_metadata_1',
   metadata: makePublishingMetadataApi(),
-  usage: {
-    providerResponseId: 'resp_metadata_1',
+};
+
+const usage = {
+    contractVersion: 1,
+    projectId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb70',
+    clipId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb71',
+    draftId: result.draftId,
+    callId: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb75',
+    requestHash: 'a'.repeat(64),
+    providerResponseId: result.providerResponseId,
     purpose: 'YOUTUBE_METADATA_GENERATION',
     modelId: 'gpt-5.6-sol',
     reasoningLevel: 'high',
@@ -543,19 +613,19 @@ const result = {
     cacheWriteInputTokens: 0,
     outputTokens: 160,
     reasoningTokens: 80,
-    costMicrousd: '12345',
-  },
 };
 
-it('atomically stores usage and completes the matching draft', async () => {
+it('records usage before the validated result completes the matching draft', async () => {
+  await controller.acceptUsage(usage);
   await controller.acceptResult(result);
-  expect(unitOfWork.execute).toHaveBeenCalledOnce();
+  expect(operationOrder).toEqual(['usage-committed', 'output-result-accepted']);
   expect(aiUsageEvents.create).toHaveBeenCalledWith(expect.objectContaining({
     providerResponseId: 'resp_metadata_1',
     purpose: 'YOUTUBE_METADATA_GENERATION',
     cachedInputTokens: 0,
     cacheWriteInputTokens: 0,
     costMicrousd: 12_345n,
+    analysisRunId: null,
   }));
   expect(drafts.completeGeneration).toHaveBeenCalledWith(expect.objectContaining({
     draftId: result.draftId,
@@ -564,6 +634,7 @@ it('atomically stores usage and completes the matching draft', async () => {
     aiUsageEventId: expect.any(String),
     actualCostMicrousd: 12_345n,
   }));
+  expect(aiUsageEvents.create).toHaveBeenCalledOnce();
 });
 
 it('records an ambiguous post-transmission outcome without completing or retrying the draft', async () => {
@@ -590,30 +661,85 @@ uv run --directory apps/worker pytest tests/entrypoints/temporal/youtube_publish
 pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/delivery/http/publishing-metadata-generation.controller.test.ts
 ```
 
-Expected RED: workflow/result shells collect; the success callback creates no `AIUsageEvent` and leaves the draft in `METADATA_DRAFT` instead of `AWAITING_APPROVAL`.
+Expected RED: workflow/usage/result shells collect; the provider response reaches output validation before `acceptUsage`, violating the asserted `usage-committed` then `output-result-accepted` order.
 
 - [ ] **GREEN 3.3 — Extend contract and implement atomic result handling.**
 
-Add `metadataGenerationResultV1` to Task 1's schema as a closed `oneOf`: the successful result above, or `{ contractVersion: 1, draftId, state: 'PAID_CALL_UNCERTAIN', possibleSpendMicrousd, safeReasonCode: 'OPENAI_RESULT_UNKNOWN_AFTER_TRANSMISSION' }`. Neither branch accepts credential/provider-body fields. Regenerate both runtimes.
+Add closed `metadataGenerationUsageV1` (the `usage` fixture above, without provider output/body) and `metadataGenerationResultV1`: either `{ contractVersion: 1, draftId, expectedRevision, providerResponseId, metadata }`, or `{ contractVersion: 1, draftId, state: 'PAID_CALL_UNCERTAIN', possibleSpendMicrousd, safeReasonCode: 'OPENAI_RESULT_UNKNOWN_AFTER_TRANSMISSION' }`. Neither contract accepts credential/provider-body fields. Regenerate both runtimes.
 
-Add repository/data-service `completeGeneration` that atomically matches `draftId`, source `OPENAI`, state `METADATA_DRAFT`, and expected revision; it sets validated fields, `AWAITING_APPROVAL`, actual cost, usage FK, and increments revision. It cannot update an already approved/superseded draft.
+Create the Phase 2 usage-scope migration so manual-origin clips can attribute metadata usage without inventing an `AnalysisRun`:
 
-The deterministic workflow calls one activity with the generated input and returns/reports the generated result. The activity performs transcript/Object Store/OpenAI/clock/network work and sends the authenticated internal callback. It records `providerRequestDispatched=true` in its durable Phase 1 paid-call attempt before awaiting the provider. An ambiguous timeout/crash after that marker raises a non-retryable `PaidCallUncertainError`; the workflow reports canonical `PAID_CALL_UNCERTAIN` and does not schedule another generator activity. The web service uses the Phase 1 unit-of-work to create immutable `AIUsageEvent` and complete the draft only on a received, validated result; duplicate `providerResponseId` or callback idempotency key returns the existing result without duplicating cost.
+```sql
+alter table "ai_usage_events"
+  alter column "analysis_run_id" drop not null;
+
+alter table "ai_usage_events"
+  drop constraint "ai_usage_events_analysis_run_id_fkey",
+  add constraint "ai_usage_events_analysis_run_id_fkey"
+    foreign key ("analysis_run_id") references "analysis_runs" ("id") on delete set null,
+  add constraint "ai_usage_events_scope_check" check (
+    ("purpose" = 'YOUTUBE_METADATA_GENERATION' and
+      "analysis_run_id" is null and "clip_id" is not null) or
+    ("purpose" <> 'YOUTUBE_METADATA_GENERATION' and "analysis_run_id" is not null)
+  );
+
+create index "ai_usage_events_project_clip_occurred_idx"
+  on "ai_usage_events" ("project_id", "clip_id", "occurred_at" desc)
+  where "purpose" = 'YOUTUBE_METADATA_GENERATION';
+```
+
+In Prisma make `analysisRunId String?` and `analysisRun AnalysisRun?`; update Entity/Record/converter/port nullability and direct round-trip tests. Existing analysis usage remains required by the check, while metadata usage sets `analysisRunId: null`, `projectId`, and `clipId`.
+
+Add repository/data-service `completeGeneration` that atomically matches `draftId`, source `OPENAI`, state `METADATA_DRAFT`, and expected revision; it looks up the already committed usage by `providerResponseId`, sets validated fields, `AWAITING_APPROVAL`, actual cost, usage FK, and increments revision. It cannot update an already approved/superseded draft and cannot create usage.
+
+The deterministic workflow calls one activity with the generated input and returns/reports the generated result. The activity performs transcript/Object Store/OpenAI/clock/network work and sends the authenticated usage callback immediately after receiving response ID/usage, before schema validation; only then may it send the validated-result callback. It records `providerRequestDispatched=true` in its durable Phase 1 paid-call attempt before awaiting the provider. An ambiguous timeout/crash after that marker raises a non-retryable `PaidCallUncertainError`; the workflow reports canonical `PAID_CALL_UNCERTAIN` and does not schedule another generator activity. Duplicate usage/result callback keys are idempotent. A received invalid output still leaves one exact immutable usage event and completed reservation; a validation retry requires a distinct reservation/call ID.
 
 ```ts
 await this.unitOfWork.execute(async (transaction) => {
-  const existing = await transaction.aiUsageEvents.findByProviderResponseId(
-    result.usage.providerResponseId,
+  const existing = await this.aiUsageEvents.findByProviderResponseId(
+    usage.providerResponseId,
+    transaction,
   );
-  if (existing) return transaction.drafts.findById(result.draftId);
-  const usage = await transaction.aiUsageEvents.create(metadataUsageApiToEntity(result.usage));
-  return transaction.drafts.completeGeneration({
-    draftId: parsePublishingMetadataDraftId(result.draftId),
-    expectedRevision: result.expectedRevision,
-    metadata: publishingMetadataApiToEntity(result.metadata),
-    aiUsageEventId: usage.id,
-    actualCostMicrousd: usage.costMicrousd,
-  });
+  if (existing) return existing;
+  const usageInput = metadataUsageApiToEntity(usage);
+  const tokenCategories = normalizeProviderUsage(
+    usageInput.inputTokens,
+    usageInput.cachedInputTokens,
+    usageInput.cacheWriteInputTokens,
+    usageInput.outputTokens,
+  );
+  const costMicrousd = priceTokens(
+    tokenCategories,
+    this.catalog.getPricing(usageInput.modelId, usageInput.pricingVersion),
+  );
+  const event = await this.aiUsageEvents.create(
+    { ...usageInput, analysisRunId: null, costMicrousd },
+    transaction,
+  );
+  await this.paidCallReservations.complete(
+    usage.callId,
+    usage.providerResponseId,
+    transaction,
+  );
+  await this.projects.addOpenAISpend(event.projectId, event.costMicrousd, transaction);
+  return event;
+});
+
+await this.unitOfWork.execute(async (transaction) => {
+  const usageEvent = await this.aiUsageEvents.requireByProviderResponseId(
+    result.providerResponseId,
+    transaction,
+  );
+  return this.drafts.completeGeneration(
+    {
+      draftId: parsePublishingMetadataDraftId(result.draftId),
+      expectedRevision: result.expectedRevision,
+      metadata: publishingMetadataApiToEntity(result.metadata),
+      aiUsageEventId: usageEvent.id,
+      actualCostMicrousd: usageEvent.costMicrousd,
+    },
+    transaction,
+  );
 });
 ```
 

@@ -55,7 +55,7 @@ from typing import Protocol
 
 @dataclass(frozen=True, slots=True)
 class AuthorizationRequest:
-    authorization_url: str
+    authorization_display_url: str
     state_digest: str
     expires_at: datetime
 
@@ -195,12 +195,14 @@ def test_callback_requires_exact_host_path_state_and_unexpired_flow() -> None:
         )
 
 
-def test_scope_validation_requires_exact_capabilities_without_force_ssl() -> None:
+def test_scope_validation_requires_exact_capabilities_and_no_extra_scope() -> None:
     assert validate_scopes(REQUIRED_YOUTUBE_SCOPES) == REQUIRED_YOUTUBE_SCOPES
     with pytest.raises(OAuthSecurityError, match='missing required scopes'):
         validate_scopes((REQUIRED_YOUTUBE_SCOPES[0],))
-    with pytest.raises(OAuthSecurityError, match='unexpected broad scope'):
+    with pytest.raises(OAuthSecurityError, match='unexpected OAuth scopes'):
         validate_scopes((*REQUIRED_YOUTUBE_SCOPES, 'https://www.googleapis.com/auth/youtube.force-ssl'))
+    with pytest.raises(OAuthSecurityError, match='unexpected OAuth scopes'):
+        validate_scopes((*REQUIRED_YOUTUBE_SCOPES, 'openid'))
 ```
 
 - [ ] **RED 1.2 — Witness missing policy.**
@@ -209,7 +211,7 @@ def test_scope_validation_requires_exact_capabilities_without_force_ssl() -> Non
 uv run --directory apps/worker pytest tests/domain/youtube_publishing/test_oauth_policy.py -q
 ```
 
-Expected RED: collection FAIL because `oauth_policy` does not exist.
+Expected RED: the policy signature shell collects; `validate_scopes((*REQUIRED_YOUTUBE_SCOPES, 'openid'))` is accepted instead of raising `unexpected OAuth scopes`.
 
 - [ ] **GREEN 1.3 — Implement exact pure functions.**
 
@@ -259,8 +261,9 @@ def validate_scopes(granted: Iterable[str]) -> tuple[str, ...]:
     missing = required_set - granted_set
     if missing:
         raise OAuthSecurityError(f'missing required scopes: {sorted(missing)}')
-    if 'https://www.googleapis.com/auth/youtube.force-ssl' in granted_set:
-        raise OAuthSecurityError('unexpected broad scope youtube.force-ssl')
+    unexpected = granted_set - required_set
+    if unexpected:
+        raise OAuthSecurityError(f'unexpected OAuth scopes: {sorted(unexpected)}')
     return REQUIRED_YOUTUBE_SCOPES
 
 
@@ -327,6 +330,18 @@ def test_redacts_headers_queries_bodies_and_nested_credentials() -> None:
         'body': '[REDACTED]',
         'status': 400,
     }
+
+
+def test_drops_cookie_set_cookie_and_unknown_headers() -> None:
+    redacted = redact_google_event({
+        'headers': {
+            'Cookie': 'oauth=sentinel',
+            'Set-Cookie': 'refresh=sentinel',
+            'X-Debug-Credential': 'sentinel',
+            'Retry-After': '30',
+        },
+    })
+    assert redacted == {'headers': {'Retry-After': '30'}}
 ```
 
 - [ ] **RED 2.2 — Witness missing redactor.**
@@ -350,9 +365,11 @@ from urllib.parse import urlsplit, urlunsplit
 def redact_google_event(event: Mapping[str, Any]) -> dict[str, Any]:
     output: dict[str, Any] = {}
     if 'headers' in event and isinstance(event['headers'], Mapping):
+        safe_headers = {'content-type', 'retry-after', 'x-request-id'}
         output['headers'] = {
             str(key): '[REDACTED]' if str(key).lower() == 'authorization' else value
             for key, value in event['headers'].items()
+            if str(key).lower() == 'authorization' or str(key).lower() in safe_headers
         }
     if 'url' in event and isinstance(event['url'], str):
         parsed = urlsplit(event['url'])
@@ -406,8 +423,10 @@ async def test_begin_stores_only_digest_then_opens_system_browser() -> None:
             datetime(2026, 7, 11, 0, 10, tzinfo=UTC),
         )
     }
-    assert fakes.browser.opened == [result.authorization_url]
-    assert 'state=' in result.authorization_url
+    assert len(fakes.browser.opened) == 1
+    assert 'state=' in fakes.browser.opened[0]
+    assert result.authorization_display_url == 'https://accounts.google.com/o/oauth2/v2/auth'
+    assert '?' not in result.authorization_display_url
     assert fakes.state_store.raw_states == []
 
 
@@ -439,7 +458,7 @@ Expected RED: the service/port signature shells collect; `begin` leaves the brow
 3. retain raw state/verifier only in an in-memory `ActiveOAuthFlow` owned by the service for ten minutes,
 4. put only `hash_state(state)` plus connection ID/expiry through `OAuthStateStore`,
 5. ask `YouTubeOAuthGateway` for the URL and `SystemBrowser` to open it,
-6. return `AuthorizationRequest` containing the sanitized URL with its query removed for UI display, state digest, and expiry.
+6. open the full one-time provider URL only through `SystemBrowser`, then return `AuthorizationRequest` containing `authorization_display_url` with its query removed, state digest, and expiry. The full URL is never returned through a Temporal result, HTTP event, or UI DTO.
 
 `complete` consumes the state digest exactly once, validates callback/expiry, exchanges/stores/identifies through the OAuth gateway, validates scopes, clears in-memory flow, and reports only `SanitizedChannelConnection` through `ConnectionEventSink`. `disconnect` attempts revoke, always deletes the local credential in `finally`, reports `revocationUncertain = not revoke_result`, and retains nonsecret history.
 
@@ -459,11 +478,31 @@ class YouTubeOAuthService:
         return result
 
     async def complete(self, callback: OAuthCallback) -> SanitizedChannelConnection:
-        active = self._active_flows.pop(hash_state(callback.state))
-        consumed = await self._state_store.consume(hash_state(callback.state))
-        validate_callback_from_records(callback, active, consumed, now=self._clock.now())
-        connection = await self._gateway.exchange_store_and_identify(active, callback.code)
-        require_exact_scopes(connection.granted_scopes)
+        state_digest = hash_state(callback.state)
+        active = self._active_flows.pop(state_digest, None)
+        stored_connection_id = await self._state_store.consume(
+            state_digest,
+            self._clock.now(),
+        )
+        if active is None or stored_connection_id is None:
+            raise OAuthSecurityError('OAuth state is missing or already consumed')
+        if stored_connection_id != active.connection_id:
+            raise OAuthSecurityError('OAuth state connection mismatch')
+        validate_callback(
+            host=callback.host,
+            path=callback.path,
+            supplied_state=callback.state,
+            expected_state=active.state,
+            now=self._clock.now(),
+            expires_at=active.expires_at,
+        )
+        connection = await self._gateway.exchange_store_and_identify(
+            active.connection_id,
+            active.redirect_uri,
+            callback.code,
+            active.code_verifier,
+        )
+        validate_scopes(connection.granted_scopes)
         await self._events.connected(connection)
         return connection
 ```

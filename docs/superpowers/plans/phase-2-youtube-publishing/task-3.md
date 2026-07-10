@@ -17,7 +17,7 @@ Persist one channel slot's nonsecret identity, scope names, health, OAuth testin
 - **Affected layers:** application Entity DTO, data service, persistence adapter, entity-record converter.
 - **Owned boundary:** `YouTubeConnectionEntityDto <-> YouTubeConnectionRecordDto`.
 - **Owned table:** `youtube_connections` only.
-- **Repository rule:** application owns `YouTubeConnectionRepositoryPort` and its Record DTO; `PrismaYouTubeConnectionRepository` implements that port and imports no other repository.
+- **Repository rule:** application owns Entity-oriented `YouTubeConnectionRepositoryPort`; `PrismaYouTubeConnectionRepository` owns its Record DTO/converter internally and imports no other repository.
 - **Data-service rule:** `YouTubeConnectionDataService` imports exactly the application-owned repository port, never the persistence adapter, and exposes only Entity DTOs.
 
 ## Files
@@ -25,7 +25,7 @@ Persist one channel slot's nonsecret identity, scope names, health, OAuth testin
 - Create: `prisma/migrations/20260712000100_phase_2_youtube_connection/migration.sql`
 - Modify: `prisma/schema.prisma`
 - Modify: `apps/web/src/modules/youtube-publishing/application/dto/entity/youtube-publishing-entity.dto.ts`
-- Create: `apps/web/src/modules/youtube-publishing/application/ports/record/youtube-connection-record.dto.ts`
+- Create: `apps/web/src/modules/youtube-publishing/adapters/persistence/dto/record/youtube-connection-record.dto.ts`
 - Create: `apps/web/src/modules/youtube-publishing/application/ports/youtube-connection.repository.ts`
 - Create: `apps/web/src/modules/youtube-publishing/converters/entity-record/youtube-connection.converter.ts`
 - Create: `apps/web/src/modules/youtube-publishing/converters/entity-record/youtube-connection.converter.test.ts`
@@ -86,6 +86,19 @@ export interface YouTubeConnectionDataServiceContract {
     revocationUncertain: boolean,
   ): Promise<YouTubeConnectionEntityDto>;
 }
+
+export interface YouTubeConnectionRepositoryPort {
+  findPrimary(): Promise<YouTubeConnectionEntityDto | null>;
+  upsertConnected(input: ConnectedChannelInput): Promise<YouTubeConnectionEntityDto>;
+  updateState(
+    id: YouTubeConnectionId,
+    state: YouTubeConnectionState,
+  ): Promise<YouTubeConnectionEntityDto | null>;
+  disconnect(
+    id: YouTubeConnectionId,
+    revocationUncertain: boolean,
+  ): Promise<YouTubeConnectionEntityDto | null>;
+}
 ```
 
 ## RED-GREEN-REFACTOR cycle 1: migration constraints and credential absence
@@ -110,28 +123,22 @@ describe('PrismaYouTubeConnectionRepository', () => {
     const repository = new PrismaYouTubeConnectionRepository(database.prisma);
     await repository.upsertConnected({
       id: '018f4f2c-93d7-7c75-8f0f-7f5165e8bb42',
-      slot: 'PRIMARY',
-      channel_id: 'UC-safe-channel',
-      channel_title: 'Clip Factory Test',
-      channel_handle: '@clipfactorytest',
-      avatar_url: 'https://yt3.ggpht.com/safe-avatar',
-      granted_scopes: [
+      channelId: 'UC-safe-channel',
+      channelTitle: 'Clip Factory Test',
+      channelHandle: '@clipfactorytest',
+      avatarUrl: 'https://yt3.ggpht.com/safe-avatar',
+      grantedScopes: [
         'https://www.googleapis.com/auth/youtube.upload',
         'https://www.googleapis.com/auth/youtube.readonly',
       ],
-      state: 'CONNECTED',
-      oauth_mode: 'TESTING',
-      refresh_token_expires_at: new Date('2026-07-18T00:00:00.000Z'),
-      health_checked_at: new Date('2026-07-11T00:00:00.000Z'),
-      connected_at: new Date('2026-07-11T00:00:00.000Z'),
-      disconnected_at: null,
-      revocation_uncertain: false,
+      oauthMode: 'TESTING',
+      refreshTokenExpiresAt: new Date('2026-07-18T00:00:00.000Z'),
+      healthCheckedAt: new Date('2026-07-11T00:00:00.000Z'),
     });
 
     await expect(repository.findPrimary()).resolves.toMatchObject({
-      slot: 'PRIMARY',
-      channel_id: 'UC-safe-channel',
-      state: 'CONNECTED',
+      channelId: 'UC-safe-channel',
+      state: YouTubeConnectionState.Connected,
     });
   });
 
@@ -249,7 +256,7 @@ export type YouTubeConnectionRecordDto = {
 };
 ```
 
-Define `YouTubeConnectionRepositoryPort` with only `findPrimary`, `upsertConnected`, `updateState`, and `disconnect`. Implement it in `PrismaYouTubeConnectionRepository`. Every Prisma select enumerates the columns above and converts Prisma camel-case output into the application-owned snake-case Record DTO; no Prisma object crosses the adapter boundary.
+Implement the Entity-oriented `YouTubeConnectionRepositoryPort` in `PrismaYouTubeConnectionRepository`. Every Prisma select enumerates the columns above, maps Prisma output to its adapter-owned snake-case Record DTO, and immediately applies the Entity↔Record converter. Neither Prisma nor a Record DTO crosses the adapter boundary.
 
 Run:
 
@@ -355,7 +362,7 @@ import {
 import type {
   YouTubeConnectionRecordDto,
   YouTubeConnectionRecordState,
-} from '../../application/ports/record/youtube-connection-record.dto';
+} from '../../adapters/persistence/dto/record/youtube-connection-record.dto';
 
 const states: Readonly<Record<YouTubeConnectionRecordState, YouTubeConnectionState>> = {
   DISCONNECTED: YouTubeConnectionState.Disconnected,
@@ -434,24 +441,30 @@ import { YouTubeConnectionState } from '../dto/entity/youtube-publishing-entity.
 import { YouTubeConnectionDataService } from './youtube-connection.data-service';
 
 it('marks invalid_grant as reauth required without deleting channel history', async () => {
-  const record = makeYouTubeConnectionRecord({ state: 'CONNECTED' });
+  const connection = makeYouTubeConnectionEntity({ state: YouTubeConnectionState.Connected });
   const repository = {
     findPrimary: vi.fn(),
     upsertConnected: vi.fn(),
-    updateState: vi.fn().mockResolvedValue({ ...record, state: 'REAUTH_REQUIRED' }),
+    updateState: vi.fn().mockResolvedValue({
+      ...connection,
+      state: YouTubeConnectionState.ReauthRequired,
+    }),
     disconnect: vi.fn(),
   };
   const service = new YouTubeConnectionDataService(repository);
 
-  await expect(service.markReauthRequired(record.id)).resolves.toMatchObject({
-    channelId: record.channel_id,
+  await expect(service.markReauthRequired(connection.id)).resolves.toMatchObject({
+    channelId: connection.channelId,
     state: YouTubeConnectionState.ReauthRequired,
   });
-  expect(repository.updateState).toHaveBeenCalledWith(record.id, 'REAUTH_REQUIRED');
+  expect(repository.updateState).toHaveBeenCalledWith(
+    connection.id,
+    YouTubeConnectionState.ReauthRequired,
+  );
 });
 ```
 
-Place the complete typed `makeYouTubeConnectionRecord` builder in `apps/web/src/test-utils/youtube-publishing-builders.ts`. Its return type is `YouTubeConnectionRecordDto`; its base object spells out all sixteen Record DTO properties shown in RED 2.1, and an optional `Partial<YouTubeConnectionRecordDto>` override is spread last. Tests must still assert the fields relevant to the behavior under test.
+Place complete typed `makeYouTubeConnectionRecord` and `makeYouTubeConnectionEntity` builders in `apps/web/src/test-utils/youtube-publishing-builders.ts`. The Record builder is adapter/converter-test-only, spells out every Record DTO property shown in RED 2.1, and never enters the application data-service fake. Tests still assert the fields relevant to the behavior under test.
 
 - [ ] **RED 3.2 — Witness the missing data service.**
 
@@ -463,7 +476,7 @@ Expected RED: the data-service signature shell collects; `markReauthRequired` th
 
 - [ ] **GREEN 3.3 — Implement the four table-level operations.**
 
-`YouTubeConnectionDataService` constructor accepts `Pick<YouTubeConnectionRepositoryPort, 'findPrimary' | 'upsertConnected' | 'updateState' | 'disconnect'>`, imports that one application-owned port and the entity-record converter, converts every result, and throws `YouTubeConnectionNotFoundDataError` when update/disconnect returns no row. It contains no OAuth, revocation, refresh, or reconnect workflow policy.
+`YouTubeConnectionDataService` constructor accepts `Pick<YouTubeConnectionRepositoryPort, 'findPrimary' | 'upsertConnected' | 'updateState' | 'disconnect'>`, imports that one Entity-oriented application port, and throws `YouTubeConnectionNotFoundDataError` when update/disconnect returns no Entity. It imports no converter or adapter and contains no OAuth, revocation, refresh, or reconnect workflow policy.
 
 ```ts
 export class YouTubeConnectionDataService {
@@ -475,14 +488,13 @@ export class YouTubeConnectionDataService {
   ) {}
 
   async getPrimary(): Promise<YouTubeConnectionEntityDto | null> {
-    const record = await this.repository.findPrimary();
-    return record ? connectionRecordToEntity(record) : null;
+    return this.repository.findPrimary();
   }
 
   async markReauthRequired(id: YouTubeConnectionId): Promise<YouTubeConnectionEntityDto> {
-    const record = await this.repository.updateState(id, 'REAUTH_REQUIRED');
-    if (!record) throw new YouTubeConnectionNotFoundDataError(id);
-    return connectionRecordToEntity(record);
+    const connection = await this.repository.updateState(id, YouTubeConnectionState.ReauthRequired);
+    if (!connection) throw new YouTubeConnectionNotFoundDataError(id);
+    return connection;
   }
 }
 ```
