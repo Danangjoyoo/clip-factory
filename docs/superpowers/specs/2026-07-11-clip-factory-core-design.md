@@ -520,6 +520,12 @@ The UI uses wording such as “estimated 8–12 minutes remaining,” never a gu
 - Contract generation is deterministic; CI fails on uncommitted generated diffs.
 - Next.js internal worker endpoints require a service credential available only to the container and native worker.
 - Internal endpoints accept idempotency keys and reject duplicate terminal result mutations.
+- A worker-only source-locator endpoint resolves a `SourceAsset` ID to either
+  the local resolved path or MinIO object reference. It is called and consumed
+  entirely inside a native activity: the locator is never returned from the
+  activity, placed in workflow history, exposed by a public API, or written to
+  logs/diagnostics. Activity results contain only sanitized probes, hashes,
+  identifiers, and object references allowed by their contract.
 - Large media and transcript payloads travel by MinIO object reference, never Temporal payload bodies or Redis values.
 
 ## 23. Failure Handling and Recovery
