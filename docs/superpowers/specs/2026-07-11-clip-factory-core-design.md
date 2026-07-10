@@ -285,7 +285,10 @@ Before transcription, the application estimates transcript size from source dura
 
 - Estimated input tokens.
 - Prompt/schema overhead.
-- Maximum output/reasoning-token ceilings.
+- The selected profile's maximum generated-token ceiling. This is sent as
+  Responses API `max_output_tokens` and covers reasoning, visible output, and
+  non-visible formatting tokens together; those categories are never added a
+  second time when estimating cost.
 - Planned number of calls and budget-permitted retries.
 - The selected model’s versioned input, cached-input, output, and long-context pricing rules.
 - A 1.5× safety factor.
@@ -310,7 +313,7 @@ The application never switches models, reasoning effort, coverage, or retry coun
 
 ### 13.5 Actual usage
 
-Each OpenAI response produces an immutable `AIUsageEvent` containing provider response ID, purpose, model ID, reasoning level, prompt/schema/pricing versions, token categories, applicable pricing tier, calculated cost, timestamps, and associated project/analysis/clip identifiers.
+Each OpenAI response produces an immutable `AIUsageEvent` containing provider response ID, purpose, model ID, reasoning level, prompt/schema/pricing versions, token categories, applicable pricing tier, calculated cost, timestamps, and associated project/analysis/clip identifiers. Provider `output_tokens` is the billed output total and already contains reasoning tokens; `output_tokens_details.reasoning_tokens` is retained as a diagnostic subset and is never billed or reserved again.
 
 Shared analysis cost is allocated equally across generated candidates:
 

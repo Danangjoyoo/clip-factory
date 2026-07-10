@@ -71,6 +71,7 @@
 | 61 | Code architecture and quality principles? | Clean Architecture, Clean Code, SOLID, and DRY are mandatory across TypeScript and Python. Dependency direction, boundary-specific DTOs/converters, narrow ports, layer ownership, cycles, and provider/framework leakage are enforced by tests, import rules, and CI before implementation is accepted. |
 | 62 | Can a paid OpenAI call be retried automatically after an ambiguous timeout or worker crash? | No. The design does not rely on undocumented provider idempotency. It durably reserves before sending, records received usage before validation retries, and enters `PAID_CALL_UNCERTAIN` after an ambiguous post-transmission outcome. A fresh attempt requires explicit authorization and a new reservation with possible prior spend disclosed. |
 | 63 | Can YouTube upload be exactly-once if the final resumable response/video ID is lost? | Not honestly. Local idempotency prevents duplicate intents, but the app cannot prove that YouTube created no video. After final-chunk dispatch, a lost result or later `404` enters `UPLOAD_OUTCOME_UNCERTAIN`; replacement requires channel reconciliation and explicit duplicate-risk acknowledgement. |
+| 64 | How are reasoning tokens capped and priced? | Responses API `max_output_tokens` is one maximum for reasoning, visible output, and formatting tokens together. Provider `output_tokens` already includes reasoning tokens, so Clip Factory reserves and bills that total once; reasoning-token detail is recorded only as a diagnostic subset. |
 
 ## Superseded or Clarified Ideas
 
