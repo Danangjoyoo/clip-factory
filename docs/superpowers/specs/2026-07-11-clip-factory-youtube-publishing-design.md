@@ -323,8 +323,42 @@ Cancellation before YouTube returns a video ID stops the resumable session where
 9. Scheduling is delegated to YouTube and remains valid while Clip Factory is offline.
 10. A failed upload or thumbnail attempt does not corrupt other publication records.
 11. Disconnect revokes/deletes credentials and leaves nonsecret history intact.
+12. Architecture checks prove that Google/OpenAI SDK types, OAuth/token payloads, persistence records, and HTTP DTOs do not leak into domain or application boundaries.
 
-## 19. External References
+## 19. Clean Architecture and Boundary Rules
+
+Phase 2 inherits every mandatory Clean Architecture, Clean Code, SOLID, DRY, testing, and automated-enforcement rule from the [core design](./2026-07-11-clip-factory-core-design.md). YouTube publishing is an isolated `youtube-publishing` feature module, not provider logic spread across project, clip, or UI modules.
+
+### Application-owned ports
+
+Publishing use cases depend on narrow application-owned ports, including:
+
+- `YouTubeOAuthGateway` for authorization URL creation, code exchange, refresh, and revocation semantics.
+- `CredentialVault` for opaque connection-scoped credential storage without exposing token material.
+- `YouTubePublisher` for resumable upload, metadata update, scheduling, status polling, and best-effort thumbnail operations.
+- `PublishingMetadataGenerator` for optional title, description, hashtag, and keyword generation with usage provenance.
+- Clock, identifier, publication persistence, and workflow-scheduling ports scoped to the operations each use case needs.
+
+Google API/OAuth SDKs, macOS Keychain APIs, OpenAI SDKs, Temporal clients, HTTP clients, and their generated types exist only in concrete adapters. The project YouTube tab, route handlers, and application services never invoke those SDKs directly. Composition roots select concrete implementations.
+
+### Boundary models and persistence
+
+- HTTP API Schema DTOs, publishing Entity DTOs/value objects, PostgreSQL Record DTOs, Google/OpenAI Client Schema DTOs, Temporal payloads, and UI view models remain separate.
+- Explicit API-to-entity, entity-to-record, and client-to-entity converters validate state, scope, schedule, visibility, money, timestamps, provider identifiers, and sanitized errors.
+- OAuth tokens are opaque adapter concerns. No domain/entity/API/persistence DTO contains an access token, refresh token, authorization code, PKCE verifier, or client secret.
+- Each publication repository owns one table/entity boundary. Cross-record scheduling, approval, metadata generation, and upload policy belongs in application services.
+- Temporal workflows contain deterministic state orchestration only; OAuth, Keychain, network, upload, OpenAI, clock, and PostgreSQL work occurs through activities/adapters.
+
+### Enforcement and testability
+
+- Import rules reject direct UI/controller/application imports of Google, OpenAI, Keychain, Prisma, or Temporal implementations and reject all dependency cycles.
+- Port contract tests require production adapters and fakes to preserve the same idempotency, resumable-upload, cancellation, error, and redaction behavior.
+- Converter tests cover provider enum/status changes, optional responses, malformed timestamps, missing scopes, sanitized errors, and money attribution.
+- Domain/application tests use fakes and contain no Google, OpenAI, Keychain, Prisma, or Temporal setup. Adapter tests use fake provider servers or isolated platform integration fixtures.
+- Shared abstractions are introduced only for stable product concepts. Similar Google, API, record, and entity shapes are not merged merely to remove duplicate fields.
+- Broad `youtube.force-ssl` support remains deferred rather than widening an existing interface before a use case needs it.
+
+## 20. External References
 
 - [YouTube OAuth for desktop apps](https://developers.google.com/youtube/v3/guides/auth/installed-apps)
 - [Google native-app OAuth and PKCE](https://developers.google.com/identity/protocols/oauth2/native-app)

@@ -68,6 +68,7 @@
 | 58 | CI platform? | Free standard GitHub-hosted Ubuntu runners for the public repository. |
 | 59 | CI strength? | Web/worker quality, contracts, migrations, real infrastructure integration, synthetic media, Playwright E2E, Docker builds, CodeQL, and Dependabot. |
 | 60 | Continuous deployment? | Explicitly excluded. No deploy, registry push, production migration, release, or production/external secrets in CI. |
+| 61 | Code architecture and quality principles? | Clean Architecture, Clean Code, SOLID, and DRY are mandatory across TypeScript and Python. Dependency direction, boundary-specific DTOs/converters, narrow ports, layer ownership, cycles, and provider/framework leakage are enforced by tests, import rules, and CI before implementation is accepted. |
 
 ## Superseded or Clarified Ideas
 
@@ -91,3 +92,4 @@ The user explicitly approved:
 - Native YouTube OAuth security flow.
 - Testing and observability strategy.
 - PostgreSQL/Prisma revision and GitHub CI design.
+- Mandatory Clean Architecture, Clean Code, SOLID, and DRY enforcement before implementation planning.

@@ -622,12 +622,13 @@ Jobs:
 
 1. Web format, lint, typecheck, unit/component tests, and coverage.
 2. Worker format/lint, typecheck, pytest, and coverage.
-3. Contract generation and compatibility checks.
-4. Prisma client generation, migration-history application, and schema validation against ephemeral PostgreSQL.
-5. Integration suite with PostgreSQL, Redis, MinIO, and Temporal.
-6. FFmpeg media integration using generated synthetic fixtures.
-7. Playwright E2E using CPU/fake adapters for OpenAI, transcription, and YouTube.
-8. Docker Compose configuration validation and reproducible application image builds.
+3. Architecture-boundary, forbidden-import, dependency-cycle, and DTO-leak checks for TypeScript and Python.
+4. Contract generation and compatibility checks.
+5. Prisma client generation, migration-history application, and schema validation against ephemeral PostgreSQL.
+6. Integration suite with PostgreSQL, Redis, MinIO, and Temporal.
+7. FFmpeg media integration using generated synthetic fixtures.
+8. Playwright E2E using CPU/fake adapters for OpenAI, transcription, and YouTube.
+9. Docker Compose configuration validation and reproducible application image builds.
 
 ### Security and dependency workflows
 
@@ -730,8 +731,120 @@ On an Apple Silicon Mac:
 10. A single failed render does not prevent successful clips from downloading.
 11. Both input methods, all three platform safe-area presets, persistent projects, deletion, and relinking pass E2E tests.
 12. All required CI checks pass on `master` with no real external API secrets or CD steps.
+13. CI rejects forbidden outward-to-inward imports, dependency cycles, generated/SDK type leakage, and missing boundary-converter tests.
 
-## 30. External References
+## 30. Mandatory Architecture and Code Quality Principles
+
+These principles are delivery requirements for both production code and tests. They are not aspirational style guidance. Clean Architecture is used to keep policy independent of frameworks and providers, while avoiding speculative layers or abstractions that do not protect a real boundary.
+
+### 30.1 Dependency rule and TypeScript module shape
+
+Dependencies point inward:
+
+```text
+delivery -> application -> domain
+adapters -> application -> domain
+composition -> delivery + adapters + application
+```
+
+Delivery and adapters are peer outer layers; neither imports the other. Domain code imports no Next.js, React, Prisma, Redis, MinIO, Temporal, OpenAI, FFmpeg, or operating-system concerns. Application code may import domain types and its own ports, but not concrete adapters. Adapters implement application-owned ports. Delivery translates HTTP/UI concerns into application requests. Composition roots are the only locations that construct concrete dependency graphs.
+
+Each product capability is a cohesive feature module rather than a horizontal grab bag. The expected TypeScript shape is:
+
+```text
+apps/web/src/modules/<feature>/
+  domain/                         entities, value objects, invariants
+  application/
+    dto/entity/                  application-facing Entity DTOs
+    ports/                       narrow interfaces owned by use cases
+    services/                    business workflows and policy
+    data-services/               one-repository persistence boundary
+  adapters/
+    persistence/dto/record/      Prisma-facing Record DTOs
+    persistence/repositories/    one table/entity per repository
+    clients/dto/client/          provider SDK/client schema DTOs
+    clients/                     OpenAI, MinIO, Redis, Temporal adapters
+  delivery/
+    http/dto/api/                request/response API Schema DTOs
+    http/                        route handlers and controllers
+    ui/                          feature UI and presentation models
+  converters/
+    api-entity/                  API Schema DTO <-> Entity DTO
+    entity-record/               Entity DTO <-> Record DTO
+    client-entity/               Client Schema DTO <-> Entity DTO
+  composition/                   dependency wiring only
+```
+
+Small modules may omit empty directories, but they may not collapse a protected boundary merely to reduce file count.
+
+### 30.2 Boundary-specific types and converters
+
+The following representations are intentionally distinct, even when their fields initially look similar:
+
+- **API Schema DTOs** represent validated public/internal HTTP contracts.
+- **Entity DTOs** represent application and domain meaning.
+- **Record DTOs** represent one database table/entity and Prisma persistence concerns.
+- **Client Schema DTOs** represent generated SDK or external-provider payloads.
+
+Enums also belong to their boundary. Generated types, Prisma models, provider SDK objects, React view models, and raw dictionaries/JSON must never leak into domain or application interfaces. Explicit converters cross each boundary and have focused tests for happy paths, invalid values, optional fields, enum mappings, money precision, and timestamp normalization. Similar DTO shapes are acceptable duplication because they prevent semantic coupling; DRY does not mean sharing transport and domain models.
+
+### 30.3 Layer responsibilities
+
+- Route handlers/controllers validate transport input, obtain request context, invoke one application entry point, map errors/status codes, and serialize output. They contain no pricing, workflow, persistence, media, or provider policy.
+- Application services own use-case orchestration, business decisions, transaction boundaries, idempotency, authorization decisions when later introduced, and typed application errors.
+- A data service imports exactly one repository, exposes Entity DTOs, applies table-level access policy, and maps persistence failures without leaking Record DTOs.
+- A repository owns exactly one table/entity boundary and works only with Prisma plus Record DTOs. Cross-table business workflows belong in application services, not repositories.
+- Adapters implement narrow application-owned ports for PostgreSQL, Redis, MinIO, Temporal, OpenAI, filesystem access, and the native worker boundary. Provider-specific retry/serialization details remain inside the adapter.
+- UI components receive presentation-ready values and callbacks. They do not call Prisma, provider SDKs, or infrastructure clients.
+
+### 30.4 Python worker architecture
+
+The native worker follows the same inward dependency rule:
+
+```text
+apps/worker/src/clip_factory/
+  domain/                         media rules and value objects
+  application/                    use cases and orchestration services
+  ports/                          filesystem, media, model, object-store, API ports
+  adapters/                       FFmpeg, MLX, OpenAI, MinIO, Redis, HTTP adapters
+  entrypoints/temporal/           workflow/activity input and result boundaries
+  composition/                    concrete dependency wiring
+```
+
+Temporal workflows contain deterministic orchestration only. Filesystem, clock, random, network, FFmpeg, model inference, and provider I/O occur in activities or adapters. Temporal payload models, Pydantic validation models, domain values, persistence payloads, and provider models remain separate and use explicit mapping functions. Python application/domain modules do not import Temporal, FFmpeg bindings, MLX, OpenAI, MinIO, Redis, or HTTP client implementations.
+
+### 30.5 SOLID requirements
+
+- **Single Responsibility:** each unit has one reason to change; split transport, policy, persistence, provider, and presentation concerns.
+- **Open/Closed:** new model providers, storage backends, transcribers, and rendering strategies are added through ports/adapters or configuration, not growing central provider `switch` statements.
+- **Liskov Substitution:** fakes and concrete adapters obey the same validation, error, idempotency, cancellation, and retry contracts.
+- **Interface Segregation:** ports are use-case-specific and expose only operations a consumer needs; avoid infrastructure god interfaces.
+- **Dependency Inversion:** domain/application policy owns abstractions; frameworks and providers depend on those abstractions through adapters.
+
+### 30.6 DRY and Clean Code requirements
+
+- Business invariants, pricing formulas, workflow transition rules, schema definitions, and platform catalogs have one authoritative implementation or generated source.
+- Repetition is removed only after the shared concept and change cadence are proven. No premature base classes, generic repositories, utility dumping grounds, or boolean-flag APIs.
+- Names express product intent. Functions and classes remain small and cohesive; parameters are grouped into named request/value types when that improves meaning.
+- Money, duration, timecode, identifiers, language tags, and workflow states use explicit validated types. Currency calculations use decimal-safe representations, never binary floating point for persisted totals.
+- Avoid magic constants, hidden global state, unchecked `any`, broad unsafe casts, silent fallback behavior, and catch-all errors. Exhaustive state handling and typed errors are required.
+- Comments explain decisions, invariants, or external constraints rather than restating code. Public ports and non-obvious policies document their contracts.
+- Refactoring is part of every red-green-refactor cycle, but behavior and architectural boundaries remain protected by tests.
+
+### 30.7 Automated enforcement and tests
+
+Architecture must remain executable policy:
+
+- TypeScript uses lint/import rules (for example `no-restricted-imports` and a dependency graph checker) to enforce module direction and reject cycles.
+- Python uses import-boundary rules and cycle checks to enforce the worker dependency graph.
+- CI verifies generated contract output is current and rejects SDK/generated/Record/API DTO imports from domain or application layers.
+- Domain tests are pure and need no infrastructure mocks.
+- Application tests use small in-memory fakes for owned ports and verify business outcomes, idempotency, and typed failures.
+- Adapter/repository tests exercise real disposable dependencies where practical.
+- Every converter and boundary contract has direct tests; full-stack tests do not substitute for them.
+- Every implementation-plan task identifies the affected layer, port, adapter, DTO boundary, and architecture check. A task that crosses layers specifies each boundary explicitly.
+
+## 31. External References
 
 - [OpenAI model catalog](https://developers.openai.com/api/docs/models)
 - [OpenAI pricing](https://developers.openai.com/api/docs/pricing)
