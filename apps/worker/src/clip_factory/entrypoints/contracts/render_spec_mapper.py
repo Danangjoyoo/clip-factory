@@ -1,45 +1,54 @@
 from __future__ import annotations
 
 from typing import Any
+from pydantic import ValidationError
+from clip_factory.domain.render_spec import freeze
 from clip_factory.domain.render_spec import RenderSpec
+from clip_factory.entrypoints.contracts.generated.render_spec import RenderSpec as ContractRenderSpec
 
-_PLATFORMS = {"YOUTUBE_SHORTS", "INSTAGRAM_REELS", "TIKTOK"}
-_STRATEGIES = {"VIDEOTOOLBOX", "SOFTWARE"}
+
+def _reject_private_source_values(value: Any) -> None:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key.lower() in {"path", "filepath", "resolvedpath", "candidatepath", "url"}:
+                raise ValueError("PRIVATE_SOURCE_VALUE")
+            _reject_private_source_values(item)
+    elif isinstance(value, list):
+        for item in value:
+            _reject_private_source_values(item)
+    elif isinstance(value, str) and (value.startswith(("file:", "http:", "https:"))):
+        raise ValueError("PRIVATE_SOURCE_VALUE")
 
 
 def map_render_spec(payload: dict[str, Any]) -> RenderSpec:
     if payload.get("schemaVersion") != "1.0.0":
         raise ValueError("UNKNOWN_RENDER_SPEC_VERSION")
-    if payload.get("platformPreset") not in _PLATFORMS:
-        raise ValueError("UNKNOWN_PLATFORM_PRESET")
-    source = payload.get("source")
-    if not isinstance(source, dict) or source.get("kind") not in {
-        "LOCAL_FILE",
-        "BROWSER_UPLOAD",
-    }:
-        raise ValueError("UNKNOWN_SOURCE_KIND")
-    encoder = payload.get("encoder")
-    if not isinstance(encoder, dict) or encoder.get("strategy") not in _STRATEGIES:
-        raise ValueError("UNKNOWN_ENCODER_STRATEGY")
-    canvas = payload.get("canvas", {})
-    span = payload.get("range", {})
-    if (
-        canvas.get("width") != 1080
-        or canvas.get("height") != 1920
-        or span.get("endMs", 0) <= span.get("startMs", -1)
-    ):
+    _reject_private_source_values(payload.get("source"))
+    try:
+        contract = ContractRenderSpec.model_validate(payload)
+    except ValidationError as error:
+        raise ValueError("INVALID_RENDER_SPEC") from error
+    data = contract.model_dump(mode="json")
+    span = data["range"]
+    if span["endMs"] <= span["startMs"]:
         raise ValueError("INVALID_RENDER_RANGE")
+    for cue in data["captions"]:
+        if cue["endMs"] <= cue["startMs"]:
+            raise ValueError("INVALID_CAPTION_RANGE")
+        for word in cue["words"]:
+            if word["endMs"] <= word["startMs"] or not cue["startMs"] <= word["startMs"] <= word["endMs"] <= cue["endMs"]:
+                raise ValueError("INVALID_CAPTION_WORD")
     return RenderSpec(
         "1.0.0",
-        str(payload["renderId"]),
-        str(payload["clipId"]),
-        dict(source),
+        data["renderId"],
+        data["clipId"],
+        freeze(data["source"]),
         (1080, 1920),
-        (int(span["startMs"]), int(span["endMs"])),
-        tuple(payload.get("cropTrack", ())),
-        tuple(payload.get("captions", ())),
-        dict(payload.get("style", {})),
-        payload.get("title"),
-        dict(encoder),
-        str(payload["platformPreset"]),
+        (span["startMs"], span["endMs"]),
+        tuple(freeze(item) for item in data["cropTrack"]),
+        tuple(freeze(item) for item in data["captions"]),
+        freeze(data["style"]),
+        data["title"],
+        freeze(data["encoder"]),
+        data["platformPreset"],
     )
