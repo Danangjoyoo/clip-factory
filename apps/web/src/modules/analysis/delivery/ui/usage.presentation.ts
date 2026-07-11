@@ -1,4 +1,7 @@
-import type { UsageReportApiDto, UsageRow } from '../http/dto/api/usage-report-api.dto';
+import type {
+  UsageReportApiDto,
+  UsageRow,
+} from '../http/dto/api/usage-report-api.dto';
 export type UsagePresentation = UsageReportApiDto;
 export const money = (micros: bigint | string | number) => {
   const n = BigInt(micros);

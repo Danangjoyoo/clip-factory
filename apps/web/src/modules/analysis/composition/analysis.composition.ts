@@ -27,7 +27,9 @@ export const analysisComposition = () => {
       new PrismaPaidCallReservationRepository(),
     ),
   );
-  const usageReportService = new GetUsageReportService(new PrismaUsageReportRepository());
+  const usageReportService = new GetUsageReportService(
+    new PrismaUsageReportRepository(),
+  );
   return {
     usageReportService,
     reconcileUncertainPaidCallService: new ReconcileUncertainPaidCallService(
@@ -37,8 +39,6 @@ export const analysisComposition = () => {
       service,
       env.INTERNAL_SERVICE_TOKEN,
     ),
-    usageReportController: new UsageReportController(
-      usageReportService,
-    ),
+    usageReportController: new UsageReportController(usageReportService),
   };
 };

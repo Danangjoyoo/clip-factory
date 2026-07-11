@@ -17,23 +17,81 @@ export type EditorShellProps = {
   onRenderSelected: () => void;
   onRenderAll: () => void;
   inspector?: React.ReactNode;
-  onTrimChange?: (id: string, range: { startMs: number; endMs: number }) => void;
+  onTrimChange?: (
+    id: string,
+    range: { startMs: number; endMs: number },
+  ) => void;
 };
 
-export function EditorShell({ clips, selectedClipId, onSelect, onAddClip, onRenderSelected, onRenderAll, inspector, onTrimChange }: EditorShellProps) {
+export function EditorShell({
+  clips,
+  selectedClipId,
+  onSelect,
+  onAddClip,
+  onRenderSelected,
+  onRenderAll,
+  inspector,
+  onTrimChange,
+}: EditorShellProps) {
   const [addOpen, setAddOpen] = useState(false);
   const selected = clips.find((clip) => clip.id === selectedClipId) ?? clips[0];
-  const add = (startMs: number, endMs: number) => { setAddOpen(false); onAddClip(startMs, endMs); };
-  const trim = (range: { startMs: number; endMs: number }) => { if (selected) onTrimChange?.(selected.id, range); };
+  const add = (startMs: number, endMs: number) => {
+    setAddOpen(false);
+    onAddClip(startMs, endMs);
+  };
+  const trim = (range: { startMs: number; endMs: number }) => {
+    if (selected) onTrimChange?.(selected.id, range);
+  };
 
-  return <>
-    <main className={styles.shell} aria-label="Clip editor">
-      <section className={styles.filmstrip} aria-label="Clips"><ClipFilmstrip clips={clips} {...(selected ? { selectedClipId: selected.id } : {})} onSelect={onSelect} onAddClip={() => setAddOpen(true)} /></section>
-      <section className={styles.preview} aria-label="Preview"><VerticalPreview {...(selected ? { clip: selected } : {})} /></section>
-      <aside className={styles.inspector} aria-label="Inspector">{inspector ?? <><h2>Inspector</h2>{selected && <p>{selected.title ?? 'Untitled clip'}</p>}</>}</aside>
-      <section className={styles.timeline} aria-label="Trim timeline">{selected && <TrimTimeline value={{ startMs: selected.startMs, endMs: selected.endMs, sourceDurationMs: selected.sourceDurationMs ?? selected.endMs, maxDurationMs: 60000 }} onChange={trim} />}</section>
-      <div className={styles.actions}><RenderActions hasSelection={Boolean(selected)} hasAcceptedClips={clips.some((clip) => clip.state !== 'FAILED')} onRenderSelected={onRenderSelected} onRenderAll={onRenderAll} /></div>
-    </main>
-    <AddClipDialog open={addOpen} onCancel={() => setAddOpen(false)} onAdd={add} />
-  </>;
+  return (
+    <>
+      <main className={styles.shell} aria-label="Clip editor">
+        <section className={styles.filmstrip} aria-label="Clips">
+          <ClipFilmstrip
+            clips={clips}
+            {...(selected ? { selectedClipId: selected.id } : {})}
+            onSelect={onSelect}
+            onAddClip={() => setAddOpen(true)}
+          />
+        </section>
+        <section className={styles.preview} aria-label="Preview">
+          <VerticalPreview {...(selected ? { clip: selected } : {})} />
+        </section>
+        <aside className={styles.inspector} aria-label="Inspector">
+          {inspector ?? (
+            <>
+              <h2>Inspector</h2>
+              {selected && <p>{selected.title ?? 'Untitled clip'}</p>}
+            </>
+          )}
+        </aside>
+        <section className={styles.timeline} aria-label="Trim timeline">
+          {selected && (
+            <TrimTimeline
+              value={{
+                startMs: selected.startMs,
+                endMs: selected.endMs,
+                sourceDurationMs: selected.sourceDurationMs ?? selected.endMs,
+                maxDurationMs: 60000,
+              }}
+              onChange={trim}
+            />
+          )}
+        </section>
+        <div className={styles.actions}>
+          <RenderActions
+            hasSelection={Boolean(selected)}
+            hasAcceptedClips={clips.some((clip) => clip.state !== 'FAILED')}
+            onRenderSelected={onRenderSelected}
+            onRenderAll={onRenderAll}
+          />
+        </div>
+      </main>
+      <AddClipDialog
+        open={addOpen}
+        onCancel={() => setAddOpen(false)}
+        onAdd={add}
+      />
+    </>
+  );
 }
