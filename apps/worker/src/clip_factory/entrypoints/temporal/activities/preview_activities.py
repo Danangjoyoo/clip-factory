@@ -1,13 +1,15 @@
-from collections.abc import Awaitable, Callable
-from typing import Any
+from dataclasses import dataclass
 
-from clip_factory.application.generate_preview import GeneratePreview, PreviewCommand
+from clip_factory.application.generate_preview import (
+    GeneratePreview,
+    PreviewArtifacts,
+    PreviewCommand,
+)
 
 
-def make_preview_activity(
-    service: GeneratePreview,
-) -> Callable[[PreviewCommand], Awaitable[Any]]:
-    async def generate(command: PreviewCommand) -> Any:
-        return await service.execute(command)
+@dataclass(frozen=True)
+class GeneratePreviewActivity:
+    service: GeneratePreview
 
-    return generate
+    async def __call__(self, command: PreviewCommand) -> PreviewArtifacts:
+        return await self.service.execute(command)

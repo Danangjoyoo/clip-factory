@@ -6,6 +6,9 @@ from typing import Any, Literal, Protocol
 class LocalFileLocator:
     kind: Literal["LOCAL_FILE"]
     candidate_path: str
+    fingerprint: str | None = None
+    size_bytes: int | None = None
+    modified_ns: int | None = None
 
 
 @dataclass(frozen=True)

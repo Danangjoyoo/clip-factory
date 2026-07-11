@@ -1,83 +1,61 @@
+import inspect
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 
-from clip_factory.adapters.media.ffmpeg_adapter import FfmpegError
+from clip_factory.adapters.media.ffmpeg_render_spec_compiler import FfmpegRenderSpecCompiler
+from clip_factory.domain.media import MediaProbe
 from clip_factory.domain.render_spec import RenderSpec
-from clip_factory.ports.preview_renderer import PreviewMedia
 from clip_factory.ports.process_runner import ProcessRunner
-from clip_factory.ports.render_spec_compiler import RenderProfile, RenderSpecCompiler
+from clip_factory.ports.render_spec_compiler import RenderSpecCompiler
+
+
+class FfmpegPreviewError(RuntimeError):
+    pass
 
 
 class FfmpegPreviewRenderer:
     def __init__(
         self,
         runner: ProcessRunner,
-        compiler: RenderSpecCompiler,
+        compiler: RenderSpecCompiler | None = None,
         executable: str | Path = "ffmpeg",
-        source: str | Path = "source",
     ) -> None:
-        self._runner, self._compiler, self._executable, self._source = (
-            runner,
-            compiler,
-            str(executable),
-            str(source),
-        )
+        self._runner = runner
+        self._compiler = compiler or FfmpegRenderSpecCompiler()
+        self._executable = str(executable)
 
-    async def render(
-        self, spec: RenderSpec, destination: Path, width: int = 360, height: int = 640
-    ) -> PreviewMedia:
-        compiled = self._compiler.compile(spec, RenderProfile.PREVIEW)
-        argv = [
-            self._executable,
-            "-nostdin",
-            "-hide_banner",
-            "-ss",
-            str(spec.range_ms[0] / 1000),
-            "-to",
-            str(spec.range_ms[1] / 1000),
-            "-i",
-            self._source,
-            "-vf",
-            compiled.filters[0].replace("scale=360:640", f"scale={width}:{height}"),
-            *compiled.encoders,
-            "-progress",
-            "pipe:1",
-            "-y",
-            destination,
-        ]
-        duration = 0
+    async def render(self, spec: RenderSpec, destination: Path, width: int = 360, height: int = 640, progress: Callable[[int], Awaitable[None] | None] | None = None) -> MediaProbe:
+        compiled = self._compiler.compile(spec, "preview")
+        source = _source_path(spec)
+        argv = [self._executable, "-nostdin", "-hide_banner", "-ss", _seconds(spec.range_ms[0]), "-to", _seconds(spec.range_ms[1]), "-i", source, "-vf", ",".join(compiled.filter_args), *compiled.encoder_args, "-progress", "pipe:1", "-y", destination]
 
-        async def progress(line: str) -> None:
-            nonlocal duration
-            if line.startswith("out_time_ms="):
+        async def on_line(line: str) -> None:
+            if progress and line.startswith("out_time_ms="):
                 try:
-                    duration = int(line.partition("=")[2])
+                    result = progress(int(line.partition("=")[2]))
+                    if inspect.isawaitable(result):
+                        await result
                 except ValueError:
                     pass
 
-        code, _, _ = await self._runner.run(argv, progress)
+        code, _, stderr = await self._runner.run(argv, on_line)
         if code:
-            raise FfmpegError("FFMPEG_FAILED")
-        return PreviewMedia(destination, duration_ms=duration)
+            raise FfmpegPreviewError(stderr or "FFMPEG_FAILED")
+        return MediaProbe(0, destination.stat().st_size if destination.exists() else 0, "mp4", "h264", width, height, 30, 1, "aac", 48_000)
 
-    async def thumbnail(
-        self, preview: Path, destination: Path, time_ms: int = 0
-    ) -> Path:
-        argv = [
-            self._executable,
-            "-nostdin",
-            "-hide_banner",
-            "-ss",
-            str(time_ms / 1000),
-            "-i",
-            preview,
-            "-frames:v",
-            "1",
-            "-q:v",
-            "2",
-            "-y",
-            destination,
-        ]
-        code, _, _ = await self._runner.run(argv)
+    async def thumbnail(self, preview: Path, destination: Path, time_ms: int = 0) -> None:
+        code, _, stderr = await self._runner.run([self._executable, "-nostdin", "-hide_banner", "-ss", _seconds(time_ms), "-i", preview, "-frames:v", "1", "-q:v", "2", "-y", destination])
         if code:
-            raise FfmpegError("FFMPEG_FAILED")
-        return destination
+            raise FfmpegPreviewError(stderr or "FFMPEG_FAILED")
+
+
+def _seconds(milliseconds: int) -> str:
+    return f"{milliseconds / 1000:.3f}"
+
+
+def _source_path(spec: RenderSpec) -> str:
+    source = spec.source
+    value = source.get("path", source.get("locator"))
+    if value is None:
+        raise FfmpegPreviewError("SOURCE_PATH_REQUIRED")
+    return str(value)

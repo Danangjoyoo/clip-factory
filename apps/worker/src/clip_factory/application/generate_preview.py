@@ -1,7 +1,6 @@
-from dataclasses import dataclass
-import hashlib
-from pathlib import Path
 import tempfile
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from clip_factory.domain.media import MediaProbe
@@ -19,53 +18,34 @@ class PreviewCommand:
 
 
 @dataclass(frozen=True)
-class PreviewResult:
+class PreviewArtifacts:
     preview: ObjectReference
     thumbnail: ObjectReference
-    probe: MediaProbe | None = None
+    probe: MediaProbe
 
 
 class GeneratePreview:
     def __init__(self, renderer: PreviewRendererPort, store: ArtifactStorePort) -> None:
         self._renderer, self._store = renderer, store
 
-    async def execute(self, command: PreviewCommand) -> PreviewResult:
+    async def execute(self, command: PreviewCommand) -> PreviewArtifacts:
         with tempfile.TemporaryDirectory(prefix="clip-preview-") as directory:
-            preview_path, thumbnail_path = (
-                Path(directory) / "preview.mp4",
-                Path(directory) / "thumbnail.jpg",
-            )
-            rendered = await self._renderer.render(command.render_spec, preview_path)
-            await self._renderer.thumbnail(rendered.path, thumbnail_path)
-            preview = await _put(
-                self._store,
-                f"projects/{command.project_id}/clips/{command.clip_id}/preview.mp4",
-                preview_path,
-                "video/mp4",
-            )
-            thumbnail = await _put(
-                self._store,
-                f"projects/{command.project_id}/clips/{command.clip_id}/thumbnail.jpg",
-                thumbnail_path,
-                "image/jpeg",
-            )
-            return PreviewResult(preview, thumbnail, rendered.probe)
+            root = Path(directory)
+            preview_path, thumbnail_path = root / "preview.mp4", root / "thumbnail.jpg"
+            probe = await self._renderer.render(command.render_spec, preview_path, 360, 640)
+            await self._renderer.thumbnail(preview_path, thumbnail_path)
+            prefix = f"projects/{command.project_id}/clips/{command.clip_id}"
+            preview = await _put_file(self._store, f"{prefix}/preview.mp4", preview_path)
+            thumbnail = await _put_file(self._store, f"{prefix}/thumbnail.jpg", thumbnail_path)
+            return PreviewArtifacts(preview, thumbnail, probe)
 
 
-async def _put(store: Any, key: str, path: Path, content_type: str) -> ObjectReference:
-    if hasattr(store, "put_file"):
-        result = store.put_file(path, key, content_type)
-        if hasattr(result, "__await__"):
-            result = await result
-        return result
-    # JSON-only stores are useful in unit tests and still expose deterministic metadata.
-    raw = path.read_bytes()
-    result = store.put_json(
-        key,
-        {
-            "sha256": hashlib.sha256(raw).hexdigest(),
-            "contentType": content_type,
-            "sizeBytes": len(raw),
-        },
-    )
+async def _put_file(store: ArtifactStorePort, key: str, path: Path) -> ObjectReference:
+    put_file = getattr(store, "put_file", None)
+    if put_file is not None:
+        return await put_file(key, path)
+    put_bytes = getattr(store, "put_bytes", None)
+    if put_bytes is None:
+        raise TypeError("artifact store must support put_file")
+    result: Any = put_bytes(key, path.read_bytes())
     return await result if hasattr(result, "__await__") else result
