@@ -29,7 +29,7 @@
     "worker:lint": ".tools/bin/uv run --directory apps/worker ruff check src tests",
     "worker:typecheck": ".tools/bin/uv run --directory apps/worker mypy src tests",
     "worker:test": ".tools/bin/uv run --directory apps/worker pytest -q",
-    "worker:architecture": ".tools/bin/uv run --directory apps/worker lint-imports",
+    "worker:architecture": "PYTHONPATH=$PWD/apps/worker/src .tools/bin/uv run --directory apps/worker lint-imports",
     "dev": "node scripts/dev.mjs",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:architecture && pnpm test:contracts"
   },

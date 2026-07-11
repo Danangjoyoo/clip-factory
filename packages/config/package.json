@@ -4,7 +4,7 @@
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {
-    "lint": "eslint src",
+    "lint": "eslint src scripts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   }

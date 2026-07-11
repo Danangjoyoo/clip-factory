@@ -4,15 +4,9 @@ export default defineConfig({
   test: {
     projects: [
       {
-        oxc: {
-          jsx: {
-            runtime: 'automatic',
-          },
-        },
+        extends: './apps/web/vitest.config.ts',
         test: {
           name: 'unit',
-          environment: 'jsdom',
-          setupFiles: ['./apps/web/src/test-setup.ts'],
           include: ['apps/web/src/**/*.test.ts', 'apps/web/src/**/*.test.tsx'],
         },
       },
