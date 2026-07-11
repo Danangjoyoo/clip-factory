@@ -87,6 +87,20 @@ pnpm test:e2e -- --list
 
 Full media, worker, and browser acceptance checks require FFmpeg, the worker toolchain, Playwright browser binaries, and running Compose services.
 
+## Fake-mode integration gate
+
+With Compose running, run the deterministic local gate against the supplied sample:
+
+```bash
+OPENAI_ADAPTER=fake pnpm test:integration-gate
+```
+
+The gate checks service health, resets and exercises the fake highlight adapter, and submits a filepath project. It never sends a request to OpenAI. `--sample /path/to/video.mp4` and `--base-url http://127.0.0.1:3000` override the defaults. Live mode is rejected before any network request:
+
+```bash
+OPENAI_ADAPTER=live pnpm test:integration-gate # expected failure
+```
+
 ## Troubleshooting
 
 - If `pnpm install` rejects very recent packages, the configured minimum-release-age policy is working as intended; retry after the packages age or use the repository-approved lockfile policy.

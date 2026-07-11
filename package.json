@@ -22,6 +22,7 @@
     "acceptance:preflight": "node scripts/acceptance/preflight.mjs",
     "acceptance:phase1": "node scripts/acceptance/run-phase-1.mjs",
     "acceptance:privacy-audit": "node scripts/acceptance/privacy-audit.mjs",
+    "test:integration-gate": "node scripts/integration-test.js",
     "prisma:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
