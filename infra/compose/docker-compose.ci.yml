@@ -1,0 +1,17 @@
+name: clip-factory-ci
+services:
+  postgres:
+    ports: ['127.0.0.1:0:5432']
+    volumes: []
+  redis:
+    command: [redis-server, --save, '']
+    ports: ['127.0.0.1:0:6379']
+    volumes: []
+  minio:
+    ports: ['127.0.0.1:0:9000', '127.0.0.1:0:9001']
+    volumes: []
+  temporal:
+    ports: ['127.0.0.1:0:7233']
+  temporal-ui:
+    profiles: [ui]
+volumes: {}

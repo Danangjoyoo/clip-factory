@@ -1,0 +1,7 @@
+packages:
+  - apps/web
+  - packages/*
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  sharp: set this to true or false

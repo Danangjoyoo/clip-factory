@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/ProgressEvent/1.0.0",
+  "title": "ProgressEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "projectId",
+    "scope",
+    "stage",
+    "completedUnits",
+    "totalUnits",
+    "unit",
+    "etaLowSeconds",
+    "etaHighSeconds",
+    "confidence",
+    "occurredAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "workflowId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "projectId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "scope": {
+      "enum": ["ANALYSIS", "RENDER"]
+    },
+    "stage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "completedUnits": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalUnits": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "unit": {
+      "enum": ["BYTES", "MEDIA_MILLISECONDS", "WINDOWS", "FRAMES", "ITEMS"]
+    },
+    "etaLowSeconds": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "etaHighSeconds": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "confidence": {
+      "enum": ["LOW", "MEDIUM", "HIGH", "NOT_APPLICABLE"]
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

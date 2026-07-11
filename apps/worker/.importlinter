@@ -1,0 +1,28 @@
+[importlinter]
+root_package = clip_factory
+
+[importlinter:contract:domain]
+name = domain-has-no-outer-imports
+type = forbidden
+source_modules = clip_factory.domain
+forbidden_modules = clip_factory.application
+    clip_factory.ports
+    clip_factory.adapters
+    clip_factory.entrypoints
+    clip_factory.composition
+
+[importlinter:contract:application]
+name = application-has-no-adapter-imports
+type = forbidden
+source_modules = clip_factory.application
+forbidden_modules = clip_factory.adapters
+    clip_factory.entrypoints
+    clip_factory.composition
+
+[importlinter:contract:temporal]
+name = temporal-entrypoints-are-outer
+type = forbidden
+source_modules = clip_factory.domain
+    clip_factory.application
+    clip_factory.ports
+forbidden_modules = clip_factory.entrypoints.temporal

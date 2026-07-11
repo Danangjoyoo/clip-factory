@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/HighlightResponse/1.0.0",
+  "title": "HighlightResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "analysisRunId", "candidates"],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "analysisRunId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "startMs",
+          "endMs",
+          "title",
+          "rationale",
+          "rank",
+          "overallScore",
+          "scores"
+        ],
+        "properties": {
+          "startMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "overallScore": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "scores": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "hook",
+              "coherence",
+              "payoff",
+              "novelty",
+              "energy",
+              "instructionFit",
+              "boundaryQuality"
+            ],
+            "properties": {
+              "hook": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "coherence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "payoff": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "novelty": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "energy": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "instructionFit": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "boundaryQuality": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

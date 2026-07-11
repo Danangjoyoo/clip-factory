@@ -1,0 +1,15 @@
+import type { CreateProjectApiRequest } from '../../converters/api-entity/project.converter';
+export async function createProject(
+  input: CreateProjectApiRequest,
+  signal?: AbortSignal,
+) {
+  const init: RequestInit = {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input),
+  };
+  if (signal) init.signal = signal;
+  const response = await fetch('/api/projects', init);
+  if (!response.ok) throw new Error('Unable to create project');
+  return response.json();
+}

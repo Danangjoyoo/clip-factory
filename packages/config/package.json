@@ -1,0 +1,15 @@
+{
+  "name": "@clip-factory/config",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint scripts",
+    "generate:cost-conformance": "node scripts/generate-cost-conformance.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  }
+}
