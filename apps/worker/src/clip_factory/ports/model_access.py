@@ -15,6 +15,8 @@ class ModelAccessResult:
     model_id: str
     status: ModelAccessStatus
     presentation: str = ""
+    reasoning: tuple[str, ...] = ()
+    max_generated_tokens: int = 0
 
 
 class ModelAccessPort(Protocol):

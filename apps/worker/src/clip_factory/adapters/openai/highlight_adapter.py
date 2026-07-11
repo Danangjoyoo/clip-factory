@@ -4,6 +4,8 @@ from typing import Any, cast
 
 from clip_factory.domain.highlight import HighlightCandidate, HighlightScores
 from clip_factory.ports.highlight_model import HighlightRequest, HighlightResponse
+from clip_factory.adapters.openai.client_models import ClientResponse
+from clip_factory.adapters.openai.model_access_adapter import MODEL_CATALOG
 
 PROMPT = (Path(__file__).parent / "prompts" / "highlights-v1.txt").read_text()
 
@@ -24,13 +26,17 @@ class OpenAIHighlightAdapter:
         )
 
     async def extract(self, request: HighlightRequest) -> HighlightResponse:
+        profile = MODEL_CATALOG.get(request.model)
+        if profile is None or request.reasoning not in profile:
+            raise ValueError("model or reasoning is not in the approved catalog")
+        max_generated_tokens = profile[request.reasoning]
         payload: dict[str, Any] = {
             "model": request.model,
             "store": False,
             "reasoning": {"effort": request.reasoning},
             "instructions": PROMPT,
             "input": f"{request.instruction}\n\nTranscript:\n{request.text}".strip(),
-            "max_output_tokens": self._max_generated_tokens,
+            "max_output_tokens": max_generated_tokens,
             "text": {
                 "format": {
                     "type": "json_schema",
@@ -43,10 +49,22 @@ class OpenAIHighlightAdapter:
         if request.model == "gpt-5.6-sol":
             payload["prompt_cache_options"] = {"mode": "explicit"}
         response = await self._client.responses.create(**payload)
-        parsed = _response_json(response)
-        candidates = tuple(_candidate(item) for item in parsed.get("candidates", []))
-        usage = getattr(response, "usage", None)
-        return HighlightResponse(candidates, getattr(response, "id", ""), _usage(usage))
+        if isinstance(response, ClientResponse):
+            parsed = response.output
+            response_id = response.response_id
+            usage_value: Any = response.usage
+        else:
+            parsed = _response_json(response)
+            response_id = getattr(response, "id", "")
+            usage_value = getattr(response, "usage", None)
+        candidates = tuple(
+            candidate
+            for item in parsed.get("candidates", [])
+            if isinstance(item, dict)
+            for candidate in (_safe_candidate(item),)
+            if candidate is not None
+        )
+        return HighlightResponse(candidates, response_id, _usage(usage_value))
 
 
 def _response_json(response: Any) -> dict[str, Any]:
@@ -85,6 +103,13 @@ def _candidate(value: dict[str, Any]) -> HighlightCandidate:
         ),
         int(value.get("rank", 0)),
     )
+
+
+def _safe_candidate(value: dict[str, Any]) -> HighlightCandidate | None:
+    try:
+        return _candidate(value)
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def _usage(usage: Any) -> dict[str, int]:

@@ -13,6 +13,9 @@ from clip_factory.entrypoints.temporal.child_workflows import (
     persist_budget_action,
     verify_analysis_budget,
 )
+from clip_factory.entrypoints.temporal.activities.highlight_activities import (
+    call_openai_once_activity,
+)
 
 
 def project_activities() -> list[Callable[..., Any]]:
@@ -25,4 +28,5 @@ def project_activities() -> list[Callable[..., Any]]:
         verify_analysis_budget,
         persist_budget_action,
         execute_analysis_child,
+        call_openai_once_activity,
     ]

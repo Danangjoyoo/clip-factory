@@ -1,6 +1,16 @@
 from typing import Any, Awaitable, Callable
+from temporalio import activity
 
 from clip_factory.ports.highlight_model import HighlightRequest
+from clip_factory.ports.paid_call import PaidCallInput, call_openai_once
+
+_paid_model: Any = None
+_paid_dependencies: Any = None
+
+
+def configure_paid_highlight_call(model: Any, dependencies: Any) -> None:
+    global _paid_model, _paid_dependencies
+    _paid_model, _paid_dependencies = model, dependencies
 
 
 def build_highlight_activity(
@@ -10,3 +20,10 @@ def build_highlight_activity(
         return await model.extract(request)
 
     return analyze
+
+
+@activity.defn
+async def call_openai_once_activity(input: PaidCallInput) -> Any:
+    if _paid_model is None or _paid_dependencies is None:
+        raise RuntimeError("paid highlight activity is not configured")
+    return await call_openai_once(_paid_model, _paid_dependencies, input)
