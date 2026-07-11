@@ -18,7 +18,11 @@ def test_local_snapshot_mismatch_is_rejected(tmp_path: Path) -> None:
     source.write_bytes(b"changed")
 
     async def run() -> None:
-        lease = SourceMediaLease(LocalFileLocator("LOCAL_FILE", str(source), fingerprint="old"), LocalSourceFilesystem((tmp_path,)), NoMaterializer())
+        lease = SourceMediaLease(
+            LocalFileLocator("LOCAL_FILE", str(source), fingerprint="old"),
+            LocalSourceFilesystem((tmp_path,)),
+            NoMaterializer(),
+        )
         with pytest.raises(RuntimeError, match="SOURCE_CHANGED"):
             async with lease:
                 pass

@@ -5,7 +5,9 @@ from typing import Any
 from pydantic import ValidationError
 from clip_factory.domain.render_spec import freeze
 from clip_factory.domain.render_spec import RenderSpec
-from clip_factory.entrypoints.contracts.generated.render_spec import RenderSpec as ContractRenderSpec
+from clip_factory.entrypoints.contracts.generated.render_spec import (
+    RenderSpec as ContractRenderSpec,
+)
 
 
 _ABSOLUTE_PATH = re.compile(r"^(?:/|[A-Za-z]:[\\/]|\\\\)")
@@ -14,7 +16,13 @@ _ABSOLUTE_PATH = re.compile(r"^(?:/|[A-Za-z]:[\\/]|\\\\)")
 def _reject_private_source_values(value: Any) -> None:
     if isinstance(value, dict):
         for key, item in value.items():
-            if key.lower() in {"path", "filepath", "resolvedpath", "candidatepath", "url"}:
+            if key.lower() in {
+                "path",
+                "filepath",
+                "resolvedpath",
+                "candidatepath",
+                "url",
+            }:
                 raise ValueError("PRIVATE_SOURCE_VALUE")
             _reject_private_source_values(item)
     elif isinstance(value, list):
@@ -43,7 +51,13 @@ def map_render_spec(payload: dict[str, Any]) -> RenderSpec:
         if cue["endMs"] <= cue["startMs"]:
             raise ValueError("INVALID_CAPTION_RANGE")
         for word in cue["words"]:
-            if word["endMs"] <= word["startMs"] or not cue["startMs"] <= word["startMs"] <= word["endMs"] <= cue["endMs"]:
+            if (
+                word["endMs"] <= word["startMs"]
+                or not cue["startMs"]
+                <= word["startMs"]
+                <= word["endMs"]
+                <= cue["endMs"]
+            ):
                 raise ValueError("INVALID_CAPTION_WORD")
     return RenderSpec(
         "1.0.0",

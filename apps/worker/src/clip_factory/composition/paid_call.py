@@ -102,14 +102,19 @@ class LocalPaidCallDependencies:
         artifact_key = str(value.get("artifactKey", ""))
         self._db.execute("BEGIN IMMEDIATE")
         row = self._db.execute(
-            "SELECT request_hash, status FROM reservations WHERE call_id = ?", (call_id,)
+            "SELECT request_hash, status FROM reservations WHERE call_id = ?",
+            (call_id,),
         ).fetchone()
         if not row or row[0] != request_hash or row[1] != "SENT":
             self._db.rollback()
             raise RuntimeError("PAID_CALL_COMPLETION_MISMATCH")
-        if artifact_key and self._db.execute(
-            "SELECT 1 FROM artifacts WHERE key = ?", (artifact_key,)
-        ).fetchone() is None:
+        if (
+            artifact_key
+            and self._db.execute(
+                "SELECT 1 FROM artifacts WHERE key = ?", (artifact_key,)
+            ).fetchone()
+            is None
+        ):
             self._db.rollback()
             raise RuntimeError("PAID_CALL_ARTIFACT_MISSING")
         self._db.execute(

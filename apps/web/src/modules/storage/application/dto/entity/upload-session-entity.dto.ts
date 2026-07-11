@@ -1,7 +1,11 @@
 import type { SourceKind } from '../../../../projects/domain/project';
 import type { ImmutableObjectReference } from '../../ports/artifact-store.port';
 
-export type UploadSessionStatus = 'ACTIVE' | 'COMPLETED' | 'ABORTED' | 'EXPIRED';
+export type UploadSessionStatus =
+  | 'ACTIVE'
+  | 'COMPLETED'
+  | 'ABORTED'
+  | 'EXPIRED';
 export interface UploadSessionEntityDto {
   id: string;
   projectId: string;

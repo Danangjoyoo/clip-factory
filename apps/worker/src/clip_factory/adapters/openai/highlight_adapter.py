@@ -64,7 +64,9 @@ class OpenAIHighlightAdapter:
         raw_candidates = parsed.get("candidates", [])
         if not isinstance(raw_candidates, list):
             raise ValueError("malformed highlight candidates")
-        candidates = tuple(_candidate(item) for item in raw_candidates if isinstance(item, dict))
+        candidates = tuple(
+            _candidate(item) for item in raw_candidates if isinstance(item, dict)
+        )
         if len(candidates) != len(raw_candidates):
             raise ValueError("malformed highlight candidate")
         return HighlightResponse(candidates, response_id, _usage(usage_value))

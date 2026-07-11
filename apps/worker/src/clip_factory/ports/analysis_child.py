@@ -19,7 +19,9 @@ class AnalysisChildInput:
 
     @classmethod
     def from_project(
-        cls, payload: WorkflowInput, transcript: ObjectReference,
+        cls,
+        payload: WorkflowInput,
+        transcript: ObjectReference,
         transcript_text: str = "",
     ) -> "AnalysisChildInput":
         if payload.mode != "AI_HIGHLIGHTS":

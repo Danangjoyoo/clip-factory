@@ -1,0 +1,26 @@
+.library {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: start;
+}
+.library ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+@media (max-width: 1023px) {
+  .library ul {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    flex-wrap: wrap;
+  }
+}

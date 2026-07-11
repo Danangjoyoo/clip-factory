@@ -25,7 +25,9 @@ class ReframeResult:
 
 
 class BuildCropTrack:
-    def __init__(self, proxy_frames: ProxyFramePort, detector: SubjectDetectorPort) -> None:
+    def __init__(
+        self, proxy_frames: ProxyFramePort, detector: SubjectDetectorPort
+    ) -> None:
         self._proxy_frames = proxy_frames
         self._detector = detector
 
@@ -35,7 +37,16 @@ class BuildCropTrack:
         for frame in frames:
             candidates = tuple(await self._detector.detect(frame))
             if candidates:
-                selected.append(max(candidates, key=lambda item: 6 * item.speaking_micros + 3 * item.area_micros + item.center_proximity_micros))
+                selected.append(
+                    max(
+                        candidates,
+                        key=lambda item: (
+                            6 * item.speaking_micros
+                            + 3 * item.area_micros
+                            + item.center_proximity_micros
+                        ),
+                    )
+                )
             else:
                 selected.append(SubjectObservation(frame.time_ms, 500_000, 500_000, 0))
         detector = getattr(self._detector, "name", self._detector.__class__.__name__)
@@ -44,5 +55,7 @@ class BuildCropTrack:
             build_crop_track(tuple(selected)),
             "reframe-v1",
             probe,
-            ReframeProvenance("reframe-v1", detector, revision, 500_000, 250_000, 640, 5),
+            ReframeProvenance(
+                "reframe-v1", detector, revision, 500_000, 250_000, 640, 5
+            ),
         )

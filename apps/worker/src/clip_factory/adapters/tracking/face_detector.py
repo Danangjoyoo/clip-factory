@@ -10,7 +10,10 @@ class FaceDetector:
     name = "mediapipe-face-detector"
     revision = "0.10.35"
 
-    def __init__(self, detector: Callable[[ProxyFrame], Sequence[SubjectObservation]] | None = None) -> None:
+    def __init__(
+        self,
+        detector: Callable[[ProxyFrame], Sequence[SubjectObservation]] | None = None,
+    ) -> None:
         self._detector = detector
 
     async def detect(self, frame: ProxyFrame) -> Sequence[SubjectObservation]:

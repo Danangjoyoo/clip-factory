@@ -131,7 +131,8 @@ const fixtureUrl = new URL(
 const content = `${JSON.stringify(rows, null, 2)}\n`;
 if (process.argv.includes('--check')) {
   const existing = await readFile(fixtureUrl, 'utf8');
-  if (existing !== content) throw new Error('cost conformance fixture is stale');
+  if (existing !== content)
+    throw new Error('cost conformance fixture is stale');
 } else {
   await writeFile(fixtureUrl, content);
 }

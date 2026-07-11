@@ -1,14 +1,15 @@
-from clip_factory.application.generate_preview import PreviewResult
+from clip_factory.application.generate_preview import PreviewArtifacts
+from clip_factory.ports.source_preprocessor import ObjectReference
 
 
-def preview_result_to_payload(result: PreviewResult) -> dict[str, object]:
-    def reference(value: object) -> dict[str, object]:
+def preview_result_to_payload(result: PreviewArtifacts) -> dict[str, object]:
+    def reference(value: ObjectReference) -> dict[str, object]:
         return {
             "bucket": value.bucket,
             "key": value.key,
             "versionId": value.version_id,
             "sha256": value.sha256,
-        }  # type: ignore[attr-defined]
+        }
 
     return {
         "preview": reference(result.preview),

@@ -7,6 +7,12 @@ import { ClipDataService } from '../application/data-services/clip.data-service'
 import { AddManualClipService } from '../application/services/add-manual-clip.service';
 import { ClipController } from '../delivery/http/clip.controller';
 export function clipsComposition() {
-  const service = new AddManualClipService(new ProjectDataService(new PrismaProjectRepository()), new SourceAssetDataService(new PrismaSourceAssetRepository()), { wordsInRange: async () => [] }, new ClipDataService(new PrismaClipRepository()), { prepare: async () => undefined });
+  const service = new AddManualClipService(
+    new ProjectDataService(new PrismaProjectRepository()),
+    new SourceAssetDataService(new PrismaSourceAssetRepository()),
+    { wordsInRange: async () => [] },
+    new ClipDataService(new PrismaClipRepository()),
+    { prepare: async () => undefined },
+  );
   return { controller: new ClipController(service) };
 }

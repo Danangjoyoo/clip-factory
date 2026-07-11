@@ -14,7 +14,24 @@ class Proxy:
 class Detector:
     async def detect(self, frame):
         del frame
-        return [SubjectObservation(0, 100_000, 500_000, 900_000, speaking_micros=100_000, area_micros=900_000), SubjectObservation(0, 800_000, 500_000, 900_000, speaking_micros=900_000, area_micros=100_000)]
+        return [
+            SubjectObservation(
+                0,
+                100_000,
+                500_000,
+                900_000,
+                speaking_micros=100_000,
+                area_micros=900_000,
+            ),
+            SubjectObservation(
+                0,
+                800_000,
+                500_000,
+                900_000,
+                speaking_micros=900_000,
+                area_micros=100_000,
+            ),
+        ]
 
 
 def test_selects_dominant_subject_and_records_algorithm() -> None:

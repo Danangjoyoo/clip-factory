@@ -10,9 +10,37 @@ import { usageEventEntityToApi } from '../../converters/entity-api/usage-event.c
 const integerInput = z
   .union([z.string().regex(/^\d+$/), z.number().int().nonnegative().safe()])
   .transform(String);
-const callbackSchema = z.object({
-  callId: z.string().min(1), projectId: z.string().min(1), providerResponseId: z.string().min(1), requestHash: z.string().min(1), modelId: z.string().min(1), reasoning: z.string().min(1), promptVersion: z.string().min(1), schemaVersion: z.string().min(1), pricingVersion: z.string().min(1), purpose: z.string().min(1), pricingTier: z.string().min(1), inputTokens: integerInput, cachedInputTokens: integerInput.optional(), cacheWriteInputTokens: integerInput.optional(), outputTokens: integerInput, reasoningTokens: integerInput.optional(), occurredAt: z.string().datetime(), clipId: z.string().min(1).nullable().optional(), responseObjectReference: z.object({ bucket: z.string().min(1), key: z.string().min(1), versionId: z.string().nullable().optional(), sha256: z.string().min(1) }).nullable().optional(),
-}).strict();
+const callbackSchema = z
+  .object({
+    callId: z.string().min(1),
+    projectId: z.string().min(1),
+    providerResponseId: z.string().min(1),
+    requestHash: z.string().min(1),
+    modelId: z.string().min(1),
+    reasoning: z.string().min(1),
+    promptVersion: z.string().min(1),
+    schemaVersion: z.string().min(1),
+    pricingVersion: z.string().min(1),
+    purpose: z.string().min(1),
+    pricingTier: z.string().min(1),
+    inputTokens: integerInput,
+    cachedInputTokens: integerInput.optional(),
+    cacheWriteInputTokens: integerInput.optional(),
+    outputTokens: integerInput,
+    reasoningTokens: integerInput.optional(),
+    occurredAt: z.string().datetime(),
+    clipId: z.string().min(1).nullable().optional(),
+    responseObjectReference: z
+      .object({
+        bucket: z.string().min(1),
+        key: z.string().min(1),
+        versionId: z.string().nullable().optional(),
+        sha256: z.string().min(1),
+      })
+      .nullable()
+      .optional(),
+  })
+  .strict();
 export class UsageCallbackController {
   constructor(
     private readonly service: RecordUsageService,
@@ -27,7 +55,9 @@ export class UsageCallbackController {
     )
       return Response.json(INTERNAL_UNAUTHORIZED, { status: 401 });
     try {
-      const body = callbackSchema.parse(await request.json()) as UsageCallbackApiDto;
+      const body = callbackSchema.parse(
+        await request.json(),
+      ) as UsageCallbackApiDto;
       return Response.json(
         usageEventEntityToApi(
           await this.service.execute(

@@ -1,6 +1,9 @@
 import { prisma } from '../../../../../infrastructure/prisma/client';
 import { Prisma, type $Enums } from '../../../../../generated/prisma/client';
-import { aiUsageEventEntityToRecord, aiUsageEventRecordToEntity } from '../converters/ai-usage-event.converter';
+import {
+  aiUsageEventEntityToRecord,
+  aiUsageEventRecordToEntity,
+} from '../converters/ai-usage-event.converter';
 import type { AIUsageEventEntityDto } from '../../../application/dto/entity';
 import type { AIUsageEventRepository } from '../../../application/ports/ai-usage-event.repository';
 import type { AnalysisTransaction } from '../../../application/ports/unit-of-work.port';
@@ -11,7 +14,10 @@ export class PrismaAIUsageEventRepository implements AIUsageEventRepository {
     });
     return row ? aiUsageEventRecordToEntity(row) : null;
   }
-  async insert(event: Omit<AIUsageEventEntityDto, 'id'>, tx?: AnalysisTransaction) {
+  async insert(
+    event: Omit<AIUsageEventEntityDto, 'id'>,
+    tx?: AnalysisTransaction,
+  ) {
     const record = aiUsageEventEntityToRecord(event);
     const row = await (tx ?? prisma).aIUsageEvent.create({
       data: {
@@ -37,7 +43,8 @@ export class PrismaAIUsageEventRepository implements AIUsageEventRepository {
         pricingTier: record.pricingTier,
         costMicrousd: record.costMicrousd,
         occurredAt: record.occurredAt,
-        responseObjectReference: record.responseObjectReference ?? Prisma.JsonNull,
+        responseObjectReference:
+          record.responseObjectReference ?? Prisma.JsonNull,
       },
     });
     return aiUsageEventRecordToEntity(row);

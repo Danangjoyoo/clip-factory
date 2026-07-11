@@ -1,0 +1,38 @@
+.shell {
+  display: grid;
+  grid-template-columns: 18rem minmax(22rem, 1fr) 22rem;
+  grid-template-rows: 1fr auto auto;
+  min-height: 70vh;
+  gap: 1rem;
+}
+.filmstrip {
+  grid-row: 1/3;
+}
+.preview {
+  grid-column: 2;
+  display: grid;
+  place-items: center;
+}
+.inspector {
+  grid-column: 3;
+}
+.timeline {
+  grid-column: 2/4;
+}
+.actions {
+  grid-column: 2/4;
+}
+@media (max-width: 1024px) {
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+  }
+  .filmstrip,
+  .preview,
+  .inspector,
+  .timeline,
+  .actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}

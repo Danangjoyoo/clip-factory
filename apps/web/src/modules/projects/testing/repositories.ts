@@ -48,23 +48,60 @@ export class InMemorySourceAssetRepository implements SourceAssetRepository {
   async findById(id: string) {
     return [...this.items.values()].find((item) => item.id === id) ?? null;
   }
-  async applyValidatedLocator(input: import('../application/dto/entity/worker-source-locator-entity.dto').ApplySourceValidationCommand) {
-    const value = [...this.items.values()].find((item) => item.id === input.sourceAssetId);
+  async applyValidatedLocator(
+    input: import('../application/dto/entity/worker-source-locator-entity.dto').ApplySourceValidationCommand,
+  ) {
+    const value = [...this.items.values()].find(
+      (item) => item.id === input.sourceAssetId,
+    );
     if (!value) throw new Error('source not found');
-    const updated = { ...value, resolvedPath: input.resolvedPath, sizeBytes: input.sizeBytes, modifiedAt: new Date(input.modifiedAt), fingerprint: input.fingerprint, probe: input.probe, health: 'LOCATED' as const };
+    const updated = {
+      ...value,
+      resolvedPath: input.resolvedPath,
+      sizeBytes: input.sizeBytes,
+      modifiedAt: new Date(input.modifiedAt),
+      fingerprint: input.fingerprint,
+      probe: input.probe,
+      health: 'LOCATED' as const,
+    };
     this.items.set(value.projectId, updated);
     return updated;
   }
   async deleteByProjectId(id: string) {
     this.items.delete(id);
   }
-  async attachUploadedObject(projectId: string, reference: import('../../storage/application/ports/artifact-store.port').ImmutableObjectReference) {
+  async attachUploadedObject(
+    projectId: string,
+    reference: import('../../storage/application/ports/artifact-store.port').ImmutableObjectReference,
+  ) {
     const value = this.items.get(projectId);
-    if (!value || value.kind !== 'BROWSER_UPLOAD') throw new Error('source is not browser upload');
-    const updated = { ...value, objectKey: reference.key, objectVersionId: reference.versionId, objectSha256: reference.sha256, sizeBytes: reference.sizeBytes, health: 'LOCATED' as const, updatedAt: new Date() };
-    this.items.set(projectId, updated); return updated;
+    if (!value || value.kind !== 'BROWSER_UPLOAD')
+      throw new Error('source is not browser upload');
+    const updated = {
+      ...value,
+      objectKey: reference.key,
+      objectVersionId: reference.versionId,
+      objectSha256: reference.sha256,
+      sizeBytes: reference.sizeBytes,
+      health: 'LOCATED' as const,
+      updatedAt: new Date(),
+    };
+    this.items.set(projectId, updated);
+    return updated;
   }
-  async relink(id: string, candidate: Pick<SourceAssetEntityDto, 'displayPath' | 'resolvedPath' | 'sizeBytes' | 'modifiedAt' | 'fingerprint' | 'probe' | 'health'>) {
+  async relink(
+    id: string,
+    candidate: Pick<
+      SourceAssetEntityDto,
+      | 'displayPath'
+      | 'resolvedPath'
+      | 'sizeBytes'
+      | 'modifiedAt'
+      | 'fingerprint'
+      | 'probe'
+      | 'health'
+    >,
+  ) {
     const value = [...this.items.values()].find((item) => item.id === id);
     if (!value) throw new Error('source not found');
     const updated = { ...value, ...candidate, updatedAt: new Date() };

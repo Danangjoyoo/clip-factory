@@ -24,8 +24,25 @@ class Store:
 
 
 def test_preview_artifacts_are_project_scoped() -> None:
-    spec = RenderSpec("1.0.0", "render", "clip", {"path": "/tmp/source.mp4"}, (360, 640), (0, 1000), (), (), {}, None, {}, "shorts")
-    result = asyncio.run(GeneratePreview(Renderer(), Store()).execute(PreviewCommand("project", "clip", spec)))
+    spec = RenderSpec(
+        "1.0.0",
+        "render",
+        "clip",
+        {"path": "/tmp/source.mp4"},
+        (360, 640),
+        (0, 1000),
+        (),
+        (),
+        {},
+        None,
+        {},
+        "shorts",
+    )
+    result = asyncio.run(
+        GeneratePreview(Renderer(), Store()).execute(
+            PreviewCommand("project", "clip", spec)
+        )
+    )
     assert result.preview.key == "projects/project/clips/clip/preview.mp4"
     assert result.thumbnail.key == "projects/project/clips/clip/thumbnail.jpg"
     assert (result.probe.width, result.probe.height) == (360, 640)

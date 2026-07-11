@@ -8,12 +8,27 @@ export class PrismaCostAllocationRepository implements CostAllocationRepository 
     tx?: AnalysisTransaction,
   ) {
     const db = tx ?? prisma;
-    const created = await Promise.all(rows.map((r: Omit<CostAllocationEntityDto, 'id' | 'createdAt'>) => db.costAllocation.create({ data: {
-        analysisRunId: r.analysisRunId,
-        clipId: r.clipId,
-        method: r.method,
-        amountMicrousd: r.amountMicrousd,
-      } })));
-    return created.map((r) => ({ id: r.id, analysisRunId: r.analysisRunId, clipId: r.clipId, method: r.method, amountMicrousd: r.amountMicrousd, label: 'allocated estimate' as const, methodLabel: 'equal share' as const, createdAt: r.createdAt }));
+    const created = await Promise.all(
+      rows.map((r: Omit<CostAllocationEntityDto, 'id' | 'createdAt'>) =>
+        db.costAllocation.create({
+          data: {
+            analysisRunId: r.analysisRunId,
+            clipId: r.clipId,
+            method: r.method,
+            amountMicrousd: r.amountMicrousd,
+          },
+        }),
+      ),
+    );
+    return created.map((r) => ({
+      id: r.id,
+      analysisRunId: r.analysisRunId,
+      clipId: r.clipId,
+      method: r.method,
+      amountMicrousd: r.amountMicrousd,
+      label: 'allocated estimate' as const,
+      methodLabel: 'equal share' as const,
+      createdAt: r.createdAt,
+    }));
   }
 }

@@ -14,7 +14,7 @@ def test_import_linter_rejects_domain_application_fixture() -> None:
     worker = Path(__file__).resolve().parents[2]
     repo = worker.parents[1]
     fixture = worker / "src/clip_factory/domain/_boundary_probe.py"
-    fixture.write_text("from clip_factory.application import __name__\n")
+    fixture.write_text("from clip_factory.application.render_clip import RenderClip\n")
     try:
         result = subprocess.run(
             [

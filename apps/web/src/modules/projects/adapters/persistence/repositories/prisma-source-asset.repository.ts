@@ -63,7 +63,10 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
     const r = await prisma.sourceAsset.findUnique({ where: { id } });
     return r ? sourceAssetRecordToEntity(r) : null;
   }
-  async applyValidatedLocator(input: import('../../../application/dto/entity/worker-source-locator-entity.dto').ApplySourceValidationCommand, tx: TransactionContext) {
+  async applyValidatedLocator(
+    input: import('../../../application/dto/entity/worker-source-locator-entity.dto').ApplySourceValidationCommand,
+    tx: TransactionContext,
+  ) {
     const db = this.db(tx);
     const r = await db.update({
       where: { id: input.sourceAssetId },
@@ -81,18 +84,59 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
   async deleteByProjectId(projectId: string, tx: TransactionContext) {
     await this.db(tx).delete({ where: { projectId } });
   }
-  async attachUploadedObject(projectId: string, reference: import('../../../../storage/application/ports/artifact-store.port').ImmutableObjectReference, tx: TransactionContext) {
+  async attachUploadedObject(
+    projectId: string,
+    reference: import('../../../../storage/application/ports/artifact-store.port').ImmutableObjectReference,
+    tx: TransactionContext,
+  ) {
     const db = this.db(tx);
     const current = await db.findUnique({ where: { projectId } });
-    if (!current || current.kind !== 'BROWSER_UPLOAD') throw new Error('source is not browser upload');
-    const r = await db.update({ where: { projectId }, data: { objectKey: reference.key, objectVersionId: reference.versionId, objectSha256: reference.sha256, sizeBytes: reference.sizeBytes, health: 'LOCATED' } });
+    if (!current || current.kind !== 'BROWSER_UPLOAD')
+      throw new Error('source is not browser upload');
+    const r = await db.update({
+      where: { projectId },
+      data: {
+        objectKey: reference.key,
+        objectVersionId: reference.versionId,
+        objectSha256: reference.sha256,
+        sizeBytes: reference.sizeBytes,
+        health: 'LOCATED',
+      },
+    });
     return sourceAssetRecordToEntity(r);
   }
-  async relink(id: string, candidate: Pick<import('../../../application/dto/entity/source-asset-entity.dto').SourceAssetEntityDto, 'displayPath' | 'resolvedPath' | 'sizeBytes' | 'modifiedAt' | 'fingerprint' | 'probe' | 'health'>, tx: TransactionContext) {
-    const r = await this.db(tx).update({ where: { id }, data: { displayPath: candidate.displayPath, resolvedPath: candidate.resolvedPath, sizeBytes: candidate.sizeBytes, modifiedAt: candidate.modifiedAt, fingerprint: candidate.fingerprint, probeJson: toPrismaJsonInput(candidate.probe), health: candidate.health } });
+  async relink(
+    id: string,
+    candidate: Pick<
+      import('../../../application/dto/entity/source-asset-entity.dto').SourceAssetEntityDto,
+      | 'displayPath'
+      | 'resolvedPath'
+      | 'sizeBytes'
+      | 'modifiedAt'
+      | 'fingerprint'
+      | 'probe'
+      | 'health'
+    >,
+    tx: TransactionContext,
+  ) {
+    const r = await this.db(tx).update({
+      where: { id },
+      data: {
+        displayPath: candidate.displayPath,
+        resolvedPath: candidate.resolvedPath,
+        sizeBytes: candidate.sizeBytes,
+        modifiedAt: candidate.modifiedAt,
+        fingerprint: candidate.fingerprint,
+        probeJson: toPrismaJsonInput(candidate.probe),
+        health: candidate.health,
+      },
+    });
     return sourceAssetRecordToEntity(r);
   }
   async markRelinking(id: string) {
-    await prisma.sourceAsset.update({ where: { id }, data: { project: { update: { status: 'RELINKING_SOURCE' } } } });
+    await prisma.sourceAsset.update({
+      where: { id },
+      data: { project: { update: { status: 'RELINKING_SOURCE' } } },
+    });
   }
 }

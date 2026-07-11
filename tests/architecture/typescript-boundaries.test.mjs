@@ -170,21 +170,14 @@ test('rejects require and dynamic imports across inner boundaries', async () => 
   assert.match(result.stderr, /domain.*must not import outer layer adapters/);
 });
 
-test('rejects provider SDK subpaths through the web ESLint policy', () => {
-  const result = spawnSync(
-    '../../node_modules/.bin/eslint',
-    [
-      '--stdin',
-      '--stdin-filename',
-      'src/modules/projects/application/services/bad.ts',
-    ],
-    {
-      cwd: 'apps/web',
-      input:
-        "import client from '@aws-sdk/client-s3';\nexport default client;\n",
-      encoding: 'utf8',
-    },
-  );
+test('rejects provider SDK subpaths through the TypeScript boundary policy', async () => {
+  const result = await runScanner({
+    'modules/projects/application/services/bad.ts':
+      "import client from '@aws-sdk/client-s3';\nexport default client;\n",
+  });
   assert.equal(result.status, 1);
-  assert.match(result.stdout + result.stderr, /application-owned ports/);
+  assert.match(
+    result.stderr,
+    /application.*must not import @aws-sdk\/client-s3/,
+  );
 });

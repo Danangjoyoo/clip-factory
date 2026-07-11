@@ -2,7 +2,9 @@ import inspect
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 
-from clip_factory.adapters.media.ffmpeg_render_spec_compiler import FfmpegRenderSpecCompiler
+from clip_factory.adapters.media.ffmpeg_render_spec_compiler import (
+    FfmpegRenderSpecCompiler,
+)
 from clip_factory.domain.media import MediaProbe
 from clip_factory.domain.render_spec import RenderSpec
 from clip_factory.ports.process_runner import ProcessRunner
@@ -24,10 +26,34 @@ class FfmpegPreviewRenderer:
         self._compiler = compiler or FfmpegRenderSpecCompiler()
         self._executable = str(executable)
 
-    async def render(self, spec: RenderSpec, destination: Path, width: int = 360, height: int = 640, progress: Callable[[int], Awaitable[None] | None] | None = None) -> MediaProbe:
+    async def render(
+        self,
+        spec: RenderSpec,
+        destination: Path,
+        width: int = 360,
+        height: int = 640,
+        progress: Callable[[int], Awaitable[None] | None] | None = None,
+    ) -> MediaProbe:
         compiled = self._compiler.compile(spec, "preview")
         source = _source_path(spec)
-        argv = [self._executable, "-nostdin", "-hide_banner", "-ss", _seconds(spec.range_ms[0]), "-to", _seconds(spec.range_ms[1]), "-i", source, "-vf", ",".join(compiled.filter_args), *compiled.encoder_args, "-progress", "pipe:1", "-y", destination]
+        argv: list[str | Path] = [
+            self._executable,
+            "-nostdin",
+            "-hide_banner",
+            "-ss",
+            _seconds(spec.range_ms[0]),
+            "-to",
+            _seconds(spec.range_ms[1]),
+            "-i",
+            source,
+            "-vf",
+            ",".join(compiled.filter_args),
+            *compiled.encoder_args,
+            "-progress",
+            "pipe:1",
+            "-y",
+            destination,
+        ]
 
         async def on_line(line: str) -> None:
             if progress and line.startswith("out_time_ms="):
@@ -41,10 +67,39 @@ class FfmpegPreviewRenderer:
         code, _, stderr = await self._runner.run(argv, on_line)
         if code:
             raise FfmpegPreviewError(stderr or "FFMPEG_FAILED")
-        return MediaProbe(0, destination.stat().st_size if destination.exists() else 0, "mp4", "h264", width, height, 30, 1, "aac", 48_000)
+        return MediaProbe(
+            0,
+            destination.stat().st_size if destination.exists() else 0,
+            "mp4",
+            "h264",
+            width,
+            height,
+            30,
+            1,
+            "aac",
+            48_000,
+        )
 
-    async def thumbnail(self, preview: Path, destination: Path, time_ms: int = 0) -> None:
-        code, _, stderr = await self._runner.run([self._executable, "-nostdin", "-hide_banner", "-ss", _seconds(time_ms), "-i", preview, "-frames:v", "1", "-q:v", "2", "-y", destination])
+    async def thumbnail(
+        self, preview: Path, destination: Path, time_ms: int = 0
+    ) -> None:
+        code, _, stderr = await self._runner.run(
+            [
+                self._executable,
+                "-nostdin",
+                "-hide_banner",
+                "-ss",
+                _seconds(time_ms),
+                "-i",
+                preview,
+                "-frames:v",
+                "1",
+                "-q:v",
+                "2",
+                "-y",
+                destination,
+            ]
+        )
         if code:
             raise FfmpegPreviewError(stderr or "FFMPEG_FAILED")
 

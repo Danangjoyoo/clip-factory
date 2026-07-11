@@ -100,9 +100,13 @@ def _restore_response(value: object) -> HighlightResponse | None:
                     str(item["rationale"]),
                     int(item["overallScore"]),
                     HighlightScores(
-                        int(item["hook"]), int(item["coherence"]), int(item["payoff"]),
-                        int(item["novelty"]), int(item["energy"]),
-                        int(item["instructionFit"]), int(item["boundaryQuality"]),
+                        int(item["hook"]),
+                        int(item["coherence"]),
+                        int(item["payoff"]),
+                        int(item["novelty"]),
+                        int(item["energy"]),
+                        int(item["instructionFit"]),
+                        int(item["boundaryQuality"]),
                     ),
                     int(item.get("rank", 0)),
                 )
@@ -183,7 +187,12 @@ async def call_openai_once(
         if window is None and response.candidates:
             raise ValueError("highlight request window is required")
         candidates = (
-            rank_candidates(response.candidates, window, call.request.maximum_clips, call.request.maximum_duration_ms)
+            rank_candidates(
+                response.candidates,
+                window,
+                call.request.maximum_clips,
+                call.request.maximum_duration_ms,
+            )
             if isinstance(window, TimeRange)
             else ()
         )

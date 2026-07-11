@@ -17,7 +17,20 @@ class Runner:
 def test_renderer_uses_shared_profile_and_clip_range(tmp_path: Path) -> None:
     runner = Runner()
     output = tmp_path / "preview.mp4"
-    spec = RenderSpec("1.0.0", "r", "c", {"path": "/safe/source.mp4"}, (360, 640), (100, 1100), (), (), {}, None, {}, "shorts")
+    spec = RenderSpec(
+        "1.0.0",
+        "r",
+        "c",
+        {"path": "/safe/source.mp4"},
+        (360, 640),
+        (100, 1100),
+        (),
+        (),
+        {},
+        None,
+        {},
+        "shorts",
+    )
     asyncio.run(FfmpegPreviewRenderer(runner).render(spec, output))
     command = runner.argv[0]
     assert command[command.index("-ss") + 1] == "0.100"
