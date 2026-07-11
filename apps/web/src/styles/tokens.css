@@ -1,1 +1,21 @@
-:root { color-scheme: dark; --color-canvas:#0b0f0e; --color-surface:#121816; --color-surface-raised:#19221f; --color-text:#f1f7f4; --color-text-muted:#9fb0aa; --color-accent:#63e6be; --color-accent-contrast:#07110d; --color-danger:#ff7b7b; --color-warning:#f4c95d; --color-focus:#8cf3d2; --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-6:1.5rem; --space-8:2rem; --radius-control:.5rem; --radius-panel:.75rem; }
+:root {
+  color-scheme: dark;
+  --color-canvas: #0b0f0e;
+  --color-surface: #121816;
+  --color-surface-raised: #19221f;
+  --color-text: #f1f7f4;
+  --color-text-muted: #9fb0aa;
+  --color-accent: #63e6be;
+  --color-accent-contrast: #07110d;
+  --color-danger: #ff7b7b;
+  --color-warning: #f4c95d;
+  --color-focus: #8cf3d2;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --radius-control: 0.5rem;
+  --radius-panel: 0.75rem;
+}

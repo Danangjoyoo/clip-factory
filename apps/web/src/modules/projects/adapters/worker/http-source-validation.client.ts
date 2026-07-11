@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import type { SourceValidationPort, ValidatedRelink } from '../../application/ports/source-validation.port';
+import type {
+  SourceValidationPort,
+  ValidatedRelink,
+} from '../../application/ports/source-validation.port';
 
 const responseSchema = z.object({
   displayPath: z.string(),
@@ -18,13 +21,23 @@ export class HttpSourceValidationClient implements SourceValidationPort {
     private readonly request: typeof fetch = fetch,
   ) {}
 
-  async validateCandidate(input: { sourceAssetId: string; candidatePath: string }): Promise<ValidatedRelink> {
-    const response = await this.request(`${this.baseUrl.replace(/\/$/, '')}/internal/source-validation`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-    });
-    if (!response.ok) throw new Error(`SOURCE_VALIDATION_FAILED:${response.status}`);
+  async validateCandidate(input: {
+    sourceAssetId: string;
+    candidatePath: string;
+  }): Promise<ValidatedRelink> {
+    const response = await this.request(
+      `${this.baseUrl.replace(/\/$/, '')}/internal/source-validation`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+      },
+    );
+    if (!response.ok)
+      throw new Error(`SOURCE_VALIDATION_FAILED:${response.status}`);
     const value = responseSchema.parse(await response.json());
     return {
       displayPath: value.displayPath,

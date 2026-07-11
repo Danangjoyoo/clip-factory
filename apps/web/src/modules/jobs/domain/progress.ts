@@ -59,8 +59,8 @@ export function estimateEta(input: EtaInput): EtaRange {
     ? [0.7, 2]
     : [1, 1];
   return {
-      lowSeconds: Math.ceil((remaining / p75) * widen[0]!),
-      highSeconds: Math.ceil((remaining / p25) * widen[1]!),
+    lowSeconds: Math.ceil((remaining / p75) * widen[0]!),
+    highSeconds: Math.ceil((remaining / p25) * widen[1]!),
     confidence: rates.length >= 20 ? 'HIGH' : 'MEDIUM',
   };
 }

@@ -1,11 +1,21 @@
 import type { AIUsageEventEntityDto } from '../../../application/dto/entity';
 import type { AIUsageEventRecordDto } from '../dto/record/ai-usage-event-record.dto';
-type ResponseReference = Exclude<AIUsageEventEntityDto['responseObjectReference'], undefined>;
+type ResponseReference = Exclude<
+  AIUsageEventEntityDto['responseObjectReference'],
+  undefined
+>;
 const responseReference = (value: unknown): ResponseReference => {
   if (!value || typeof value !== 'object') return null;
   const r = value as Record<string, unknown>;
-  return typeof r.bucket === 'string' && typeof r.key === 'string' && typeof r.sha256 === 'string'
-    ? { bucket: r.bucket, key: r.key, sha256: r.sha256, versionId: typeof r.versionId === 'string' ? r.versionId : null }
+  return typeof r.bucket === 'string' &&
+    typeof r.key === 'string' &&
+    typeof r.sha256 === 'string'
+    ? {
+        bucket: r.bucket,
+        key: r.key,
+        sha256: r.sha256,
+        versionId: typeof r.versionId === 'string' ? r.versionId : null,
+      }
     : null;
 };
 export const aiUsageEventRecordToEntity = (

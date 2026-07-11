@@ -10,7 +10,9 @@ export class SourceAssetDataService {
   getByProjectId(id: string) {
     return this.repository.findByProjectId(id);
   }
-  findById(id: string) { return this.repository.findById(id); }
+  findById(id: string) {
+    return this.repository.findById(id);
+  }
   applyValidatedLocator(
     input: import('../dto/entity/worker-source-locator-entity.dto').ApplySourceValidationCommand,
     tx: TransactionContext,
@@ -20,11 +22,29 @@ export class SourceAssetDataService {
   deleteByProjectId(id: string, tx: TransactionContext) {
     return this.repository.deleteByProjectId(id, tx);
   }
-  attachUploadedObject(projectId: string, reference: ImmutableObjectReference, tx: TransactionContext) {
-    if (!this.repository.attachUploadedObject) throw new Error('upload attachment unsupported');
+  attachUploadedObject(
+    projectId: string,
+    reference: ImmutableObjectReference,
+    tx: TransactionContext,
+  ) {
+    if (!this.repository.attachUploadedObject)
+      throw new Error('upload attachment unsupported');
     return this.repository.attachUploadedObject(projectId, reference, tx);
   }
-  relink(id: string, candidate: Pick<import('../dto/entity/source-asset-entity.dto').SourceAssetEntityDto, 'displayPath' | 'resolvedPath' | 'sizeBytes' | 'modifiedAt' | 'fingerprint' | 'probe' | 'health'>, tx: TransactionContext) {
+  relink(
+    id: string,
+    candidate: Pick<
+      import('../dto/entity/source-asset-entity.dto').SourceAssetEntityDto,
+      | 'displayPath'
+      | 'resolvedPath'
+      | 'sizeBytes'
+      | 'modifiedAt'
+      | 'fingerprint'
+      | 'probe'
+      | 'health'
+    >,
+    tx: TransactionContext,
+  ) {
     if (!this.repository.relink) throw new Error('relink unsupported');
     return this.repository.relink(id, candidate, tx);
   }

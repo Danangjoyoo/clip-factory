@@ -1,5 +1,9 @@
 export interface ArtifactStorePort {
-  head(key: string): Promise<{ sizeBytes: bigint; versionId: string | null; sha256: string | null }>;
+  head(key: string): Promise<{
+    sizeBytes: bigint;
+    versionId: string | null;
+    sha256: string | null;
+  }>;
   deleteMany(keys: readonly string[]): Promise<void>;
 }
 

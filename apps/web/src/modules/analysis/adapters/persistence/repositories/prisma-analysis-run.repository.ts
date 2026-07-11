@@ -23,7 +23,11 @@ export class PrismaAnalysisRunRepository implements AnalysisRunRepository {
       },
     });
   }
-  async reconcileUncertain(id: string, amount: bigint, tx?: AnalysisTransaction) {
+  async reconcileUncertain(
+    id: string,
+    amount: bigint,
+    tx?: AnalysisTransaction,
+  ) {
     if (amount <= 0n) throw new Error('UNCERTAIN_AMOUNT_INVALID');
     const db = tx ?? prisma;
     const changed = await db.analysisRun.updateMany({
@@ -37,14 +41,14 @@ export class PrismaAnalysisRunRepository implements AnalysisRunRepository {
         uncertainReservedMicrousd: { decrement: amount },
       },
     });
-    if (changed.count !== 1)
-      throw new Error('UNCERTAIN_RESERVATION_MISMATCH');
+    if (changed.count !== 1) throw new Error('UNCERTAIN_RESERVATION_MISMATCH');
     const current = await db.analysisRun.findUnique({ where: { id } });
     if (!current) throw new Error('UNCERTAIN_RESERVATION_MISMATCH');
     await db.analysisRun.update({
       where: { id },
       data: {
-        status: current.uncertainCallCount === 0 ? 'RUNNING' : 'PAID_CALL_UNCERTAIN',
+        status:
+          current.uncertainCallCount === 0 ? 'RUNNING' : 'PAID_CALL_UNCERTAIN',
       },
     });
   }

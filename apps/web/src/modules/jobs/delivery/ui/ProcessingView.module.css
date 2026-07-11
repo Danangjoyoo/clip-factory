@@ -1,1 +1,10 @@
-main { max-width: 48rem; margin: 2rem auto; } @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+main {
+  max-width: 48rem;
+  margin: 2rem auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

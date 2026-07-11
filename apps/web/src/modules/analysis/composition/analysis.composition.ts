@@ -25,7 +25,9 @@ export const analysisComposition = () => {
     ),
   );
   return {
-    reconcileUncertainPaidCallService: new ReconcileUncertainPaidCallService(service),
+    reconcileUncertainPaidCallService: new ReconcileUncertainPaidCallService(
+      service,
+    ),
     usageCallbackController: new UsageCallbackController(
       service,
       env.INTERNAL_SERVICE_TOKEN,

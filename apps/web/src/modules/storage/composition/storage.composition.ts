@@ -10,12 +10,23 @@ import { SourceAssetDataService } from '../../projects/application/data-services
 import { prisma } from '../../../infrastructure/prisma/client';
 export function storageComposition() {
   const multipart = new S3MultipartUploadAdapter();
-  const sessions = new UploadSessionDataService(new PrismaUploadSessionRepository());
-  const uow = { execute: <T>(fn: (tx: unknown) => Promise<T>) => prisma.$transaction((tx) => fn(tx)) };
+  const sessions = new UploadSessionDataService(
+    new PrismaUploadSessionRepository(),
+  );
+  const uow = {
+    execute: <T>(fn: (tx: unknown) => Promise<T>) =>
+      prisma.$transaction((tx) => fn(tx)),
+  };
   const sources = new SourceAssetDataService(new PrismaSourceAssetRepository());
   const start = new StartUploadService(sessions, multipart, sources);
   const resume = new ResumeUploadService(sessions, multipart);
-  const complete = new CompleteUploadService(sessions, sources, multipart, multipart, uow);
+  const complete = new CompleteUploadService(
+    sessions,
+    sources,
+    multipart,
+    multipart,
+    uow,
+  );
   const controller = new UploadController(start, resume, complete);
   return { start: controller, controller, resume, complete, multipart };
 }
