@@ -1,4 +1,5 @@
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,8 @@ class SourceMediaLease:
         if hasattr(self._locator, "candidate_path"):
             validated = self._local_filesystem.validate(Path(self._locator.candidate_path))
             self.path = validated.resolved_path
+            self._workspace = Path(tempfile.mkdtemp(prefix="clip-factory-"))
+            self._workspace.chmod(0o700)
             return self.path
         self.path, self._workspace = self._materializer.materialize(self._locator)
         return self.path
@@ -33,3 +36,9 @@ class SourceMediaLease:
         if self._workspace and self._workspace.exists():
             shutil.rmtree(self._workspace, ignore_errors=True)
         self.path = None
+
+    @property
+    def workspace(self) -> Path:
+        if self._workspace is None:
+            raise RuntimeError("source lease is not active")
+        return self._workspace

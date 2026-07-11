@@ -1,6 +1,8 @@
 """Safe argv-only subprocess execution."""
 
 import asyncio
+import os
+import signal
 from collections.abc import Awaitable, Callable, Sequence
 from pathlib import Path
 
@@ -28,6 +30,7 @@ class AsyncioProcessRunner:
         argv: Sequence[str | Path],
         on_stdout_line: Callable[[str], Awaitable[None] | None] | None = None,
         cancellation: asyncio.Event | None = None,
+        timeout: float | None = None,
     ) -> ProcessOutput:
         if not argv or any(not str(part) for part in argv):
             raise ValueError("argv must not be empty")
@@ -50,21 +53,41 @@ class AsyncioProcessRunner:
             return "\n".join(lines)
 
         stdout_task = asyncio.create_task(read_stdout())
+        wait_task = asyncio.create_task(process.wait())
+        cancel_task = asyncio.create_task(cancellation.wait()) if cancellation else None
         try:
-            if cancellation is None:
-                await process.wait()
-            else:
-                await asyncio.wait(
-                    {asyncio.create_task(process.wait()), asyncio.create_task(cancellation.wait())},
-                    return_when=asyncio.FIRST_COMPLETED,
-                )
-                if cancellation.is_set() and process.returncode is None:
-                    process.terminate()
-                    await process.wait()
-                    raise asyncio.CancelledError
+            waiters = {wait_task} | ({cancel_task} if cancel_task else set())
+            done, _ = await asyncio.wait(waiters, timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
+            if not done:
+                _kill_process_group(process)
+                await wait_task
+                raise ProcessExecutionError("PROCESS_TIMEOUT")
+            if cancel_task and cancel_task in done and process.returncode is None:
+                _kill_process_group(process)
+                await wait_task
+                raise asyncio.CancelledError
             stdout = await stdout_task
             stderr = await process.stderr.read() if process.stderr else b""
             return process.returncode or 0, stdout, _safe_stderr(stderr)
         finally:
+            if process.returncode is None:
+                _kill_process_group(process)
+                await wait_task
+            if cancel_task and not cancel_task.done():
+                cancel_task.cancel()
+                await asyncio.gather(cancel_task, return_exceptions=True)
+            if not wait_task.done():
+                wait_task.cancel()
+                await asyncio.gather(wait_task, return_exceptions=True)
             if not stdout_task.done():
                 stdout_task.cancel()
+                await asyncio.gather(stdout_task, return_exceptions=True)
+
+
+def _kill_process_group(process: asyncio.subprocess.Process) -> None:
+    if process.returncode is not None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return

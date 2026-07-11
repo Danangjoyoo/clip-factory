@@ -9,7 +9,7 @@ from clip_factory.ports.source_preprocessor import ObjectReference
 
 
 class ObjectDownloader(Protocol):
-    def download(self, reference: ObjectReference, destination: Path) -> None: ...
+    def download(self, reference: ObjectReference, destination: Path) -> object: ...
 
 
 class ObjectMaterializationError(RuntimeError):
@@ -26,8 +26,13 @@ class MinioObjectMaterializer:
         workspace.chmod(0o700)
         destination = workspace / "source.bin"
         try:
-            self._store.download(reference, destination)
+            result = self._store.download(reference, destination)
             destination.chmod(0o600)
+            version_id = _version_id(result)
+            if version_id is None and hasattr(self._store, "head"):
+                version_id = _version_id(self._store.head(reference))
+            if version_id is not None and version_id != reference.version_id:
+                raise ObjectMaterializationError("OBJECT_VERSION_MISMATCH")
             digest = hashlib.sha256(destination.read_bytes()).hexdigest()
             if digest != reference.sha256:
                 raise ObjectMaterializationError("OBJECT_HASH_MISMATCH")
@@ -42,3 +47,12 @@ def _remove(path: Path) -> None:
         for child in path.iterdir():
             child.unlink()
         path.rmdir()
+
+
+def _version_id(value: object) -> str | None:
+    if isinstance(value, str):
+        return value
+    if value is None:
+        return None
+    version = getattr(value, "version_id", getattr(value, "versionId", None))
+    return str(version) if version else None
