@@ -28,7 +28,7 @@ class MlxWhisperAdapter:
             self.materializer.materialize, audio_object
         )
         try:
-            import mlx_whisper  # type: ignore[import-untyped]
+            import mlx_whisper  # type: ignore[import-not-found]
 
             result = await asyncio.to_thread(
                 mlx_whisper.transcribe,
