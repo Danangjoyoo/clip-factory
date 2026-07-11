@@ -21,3 +21,4 @@ __pycache__/
 .tools/
 .worktrees/
 .artifacts/media-fixtures/
+.artifacts/acceptance/
