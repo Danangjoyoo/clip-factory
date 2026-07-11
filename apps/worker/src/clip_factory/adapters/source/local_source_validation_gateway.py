@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from clip_factory.adapters.filesystem.local_source import LocalSourceFilesystem
 from clip_factory.adapters.http.source_locator_client import modified_at
 from clip_factory.adapters.http.source_locator_client_models import (
@@ -17,7 +19,7 @@ class LocalSourceValidationGateway:
     def validate_and_persist(self, source_asset_id: str) -> SourceValidationReceipt:
         locator = self._client.get(source_asset_id)
         validated = self._filesystem.validate(
-            __import__("pathlib").Path(locator.candidate_path)
+            Path(locator.candidate_path)
         )
         result = self._client.apply_locator_validation(
             SourceValidationUpdate(
@@ -28,6 +30,12 @@ class LocalSourceValidationGateway:
                 validated.fingerprint,
             )
         )
+        probe = result.get("probe")
+        safe_probe = (
+            {k: v for k, v in probe.items() if "path" not in k.lower()}
+            if isinstance(probe, dict)
+            else None
+        )
         return SourceValidationReceipt(
-            source_asset_id, "LOCATED", validated.fingerprint, result.get("probe")
+            source_asset_id, "LOCATED", validated.fingerprint, safe_probe
         )

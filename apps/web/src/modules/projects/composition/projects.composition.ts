@@ -44,6 +44,6 @@ export function projectsComposition() {
       ),
       loadServerEnv().INTERNAL_SERVICE_TOKEN,
     ),
-    relinkSourceController: new RelinkSourceController(new RelinkSourceService(uow, sources, workflows)),
+    relinkSourceController: new RelinkSourceController(new RelinkSourceService(uow, sources, workflows, { validateCandidate: async () => { throw new Error('SOURCE_VALIDATION_UNAVAILABLE'); } }), loadServerEnv().INTERNAL_SERVICE_TOKEN),
   };
 }

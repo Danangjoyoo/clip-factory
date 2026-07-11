@@ -1,9 +1,11 @@
 import { RelinkConfirmationRequiredError, RelinkIncompatibleError, RelinkSourceService } from '../../application/services/relink-source.service';
 import { RelinkSourceApiSchema } from './dto/api/relink-source-api.dto';
 import { relinkSourceApiToEntity } from '../../converters/api-entity/relink-source.converter';
+import { authenticateInternalRequest } from '../../../../shared/delivery/http/internal-auth';
 export class RelinkSourceController {
-  constructor(private readonly service: RelinkSourceService) {}
+  constructor(private readonly service: RelinkSourceService, private readonly token: string) {}
   async post(request: Request, projectId: string) {
+    if (!authenticateInternalRequest(request.headers.get('authorization'), this.token)) return Response.json({ code: 'INTERNAL_UNAUTHORIZED' }, { status: 401 });
     const parsed = RelinkSourceApiSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return Response.json({ code: 'INVALID_RELINK_SOURCE' }, { status: 422 });
     try {

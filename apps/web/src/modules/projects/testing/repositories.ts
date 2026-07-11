@@ -71,6 +71,7 @@ export class InMemorySourceAssetRepository implements SourceAssetRepository {
     this.items.set(value.projectId, updated);
     return updated;
   }
+  async markRelinking(_id: string) {}
 }
 export class InMemoryUnitOfWork {
   execute<T>(fn: (tx: unknown) => Promise<T>) {

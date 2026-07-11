@@ -19,4 +19,5 @@ export interface SourceAssetRepository {
   deleteByProjectId(projectId: string, tx: TransactionContext): Promise<void>;
   attachUploadedObject?(projectId: string, reference: ImmutableObjectReference, tx: TransactionContext): Promise<SourceAssetEntityDto>;
   relink?(id: string, candidate: Pick<SourceAssetEntityDto, 'displayPath' | 'resolvedPath' | 'sizeBytes' | 'modifiedAt' | 'fingerprint' | 'probe' | 'health'>, tx: TransactionContext): Promise<SourceAssetEntityDto>;
+  markRelinking?(id: string): Promise<void>;
 }

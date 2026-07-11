@@ -28,4 +28,8 @@ export class SourceAssetDataService {
     if (!this.repository.relink) throw new Error('relink unsupported');
     return this.repository.relink(id, candidate, tx);
   }
+  markRelinking(id: string) {
+    if (!this.repository.markRelinking) return Promise.resolve();
+    return this.repository.markRelinking(id);
+  }
 }

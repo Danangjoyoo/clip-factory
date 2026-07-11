@@ -92,4 +92,7 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
     const r = await this.db(tx).update({ where: { id }, data: { displayPath: candidate.displayPath, resolvedPath: candidate.resolvedPath, sizeBytes: candidate.sizeBytes, modifiedAt: candidate.modifiedAt, fingerprint: candidate.fingerprint, probeJson: toPrismaJsonInput(candidate.probe), health: candidate.health } });
     return sourceAssetRecordToEntity(r);
   }
+  async markRelinking(id: string) {
+    await prisma.sourceAsset.update({ where: { id }, data: { project: { update: { status: 'RELINKING_SOURCE' } } } });
+  }
 }
