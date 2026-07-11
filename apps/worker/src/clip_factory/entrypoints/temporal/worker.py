@@ -1,4 +1,5 @@
 import os
+import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -74,3 +75,13 @@ def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
         max_concurrent_activities=1,
         max_concurrent_workflow_tasks=20,
     )
+
+
+async def main() -> None:
+    client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "127.0.0.1:7233"))
+    async with build_worker(client):
+        await asyncio.Future()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

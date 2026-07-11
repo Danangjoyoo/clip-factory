@@ -38,9 +38,12 @@ export async function start({
         { stdio: 'inherit', shell: false },
       );
       child.once('error', reject);
-      child.once('exit', (code) =>
-        code === 0 ? resolve() : reject(new Error(`docker exited ${code}`)),
-      );
+      child.once('exit', (code) => {
+        // ponytail: Compose returns 1 when the successful one-shot minio-init exits; core services are health-gated.
+        code === 0 || args.includes('--wait') && code === 1
+          ? resolve()
+          : reject(new Error(`docker exited ${code}`));
+      });
     }),
   preflight = () => import('./preflight.mjs').then(({ check }) => check()),
   waitMs = 15000,
@@ -49,8 +52,12 @@ export async function start({
   await run(['up', '-d', '--wait']);
   const worker = spawnProcess(
     '.tools/bin/uv',
-    ['run', '--directory', 'apps/worker', 'clip-factory-worker'],
-    { stdio: 'inherit', shell: false, env: process.env },
+    ['run', '--directory', 'apps/worker', 'python', '-m', 'clip_factory.entrypoints.temporal.worker'],
+    {
+      stdio: 'inherit',
+      shell: false,
+      env: { ...process.env, PYTHONPATH: `${process.cwd()}/apps/worker/src` },
+    },
   );
   let stopping = false;
   const stop = async (signal) => {

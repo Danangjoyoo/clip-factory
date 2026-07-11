@@ -1,6 +1,8 @@
 [project]
 name = "clip-factory-worker"
 version = "0.1.0"
+[project.scripts]
+clip-factory-worker = "clip_factory.entrypoints.temporal.worker:main"
 requires-python = "==3.12.11"
 dependencies = [
     "pydantic==2.13.4",
