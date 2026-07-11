@@ -246,6 +246,12 @@ def test_source_failure_types_wait_in_distinct_states() -> None:
     asyncio.run(_test_source_failure_types_wait_in_distinct_states())
 
 
+def test_source_not_allowed_error_type_maps_to_not_allowed_event() -> None:
+    error = ApplicationError("source failure", type="SourceNotAllowedError", non_retryable=True)
+
+    assert ProjectWorkflow._source_failure_event(error) == "source_not_allowed"
+
+
 async def _test_source_failure_types_wait_in_distinct_states() -> None:
     for error_type, state in (("SOURCE_CHANGED", "SOURCE_CHANGED"), ("SOURCE_NOT_ALLOWED", "SOURCE_NOT_ALLOWED")):
         @activity.defn(name="validate_source")

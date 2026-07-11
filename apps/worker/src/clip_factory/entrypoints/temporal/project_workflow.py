@@ -129,9 +129,10 @@ class ProjectWorkflow:
             current = getattr(current, "cause", None)
         else:
             kind = ""
-        if "NOT_ALLOWED" in kind:
+        normalized_kind = kind.replace("_", "").replace("-", "")
+        if "NOTALLOWED" in normalized_kind:
             return "source_not_allowed"
-        if "CHANGED" in kind:
+        if "CHANGED" in normalized_kind:
             return "source_changed"
         return "source_missing"
 
