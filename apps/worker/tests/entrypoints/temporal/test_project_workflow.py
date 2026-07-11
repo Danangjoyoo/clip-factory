@@ -13,9 +13,11 @@ from clip_factory.entrypoints.temporal.activities.project_activities import (
     validate_source,
 )
 from clip_factory.entrypoints.temporal.project_workflow import ProjectWorkflow
+from clip_factory.entrypoints.temporal.child_workflows import RenderBatchChildWorkflow
 from clip_factory.ports.project_results import WorkflowInput
 from clip_factory.ports.project_results import EditorInput, PreprocessSourceInput, TranscribeInput, ValidateSourceInput
 from clip_factory.ports.project_results import PrepareManualClipCommand
+from clip_factory.ports.project_results import RenderBatchInput
 
 
 def test_manual_workflow_reaches_review_without_analysis() -> None:
@@ -124,6 +126,55 @@ async def _test_review_signals_serialize_manual_and_render_batches() -> None:
             await handle.signal(ProjectWorkflow.complete_project)
             assert (await handle.result()).status == "COMPLETED"
             assert activities[-1] == "clip-1"
+
+
+def test_two_render_batches_are_serialized_before_completion() -> None:
+    asyncio.run(_test_two_render_batches_are_serialized_before_completion())
+
+
+async def _test_two_render_batches_are_serialized_before_completion() -> None:
+    @activity.defn(name="validate_source")
+    async def validate(payload: ValidateSourceInput):
+        return await validate_source(payload)
+
+    @activity.defn(name="extract_audio")
+    async def extract(payload: PreprocessSourceInput):
+        return await extract_audio(payload)
+
+    @activity.defn(name="transcribe")
+    async def speech(payload: TranscribeInput):
+        return await transcribe(payload)
+
+    @activity.defn(name="prepare_editor")
+    async def editor(payload: EditorInput):
+        return await prepare_editor(payload)
+
+    async with await WorkflowEnvironment.start_time_skipping() as env:
+        async with Worker(
+            env.client,
+            task_queue="render-test",
+            workflows=[ProjectWorkflow, RenderBatchChildWorkflow],
+            activities=[validate, extract, speech, editor],
+        ):
+            handle = await env.client.start_workflow(
+                ProjectWorkflow.run,
+                WorkflowInput("wf-render", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "MANUAL", "en"),
+                id="wf-render",
+                task_queue="render-test",
+            )
+            for _ in range(100):
+                if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
+                    break
+                await env.sleep(timedelta(milliseconds=10))
+            await handle.signal(ProjectWorkflow.queue_render_batch, RenderBatchInput("batch-1", ("clip-1",)))
+            await handle.signal(ProjectWorkflow.queue_render_batch, RenderBatchInput("batch-2", ("clip-2",)))
+            for _ in range(100):
+                if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
+                    break
+                await env.sleep(timedelta(milliseconds=10))
+            assert await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW"
+            await handle.signal(ProjectWorkflow.complete_project)
+            assert (await handle.result()).status == "COMPLETED"
 
 
 def test_missing_source_waits_for_relink() -> None:
