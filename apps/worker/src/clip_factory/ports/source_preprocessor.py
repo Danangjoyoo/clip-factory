@@ -14,6 +14,16 @@ class ObjectReference:
     sha256: str
 
 
+@dataclass(frozen=True)
+class AudioValidationReceipt:
+    """Typed proof that a normalized audio object belongs to one source revision."""
+
+    source_asset_id: str
+    fingerprint: str
+    normalization_version: str
+    audio_object: ObjectReference
+
+
 ProgressCallback = Callable[[int, int], Awaitable[None] | None]
 
 

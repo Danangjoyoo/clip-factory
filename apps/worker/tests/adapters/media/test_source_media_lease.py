@@ -55,3 +55,26 @@ def test_lease_cleans_workspace_on_exception(tmp_path: Path) -> None:
         assert not workspace.exists()
 
     asyncio.run(run())
+
+
+def test_lease_cleans_workspace_on_cancellation(tmp_path: Path) -> None:
+    source = tmp_path / "source.mov"
+    source.write_bytes(b"source")
+
+    async def run() -> None:
+        lease = SourceMediaLease(
+            LocalFileLocator("LOCAL_FILE", str(source)),
+            LocalSourceFilesystem((tmp_path,)),
+            cast(MinioObjectMaterializer, UnusedMaterializer()),
+        )
+        try:
+            async with lease:
+                workspace = lease.workspace
+                (workspace / "speech.wav").write_bytes(b"audio")
+                raise asyncio.CancelledError
+        except asyncio.CancelledError:
+            pass
+        assert not workspace.exists()
+        assert source.read_bytes() == b"source"
+
+    asyncio.run(run())

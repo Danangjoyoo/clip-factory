@@ -4,9 +4,15 @@ from uuid import uuid4
 from typing import Any
 
 from clip_factory.adapters.filesystem.local_source import LocalSourceFilesystem
-from clip_factory.adapters.http.source_locator_client_models import LocalFileLocator, SourceValidationUpdate
-from clip_factory.adapters.media.source_preprocessor_adapter import SourcePreprocessorAdapter
+from clip_factory.adapters.http.source_locator_client_models import (
+    LocalFileLocator,
+    SourceValidationUpdate,
+)
+from clip_factory.adapters.media.source_preprocessor_adapter import (
+    SourcePreprocessorAdapter,
+)
 from clip_factory.ports.source_preprocessor import ObjectReference
+from clip_factory.ports.source_preprocessor import AudioValidationReceipt
 from clip_factory.domain.media import MediaProbe
 
 
@@ -18,7 +24,9 @@ class Locator:
     def get(self, _asset: str) -> LocalFileLocator:
         return LocalFileLocator("LOCAL_FILE", str(self.path))
 
-    def apply_locator_validation(self, update: SourceValidationUpdate) -> dict[str, object]:
+    def apply_locator_validation(
+        self, update: SourceValidationUpdate
+    ) -> dict[str, object]:
         self.update = update
         return {}
 
@@ -29,34 +37,55 @@ class Probe:
 
 
 class Ffmpeg:
-    async def extract_speech(self, source: Path, destination: Path, _progress: Any) -> None:
+    async def extract_speech(
+        self, source: Path, destination: Path, _progress: Any
+    ) -> None:
         assert destination.parent != source.parent
         destination.write_bytes(b"audio")
 
 
 class Artifacts:
+    def __init__(self) -> None:
+        self.puts = 0
+        self.receipts: dict[str, AudioValidationReceipt] = {}
+
     def put(self, path: Path, key: str) -> ObjectReference:
+        self.puts += 1
         assert path.name == "speech.wav"
         assert path.exists()
         return ObjectReference("bucket", key, "v1", "digest")
 
+    def get_validation_receipt(self, key: str) -> AudioValidationReceipt | None:
+        return self.receipts.get(key)
 
-def test_preprocessor_posts_typed_validation_and_keeps_source_read_only(tmp_path: Path) -> None:
+    def record_validation_receipt(self, receipt: AudioValidationReceipt) -> None:
+        self.receipts[receipt.audio_object.key] = receipt
+
+    def head(self, _key: str) -> dict[str, str]:
+        return {"version_id": "v1", "sha256": "digest"}
+
+
+def test_preprocessor_posts_typed_validation_and_keeps_source_read_only(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "source.mp4"
     source.write_bytes(b"source")
     locator = Locator(source)
     asset = uuid4()
-    asyncio.run(
-        SourcePreprocessorAdapter(
-            locator,
-            Probe(),  # type: ignore[arg-type]
-            Ffmpeg(),  # type: ignore[arg-type]
-            Artifacts(),
-            LocalSourceFilesystem((tmp_path,)),
-            object(),
-        ).prepare(asset, uuid4(), lambda *_: None)
+    artifacts = Artifacts()
+    adapter = SourcePreprocessorAdapter(
+        locator,
+        Probe(),  # type: ignore[arg-type]
+        Ffmpeg(),  # type: ignore[arg-type]
+        artifacts,
+        LocalSourceFilesystem((tmp_path,)),
+        object(),
     )
+    project = uuid4()
+    asyncio.run(adapter.prepare(asset, project, lambda *_: None))
     assert isinstance(locator.update, SourceValidationUpdate)
     assert locator.update.source_asset_id == str(asset)
     assert source.read_bytes() == b"source"
     assert not (tmp_path / "speech.wav").exists()
+    asyncio.run(adapter.prepare(asset, project, lambda *_: None))
+    assert artifacts.puts == 1
