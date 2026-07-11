@@ -21,7 +21,9 @@ class ProcessExecutionError(RuntimeError):
 def _safe_stderr(value: bytes) -> str:
     text = value[:MAX_STDERR_BYTES].decode("utf-8", "replace")
     # Paths are deliberately not included in adapter failures/logs.
-    return " ".join(part for part in text.splitlines() if "/" not in part and "\\" not in part)
+    return " ".join(
+        part for part in text.splitlines() if "/" not in part and "\\" not in part
+    )
 
 
 class AsyncioProcessRunner:
@@ -40,6 +42,7 @@ class AsyncioProcessRunner:
             stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
         )
+
         async def read_stdout() -> str:
             assert process.stdout is not None
             lines: list[str] = []
@@ -52,12 +55,23 @@ class AsyncioProcessRunner:
                         await result
             return "\n".join(lines)
 
+        async def read_stderr() -> str:
+            assert process.stderr is not None
+            captured = bytearray()
+            while chunk := await process.stderr.read(4096):
+                if len(captured) < MAX_STDERR_BYTES:
+                    captured.extend(chunk[: MAX_STDERR_BYTES - len(captured)])
+            return _safe_stderr(bytes(captured))
+
         stdout_task = asyncio.create_task(read_stdout())
+        stderr_task = asyncio.create_task(read_stderr())
         wait_task = asyncio.create_task(process.wait())
         cancel_task = asyncio.create_task(cancellation.wait()) if cancellation else None
         try:
             waiters = {wait_task} | ({cancel_task} if cancel_task else set())
-            done, _ = await asyncio.wait(waiters, timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
+            done, _ = await asyncio.wait(
+                waiters, timeout=timeout, return_when=asyncio.FIRST_COMPLETED
+            )
             if not done:
                 _kill_process_group(process)
                 await wait_task
@@ -67,8 +81,8 @@ class AsyncioProcessRunner:
                 await wait_task
                 raise asyncio.CancelledError
             stdout = await stdout_task
-            stderr = await process.stderr.read() if process.stderr else b""
-            return process.returncode or 0, stdout, _safe_stderr(stderr)
+            stderr = await stderr_task
+            return process.returncode or 0, stdout, stderr
         finally:
             if process.returncode is None:
                 _kill_process_group(process)
@@ -82,6 +96,9 @@ class AsyncioProcessRunner:
             if not stdout_task.done():
                 stdout_task.cancel()
                 await asyncio.gather(stdout_task, return_exceptions=True)
+            if not stderr_task.done():
+                stderr_task.cancel()
+                await asyncio.gather(stderr_task, return_exceptions=True)
 
 
 def _kill_process_group(process: asyncio.subprocess.Process) -> None:

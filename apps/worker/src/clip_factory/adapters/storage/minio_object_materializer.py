@@ -31,7 +31,7 @@ class MinioObjectMaterializer:
             version_id = _version_id(result)
             if version_id is None and hasattr(self._store, "head"):
                 version_id = _version_id(self._store.head(reference))
-            if version_id is not None and version_id != reference.version_id:
+            if version_id != reference.version_id:
                 raise ObjectMaterializationError("OBJECT_VERSION_MISMATCH")
             digest = hashlib.sha256(destination.read_bytes()).hexdigest()
             if digest != reference.sha256:
