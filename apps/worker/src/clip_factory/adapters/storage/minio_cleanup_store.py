@@ -1,5 +1,12 @@
+from typing import Protocol
+
+
+class ObjectRemover(Protocol):
+    def remove_object(self, bucket_name: str, object_name: str) -> None: ...
+
+
 class MinioCleanupStore:
-    def __init__(self, client: object, bucket: str) -> None:
+    def __init__(self, client: ObjectRemover, bucket: str) -> None:
         self.client, self.bucket = client, bucket
 
     async def abort_multipart(self, upload_id: str) -> None:

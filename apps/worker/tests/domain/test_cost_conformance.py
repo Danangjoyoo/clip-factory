@@ -1,10 +1,26 @@
 import json
 from pathlib import Path
+from typing import TypedDict, cast
 
 from clip_factory.domain.cost import required_reserve_microusd
 
 
-def _price(tokens: dict[str, str], rule: dict[str, object]) -> int:
+class Multiplier(TypedDict):
+    numerator: int
+    denominator: int
+
+
+class PriceRule(TypedDict):
+    longContextThresholdTokens: int
+    longContextInputMultiplier: Multiplier
+    longContextOutputMultiplier: Multiplier
+    inputMicrousdPerMillion: int
+    cachedInputMicrousdPerMillion: int
+    cacheWriteMicrousdPerMillion: int
+    outputMicrousdPerMillion: int
+
+
+def _price(tokens: dict[str, str], rule: PriceRule) -> int:
     total = sum(
         int(tokens[key]) for key in ("uncachedInput", "cachedInput", "cacheWriteInput")
     )
@@ -20,14 +36,14 @@ def _price(tokens: dict[str, str], rule: dict[str, object]) -> int:
         else {"numerator": 1, "denominator": 1}
     )
 
-    def part(count: str, rate: object, multiplier: dict[str, int]) -> int:
-        value = int(count) * int(rate) * multiplier["numerator"]
+    def part(count: str, rate: int, multiplier: Multiplier) -> int:
+        value = int(count) * rate * multiplier["numerator"]
         return (value + 1_000_000 * multiplier["denominator"] - 1) // (
             1_000_000 * multiplier["denominator"]
         )
 
     return sum(
-        (
+        [
             part(
                 tokens["uncachedInput"],
                 rule["inputMicrousdPerMillion"],
@@ -44,17 +60,17 @@ def _price(tokens: dict[str, str], rule: dict[str, object]) -> int:
                 input_multiplier,
             ),
             part(tokens["output"], rule["outputMicrousdPerMillion"], output_multiplier),
-        )
+        ]
     )
 
 
 def test_shared_vectors_reserve_values() -> None:
-    vectors = json.loads(
+    vectors = cast(list[dict[str, object]], json.loads(
         (
             Path(__file__).parents[4]
             / "packages/contracts/test-fixtures/cost-conformance-vectors.json"
         ).read_text()
-    )
+    ))
     for vector in vectors:
         if (
             "tokens" in vector
@@ -68,11 +84,15 @@ def test_shared_vectors_reserve_values() -> None:
                 ).read_text()
             )
             model_id = vector.get("modelId", "gpt-5.6-sol")
-            rule = next(
-                rule for rule in catalogs["rules"] if rule.get("modelId") == model_id
+            rules = cast(list[dict[str, object]], catalogs["rules"])
+            rule = cast(
+                PriceRule,
+                next(rule for rule in rules if rule.get("modelId") == model_id),
             )
-            assert _price(vector["tokens"], rule) == int(vector["expectedCostMicrousd"])
+            tokens = cast(dict[str, str], vector["tokens"])
+            expected = cast(int | str, vector["expectedCostMicrousd"])
+            assert _price(tokens, rule) == int(expected)
         if "remainingCallCosts" in vector:
-            assert required_reserve_microusd(
-                [int(value) for value in vector["remainingCallCosts"]]
-            ) == int(vector["expectedReserveMicrousd"])
+            remaining = cast(list[int | str], vector["remainingCallCosts"])
+            expected = cast(int | str, vector["expectedReserveMicrousd"])
+            assert required_reserve_microusd([int(value) for value in remaining]) == int(expected)
