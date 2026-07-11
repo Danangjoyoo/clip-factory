@@ -6,5 +6,9 @@ export interface LiveProjectionPort {
     projectId: string,
     afterId: string,
     signal?: AbortSignal,
-  ): AsyncIterable<{ id: string; event: ProgressPresentation }>;
+  ): AsyncIterable<{
+    id: string;
+    event?: ProgressPresentation;
+    comment?: boolean;
+  }>;
 }

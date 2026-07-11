@@ -23,9 +23,21 @@ export class RecordProgressService {
       durationMs?: number;
     },
   ) {
-    const event = calculateProgress(input);
+    const historicalThroughputs =
+      input.hardwareKey && input.backendKey
+        ? await this.timings.listThroughputs(
+            input.stage,
+            input.hardwareKey,
+            input.backendKey,
+          )
+        : input.historicalThroughputs;
+    const event = calculateProgress({ ...input, historicalThroughputs });
     await this.projections.upsert(event);
-    if (input.terminal && input.durationMs && input.durationMs > 0)
+    if (
+      input.terminal &&
+      input.durationMs !== undefined &&
+      input.durationMs >= 0
+    )
       await this.timings.create({
         projectId: input.projectId,
         stage: input.stage,
@@ -34,7 +46,9 @@ export class RecordProgressService {
         workUnits: BigInt(input.totalUnits),
         durationMs: input.durationMs,
         throughputMicrounits: BigInt(
-          Math.floor((input.totalUnits * 1_000_000) / input.durationMs),
+          input.durationMs === 0
+            ? 0
+            : Math.floor((input.totalUnits * 1_000_000) / input.durationMs),
         ),
       });
     await this.live.publish(input.projectId, event);

@@ -17,7 +17,9 @@ export class ProgressSseController {
           )) {
             controller.enqueue(
               encoder.encode(
-                `id: ${item.id}\ndata: ${JSON.stringify(item.event)}\n\n`,
+                item.comment
+                  ? ': keepalive\n\n'
+                  : `id: ${item.id}\ndata: ${JSON.stringify(item.event)}\n\n`,
               ),
             );
           }
