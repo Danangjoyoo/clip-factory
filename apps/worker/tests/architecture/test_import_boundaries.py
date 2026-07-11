@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import shutil
 import subprocess
 
 
@@ -16,9 +17,10 @@ def test_import_linter_rejects_domain_application_fixture() -> None:
     fixture = worker / "src/clip_factory/domain/_boundary_probe.py"
     fixture.write_text("from clip_factory.application.render_clip import RenderClip\n")
     try:
+        uv = shutil.which("uv") or str(repo / ".tools/bin/uv")
         result = subprocess.run(
             [
-                str(repo / ".tools/bin/uv"),
+                uv,
                 "run",
                 "--directory",
                 "apps/worker",
