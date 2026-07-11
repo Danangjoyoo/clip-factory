@@ -202,7 +202,10 @@
     },
     "reasoning": null,
     "retries": 0,
-    "remainingCallCosts": ["101", "200"],
+    "remainingCallCosts": [
+      "101",
+      "200"
+    ],
     "expectedCostMicrousd": "301",
     "expectedReserveMicrousd": "452"
   },
