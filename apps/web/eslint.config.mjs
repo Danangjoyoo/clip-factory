@@ -5,9 +5,9 @@ const providerModules = [
   'redis',
   'ioredis',
   'openai',
-  '@aws-sdk/*',
-  '@temporalio/*',
 ];
+
+const providerPatterns = ['@aws-sdk/**', '@temporalio/**', 'openai/**'];
 
 const boundaryPatterns = [
   '**/generated/**',
@@ -46,11 +46,18 @@ export default [
             message:
               'Domain and application code must use application-owned ports.',
           })),
-          patterns: boundaryPatterns.map((group) => ({
-            group: [group],
-            message:
-              'Boundary DTOs and generated types must stay at their owning boundary.',
-          })),
+          patterns: [
+            ...providerPatterns.map((group) => ({
+              group: [group],
+              message:
+                'Domain and application code must use application-owned ports.',
+            })),
+            ...boundaryPatterns.map((group) => ({
+              group: [group],
+              message:
+                'Boundary DTOs and generated types must stay at their owning boundary.',
+            })),
+          ],
         },
       ],
     },

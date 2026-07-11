@@ -59,3 +59,34 @@ test('accepts application imports owned by the application layer', async () => {
   });
   assert.equal(result.status, 0, result.stderr);
 });
+
+test('rejects inner-to-outer imports and dependency cycles', async () => {
+  const result = await runScanner({
+    'modules/projects/domain/model.ts':
+      "import type { Store } from '../adapters/store';\nexport type Model = Store;\n",
+    'modules/projects/adapters/store.ts':
+      "import type { Model } from '../domain/model';\nexport type Store = Model;\n",
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /domain.*must not import outer layer/);
+  assert.match(result.stderr, /cycle detected/);
+});
+
+test('rejects provider SDK subpaths through the web ESLint policy', () => {
+  const result = spawnSync(
+    '../../node_modules/.bin/eslint',
+    [
+      '--stdin',
+      '--stdin-filename',
+      'src/modules/projects/application/services/bad.ts',
+    ],
+    {
+      cwd: 'apps/web',
+      input:
+        "import client from '@aws-sdk/client-s3';\nexport default client;\n",
+      encoding: 'utf8',
+    },
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stdout + result.stderr, /application-owned ports/);
+});

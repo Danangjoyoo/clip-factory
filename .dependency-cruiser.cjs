@@ -1,5 +1,3 @@
-const layer =
-  '(?:^|/)(?:domain|application|adapters|delivery|converters|composition)(?:/|$)';
 const inner = '(?:^|/)(?:domain|application)(?:/|$)';
 const outer = '(?:^|/)(?:adapters|delivery|converters)(?:/|$)';
 
