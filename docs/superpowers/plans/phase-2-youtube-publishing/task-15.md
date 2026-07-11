@@ -22,9 +22,14 @@ Prove that OAuth/token material stays inside native adapter memory/Keychain, pro
 ## Files
 
 - Create: `tests/integration/youtube-publishing/credential-containment.test.ts`
+- Create: `tests/integration/youtube-publishing/support/youtube-security-harness.ts`
+- Create: `tests/integration/youtube-publishing/support/runtime-sink-readers.ts`
+- Create: `tests/integration/youtube-publishing/support/credential-canaries.ts`
+- Modify: `tests/integration/support/test-environment.ts`
+- Create: `tests/e2e/support/browser-credential-scan.ts`
 - Create: `apps/worker/tests/security/test_youtube_credential_containment.py`
 - Create: `apps/worker/tests/contracts/test_credential_vault_contract.py`
-- Create: `apps/worker/tests/contracts/test_youtube_publisher_contract.py`
+- Modify: `apps/worker/tests/contracts/test_youtube_publisher_contract.py`
 - Create: `apps/worker/tests/contracts/test_metadata_generator_contract.py`
 - Create: `apps/web/src/modules/youtube-publishing/security/youtube-boundary.test.ts`
 - Create: `apps/web/src/modules/youtube-publishing/security/youtube-diagnostics.test.ts`
@@ -77,9 +82,21 @@ No canary value is committed. A failure reports sink name and credential kind, n
 Create `credential-containment.test.ts`:
 
 ```ts
+import { expect, it } from 'vitest';
+
+import {
+  createCredentialCanaries,
+} from './support/credential-canaries';
+import {
+  YouTubeSecurityHarness,
+} from './support/youtube-security-harness';
+import {
+  scanRuntimeSinks,
+} from '../../../apps/web/src/modules/youtube-publishing/security/scan-runtime-sinks';
+
 it('keeps runtime credential canaries out of every forbidden sink', async () => {
   const canaries = createCredentialCanaries();
-  const harness = await startYouTubeSecurityHarness({ canaries });
+  const harness = await YouTubeSecurityHarness.start({ canaries });
   try {
     await harness.completeFakeOAuthAndPrivateUpload();
     await harness.forceRefresh();
@@ -96,10 +113,78 @@ it('keeps runtime credential canaries out of every forbidden sink', async () => 
     });
     expect(findings).toEqual([]);
   } finally {
-    await harness.disconnectAndStop();
+    await harness.stop();
   }
 });
 ```
+
+Create the support class with this exact lifecycle; `TestEnvironment.start` is the accepted Phase 1 disposable PostgreSQL/Redis/MinIO/Temporal/web/worker owner and `stop` is idempotent:
+
+```ts
+import type { CredentialCanaries } from './credential-canaries';
+import {
+  TestEnvironment,
+} from '../../support/test-environment';
+
+export class YouTubeSecurityHarness {
+  private stopped = false;
+
+  private constructor(
+    private readonly environment: TestEnvironment,
+    readonly postgres: TestEnvironment['postgres'],
+    readonly redis: TestEnvironment['redis'],
+    readonly minio: TestEnvironment['minio'],
+    readonly temporal: TestEnvironment['temporal'],
+    readonly docker: TestEnvironment['docker'],
+    readonly logs: TestEnvironment['logs'],
+    readonly diagnosticsArchive: TestEnvironment['diagnosticsArchive'],
+  ) {}
+
+  static async start(input: {
+    canaries: CredentialCanaries;
+  }): Promise<YouTubeSecurityHarness> {
+    const environment = await TestEnvironment.start({
+      fakeProviderCredentialCanaries: input.canaries,
+      testAdapters: true,
+      freshState: true,
+    });
+    return new YouTubeSecurityHarness(
+      environment,
+      environment.postgres,
+      environment.redis,
+      environment.minio,
+      environment.temporal,
+      environment.docker,
+      environment.logs,
+      environment.diagnosticsArchive,
+    );
+  }
+
+  async completeFakeOAuthAndPrivateUpload(): Promise<void> {
+    await this.environment.scenarios.completeFakeOAuthAndPrivateUpload();
+  }
+
+  async forceRefresh(): Promise<void> {
+    await this.environment.scenarios.forceYouTubeRefresh();
+  }
+
+  async exportDiagnostics(): Promise<void> {
+    await this.environment.scenarios.exportDiagnostics();
+  }
+
+  async stop(): Promise<void> {
+    if (this.stopped) return;
+    this.stopped = true;
+    try {
+      await this.environment.scenarios.disconnectYouTubeIfConnected();
+    } finally {
+      await this.environment.stop();
+    }
+  }
+}
+```
+
+`runtime-sink-readers.ts` implements the seven typed readers consumed by `scanRuntimeSinks`; `credential-canaries.ts` owns the types/factory above. Extend the Phase 1 `TestEnvironment` with the exact properties/methods used by the class and with teardown registered immediately after each resource starts. If a later start step fails, it unwinds already-started resources in reverse order. Create compile-safe support implementations before the RED run; the intended RED is a nonempty credential finding, never an undefined harness, `ENOENT`, infrastructure-start, or teardown error.
 
 `scanRuntimeSinks` must inspect:
 
@@ -435,14 +520,36 @@ pnpm test:integration
 it.each([
   ['application imports googleapis', "import type { youtube_v3 } from 'googleapis';"],
   ['UI imports Prisma', "import type { PrismaClient } from '@prisma/client';"],
-  ['Entity declares refresh token', 'export type Bad = { refreshToken: string };'],
-  ['Record declares authorization code', 'export type BadRecordDto = { authorization_code: string };'],
-  ['Temporal DTO declares verifier', 'export type BadWorkflowInput = { codeVerifier: string };'],
 ])('rejects %s', async (_name, source) => {
   const file = await writeBoundaryFixture(source);
   const result = await runTsBoundaryScanner(file);
   expect(result.exitCode).toBe(1);
   expect(result.stderr).toMatch(/adapter-only|credential field forbidden/);
+});
+
+it.each([
+  ['accessToken', 'Entity'],
+  ['access_token', 'Record'],
+  ['refreshToken', 'Entity'],
+  ['refresh_token', 'Record'],
+  ['authorizationCode', 'Temporal'],
+  ['authorization_code', 'Record'],
+  ['codeVerifier', 'Temporal'],
+  ['code_verifier', 'Record'],
+  ['clientSecret', 'Api'],
+  ['client_secret', 'Record'],
+] as const)('rejects credential field spelling %s', async (field, dtoKind) => {
+  const source = `export type Bad${dtoKind}Dto = { ${field}: string };`;
+  const pathByKind = {
+    Entity: 'application/dto/entity/bad.ts',
+    Record: 'adapters/persistence/dto/record/bad.ts',
+    Temporal: 'entrypoints/contracts/bad.ts',
+    Api: 'delivery/http/dto/api/bad.ts',
+  } as const;
+  const file = await writeBoundaryFixture(source, pathByKind[dtoKind]);
+  const result = await runTsBoundaryScanner(file);
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toMatch(/credential field forbidden/);
 });
 ```
 
@@ -481,10 +588,19 @@ Expected RED: any fixture not rejected exposes a rule gap.
 Update Task 1's scanner/config patterns to cover every actual Phase 2 directory and boundary-specific DTO suffix. Reject dependency cycles and concrete adapter imports outside composition. Make generated-output/leak tests verify Google/OpenAI Client DTOs remain adapter-local and Task 1 Temporal payloads are token-free.
 
 ```js
-const forbiddenCredentialField = /\b(?:accessToken|refreshToken|authorizationCode|codeVerifier|clientSecret)\b/u;
-const protectedDtoPath = /(?:application\/dto\/entity|entrypoints\/contracts|packages\/contracts\/schema)/u;
-if (protectedDtoPath.test(file) && forbiddenCredentialField.test(source)) {
-  violations.push(`${file}: credential field forbidden in Entity/Temporal DTO`);
+const FORBIDDEN_CREDENTIAL_IDENTIFIERS = new Set([
+  'accesstoken',
+  'refreshtoken',
+  'authorizationcode',
+  'codeverifier',
+  'clientsecret',
+]);
+const protectedDtoPath = /(?:application\/dto\/entity|adapters\/persistence\/dto\/record|delivery\/http\/dto\/api|entrypoints\/contracts|packages\/contracts\/schema)/u;
+for (const identifier of collectDeclaredPropertyIdentifiers(source)) {
+  const normalized = identifier.replaceAll('_', '').toLowerCase();
+  if (protectedDtoPath.test(file) && FORBIDDEN_CREDENTIAL_IDENTIFIERS.has(normalized)) {
+    violations.push(`${file}: credential field forbidden in Entity/Record/API/Temporal DTO`);
+  }
 }
 ```
 
@@ -510,6 +626,10 @@ Expected GREEN: every negative fixture is rejected while production tree passes.
 
 Ensure root `pnpm test:architecture` invokes every TS/Python boundary/cycle/DTO test and is the only CI entry point. Focused tests remain developer diagnostics. Rerun root command.
 
+```bash
+pnpm test:architecture
+```
+
 ## Broader verification
 
 - [ ] Run:
@@ -528,9 +648,29 @@ git diff --check
 ```
 
 - [ ] Run `git grep` command from `master.md`; only adapter/test naming exclusions are permitted and runtime canaries must never be tracked.
+
+```bash
+! git grep -nE '(access_token|refresh_token|authorization_code|code_verifier|client_secret)' -- ':!docs/superpowers/plans/phase-2-youtube-publishing/**' ':!apps/worker/src/clip_factory/adapters/youtube/**' ':!apps/worker/tests/**'
+pnpm exec vitest run tests/integration/youtube-publishing/credential-containment.test.ts -t 'tracked files'
+```
+
 - [ ] Confirm `PAID_CALL_UNCERTAIN` exports possible-spend/safe-state only and cannot trigger automatic generation.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/metadata-generation.test.ts -t 'paid call uncertain'
+```
+
 - [ ] Confirm `UPLOAD_OUTCOME_UNCERTAIN` exports safe audit state only and cannot trigger automatic replacement before reconciliation plus explicit duplicate-risk acknowledgement.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/publication-workflow-restart.test.ts -t 'upload outcome uncertain'
+```
+
 - [ ] Confirm real Keychain selection fails closed on non-macOS/plaintext/fallback backend.
+
+```bash
+uv run --directory apps/worker pytest tests/adapters/youtube/test_keychain_credential_vault.py -q -k 'backend or fallback or non_macos'
+```
 
 ## Review gate
 

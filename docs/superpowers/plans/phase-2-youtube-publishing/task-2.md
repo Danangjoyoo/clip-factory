@@ -500,7 +500,7 @@ export function visibilityRequiresSchedule(value: PublicationVisibility): boolea
 Rerun:
 
 ```bash
-pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/application/policies/publishing-metadata-policy.test.ts
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/domain/publishing-metadata.test.ts
 pnpm test:architecture
 ```
 
@@ -537,7 +537,12 @@ Create `publication-state.test.ts`:
 import { expect, it } from 'vitest';
 
 import { PublicationState } from '../application/dto/entity/youtube-publishing-entity.dto';
-import { assertPublicationTransition } from './publication-state';
+import {
+  assertAcknowledgedReplacementAttempt,
+  assertOrdinaryPreFinalRetry,
+  assertPublicationTransition,
+  assertReconciledRemoteVideo,
+} from './publication-state';
 
 it('allows only explicit publication transitions', () => {
   expect(() =>
@@ -563,7 +568,16 @@ it('allows only explicit publication transitions', () => {
       PublicationState.UploadOutcomeUncertain,
       PublicationState.Uploading,
     ),
-  ).not.toThrow();
+  ).toThrow('invalid publication transition UPLOAD_OUTCOME_UNCERTAIN -> UPLOADING');
+  expect(() =>
+    assertPublicationTransition(
+      PublicationState.UploadOutcomeUncertain,
+      PublicationState.YouTubeProcessing,
+    ),
+  ).toThrow('invalid publication transition UPLOAD_OUTCOME_UNCERTAIN -> YOUTUBE_PROCESSING');
+  expect(() =>
+    assertPublicationTransition(PublicationState.Failed, PublicationState.ReadyToUpload),
+  ).toThrow('invalid publication transition FAILED -> READY_TO_UPLOAD');
   expect(() =>
     assertPublicationTransition(PublicationState.YouTubeProcessing, PublicationState.Scheduled),
   ).not.toThrow();
@@ -574,6 +588,68 @@ it('allows only explicit publication transitions', () => {
     assertPublicationTransition(PublicationState.Published, PublicationState.ReadyToUpload),
   ).toThrow('invalid publication transition PUBLISHED -> READY_TO_UPLOAD');
 });
+
+it('authorizes ordinary retry only with locked proof that final dispatch never began', () => {
+  expect(assertOrdinaryPreFinalRetry(PublicationState.Failed, {
+    kind: 'PRE_FINAL_RETRY',
+    finalChunkDispatchStartedAt: null,
+    outcomeUncertainAt: null,
+    reconciliationCheckedAt: null,
+    reconciliationResult: null,
+    duplicateRiskAcknowledgedAt: null,
+    youtubeVideoId: null,
+    attemptNumber: 1,
+    maxAttempts: 3,
+  })).toEqual({ nextState: PublicationState.ReadyToUpload });
+  expect(() => assertOrdinaryPreFinalRetry(PublicationState.Failed, {
+    kind: 'PRE_FINAL_RETRY',
+    finalChunkDispatchStartedAt: new Date('2026-07-11T00:00:00Z'),
+    outcomeUncertainAt: null,
+    reconciliationCheckedAt: null,
+    reconciliationResult: null,
+    duplicateRiskAcknowledgedAt: null,
+    youtubeVideoId: null,
+    attemptNumber: 1,
+    maxAttempts: 3,
+  })).toThrow('ordinary retry requires proof that final chunk was never dispatched');
+});
+
+it('authorizes an uncertain replacement only after durable reconciliation and acknowledgement', () => {
+  const base = {
+    kind: 'ACKNOWLEDGED_REPLACEMENT' as const,
+    finalChunkDispatchStartedAt: new Date('2026-07-11T00:00:00Z'),
+    outcomeUncertainAt: new Date('2026-07-11T00:00:01Z'),
+    reconciliationCheckedAt: new Date('2026-07-11T00:00:30Z'),
+    reconciliationResult: 'NO_MATCH_FOUND' as const,
+    duplicateRiskAcknowledgedAt: new Date('2026-07-11T00:01:00Z'),
+    youtubeVideoId: null,
+    attemptNumber: 1,
+    maxAttempts: 3,
+  };
+  expect(assertAcknowledgedReplacementAttempt(
+    PublicationState.UploadOutcomeUncertain,
+    base,
+  )).toEqual({ nextState: PublicationState.ReadyToUpload });
+  expect(() => assertAcknowledgedReplacementAttempt(
+    PublicationState.UploadOutcomeUncertain,
+    { ...base, reconciliationResult: 'VIDEO_FOUND' },
+  )).toThrow('replacement is forbidden when reconciliation found a remote video');
+  expect(() => assertAcknowledgedReplacementAttempt(
+    PublicationState.UploadOutcomeUncertain,
+    { ...base, duplicateRiskAcknowledgedAt: null },
+  )).toThrow('replacement requires durable duplicate-risk acknowledgement');
+});
+
+it('permits processing only through evidence of a reconciled remote video', () => {
+  expect(assertReconciledRemoteVideo(PublicationState.UploadOutcomeUncertain, {
+    reconciliationResult: 'VIDEO_FOUND',
+    youtubeVideoId: 'video-safe-1',
+  })).toEqual({ nextState: PublicationState.YouTubeProcessing });
+  expect(() => assertReconciledRemoteVideo(PublicationState.UploadOutcomeUncertain, {
+    reconciliationResult: 'INCONCLUSIVE',
+    youtubeVideoId: null,
+  })).toThrow('reconciled remote video requires VIDEO_FOUND and a video id');
+});
 ```
 
 - [ ] **RED 3.2 — Run both tests and witness missing functions.**
@@ -582,7 +658,7 @@ it('allows only explicit publication transitions', () => {
 pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/domain/upload-eligibility.test.ts src/modules/youtube-publishing/domain/publication-state.test.ts
 ```
 
-Expected RED: the eligibility/transition shells collect; `assertPublicationTransition(Uploading, ReadyToUpload)` returns instead of throwing `invalid publication transition UPLOADING -> READY_TO_UPLOAD`.
+Expected RED: the transition shell still permits either generic recovery arc, or the new evidence functions are absent; the named behavioral assertion—not a missing import—fails.
 
 - [ ] **GREEN 3.3 — Implement the exact pure rules.**
 
@@ -618,8 +694,6 @@ const allowed: Readonly<Record<PublicationState, ReadonlySet<PublicationState>>>
     PublicationState.Cancelled,
   ]),
   [PublicationState.UploadOutcomeUncertain]: new Set([
-    PublicationState.Uploading,
-    PublicationState.YouTubeProcessing,
     PublicationState.Failed,
     PublicationState.Cancelled,
   ]),
@@ -640,7 +714,6 @@ const allowed: Readonly<Record<PublicationState, ReadonlySet<PublicationState>>>
   ]),
   [PublicationState.Published]: new Set(),
   [PublicationState.Failed]: new Set([
-    PublicationState.ReadyToUpload,
     PublicationState.Cancelled,
   ]),
   [PublicationState.Cancelled]: new Set(),
@@ -654,7 +727,101 @@ export function assertPublicationTransition(
     throw new Error(`invalid publication transition ${current} -> ${next}`);
   }
 }
+
+export type OrdinaryPreFinalRetryEvidence = {
+  kind: 'PRE_FINAL_RETRY';
+  finalChunkDispatchStartedAt: Date | null;
+  outcomeUncertainAt: Date | null;
+  reconciliationCheckedAt: null;
+  reconciliationResult: null;
+  duplicateRiskAcknowledgedAt: null;
+  youtubeVideoId: null;
+  attemptNumber: number;
+  maxAttempts: number;
+};
+
+export type AcknowledgedReplacementEvidence = {
+  kind: 'ACKNOWLEDGED_REPLACEMENT';
+  finalChunkDispatchStartedAt: Date;
+  outcomeUncertainAt: Date;
+  reconciliationCheckedAt: Date;
+  reconciliationResult: 'NO_MATCH_FOUND' | 'INCONCLUSIVE' | 'VIDEO_FOUND';
+  duplicateRiskAcknowledgedAt: Date | null;
+  youtubeVideoId: string | null;
+  attemptNumber: number;
+  maxAttempts: number;
+};
+
+export function assertOrdinaryPreFinalRetry(
+  current: PublicationState,
+  evidence: OrdinaryPreFinalRetryEvidence,
+): { nextState: PublicationState.ReadyToUpload } {
+  if (current !== PublicationState.Failed || evidence.kind !== 'PRE_FINAL_RETRY') {
+    throw new Error('ordinary retry requires FAILED pre-final publication');
+  }
+  if (
+    evidence.finalChunkDispatchStartedAt !== null ||
+    evidence.outcomeUncertainAt !== null ||
+    evidence.reconciliationCheckedAt !== null ||
+    evidence.reconciliationResult !== null ||
+    evidence.duplicateRiskAcknowledgedAt !== null ||
+    evidence.youtubeVideoId !== null
+  ) {
+    throw new Error('ordinary retry requires proof that final chunk was never dispatched');
+  }
+  if (evidence.attemptNumber >= evidence.maxAttempts) {
+    throw new Error('publication attempt limit reached');
+  }
+  return { nextState: PublicationState.ReadyToUpload };
+}
+
+export function assertAcknowledgedReplacementAttempt(
+  current: PublicationState,
+  evidence: AcknowledgedReplacementEvidence,
+): { nextState: PublicationState.ReadyToUpload } {
+  if (current !== PublicationState.UploadOutcomeUncertain) {
+    throw new Error('replacement requires UPLOAD_OUTCOME_UNCERTAIN');
+  }
+  if (evidence.reconciliationResult === 'VIDEO_FOUND' || evidence.youtubeVideoId !== null) {
+    throw new Error('replacement is forbidden when reconciliation found a remote video');
+  }
+  if (evidence.finalChunkDispatchStartedAt > evidence.outcomeUncertainAt) {
+    throw new Error('replacement requires final-dispatch uncertainty evidence');
+  }
+  if (
+    evidence.reconciliationResult !== 'NO_MATCH_FOUND' &&
+    evidence.reconciliationResult !== 'INCONCLUSIVE'
+  ) {
+    throw new Error('replacement requires durable unresolved reconciliation');
+  }
+  if (evidence.duplicateRiskAcknowledgedAt === null) {
+    throw new Error('replacement requires durable duplicate-risk acknowledgement');
+  }
+  if (evidence.duplicateRiskAcknowledgedAt < evidence.reconciliationCheckedAt) {
+    throw new Error('replacement acknowledgement predates reconciliation');
+  }
+  if (evidence.attemptNumber >= evidence.maxAttempts) {
+    throw new Error('publication attempt limit reached');
+  }
+  return { nextState: PublicationState.ReadyToUpload };
+}
+
+export function assertReconciledRemoteVideo(
+  current: PublicationState,
+  evidence: { reconciliationResult: 'VIDEO_FOUND' | 'NO_MATCH_FOUND' | 'INCONCLUSIVE'; youtubeVideoId: string | null },
+): { nextState: PublicationState.YouTubeProcessing } {
+  if (
+    current !== PublicationState.UploadOutcomeUncertain ||
+    evidence.reconciliationResult !== 'VIDEO_FOUND' ||
+    evidence.youtubeVideoId === null
+  ) {
+    throw new Error('reconciled remote video requires VIDEO_FOUND and a video id');
+  }
+  return { nextState: PublicationState.YouTubeProcessing };
+}
 ```
+
+`assertPublicationTransition` is intentionally a non-recovery state machine: it never accepts `UPLOAD_OUTCOME_UNCERTAIN -> UPLOADING`, `UPLOAD_OUTCOME_UNCERTAIN -> YOUTUBE_PROCESSING`, or `FAILED -> READY_TO_UPLOAD`. Only the three named evidence functions may authorize those next states, and application services must derive their evidence from one locked durable publication/attempt snapshot rather than from request booleans or UI state.
 
 Run both focused tests. Expected GREEN: PASS.
 
@@ -701,7 +868,16 @@ git diff --check
 ```
 
 - [ ] Require 100% branch coverage for these pure policy files; they are finite invariant tables, not infrastructure.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run --coverage --coverage.thresholds.branches=100 src/modules/youtube-publishing/domain
+```
+
 - [ ] Confirm no provider/framework import appears under `domain/` or the Entity DTO file.
+
+```bash
+! rg -n "from ['\"](?:react|next|@prisma/client|@temporalio|googleapis|openai)" apps/web/src/modules/youtube-publishing/domain apps/web/src/modules/youtube-publishing/application/dto/entity/youtube-publishing-entity.dto.ts
+```
 
 ## Review gate
 

@@ -616,7 +616,18 @@ git diff --check
 ```
 
 - [ ] Capture logs from every test and assert no sentinel access token, refresh token, code, verifier, client-secret value, or raw callback query appears.
+
+```bash
+uv run --directory apps/worker pytest tests/adapters/youtube ../../tests/integration/youtube-publishing/test_native_oauth_flow.py -q --log-file=.artifacts/youtube-oauth-tests.log
+! rg -n 'sentinel-(access|refresh|code|verifier|client)|oauth2/callback\?' .artifacts/youtube-oauth-tests.log
+```
+
 - [ ] Inspect the worker environment/Compose config and confirm client-config path and Google endpoints are never exposed to `apps/web` or the browser.
+
+```bash
+pnpm compose:config > .artifacts/compose-phase2.yml
+! rg -n 'YOUTUBE_OAUTH_CLIENT_CONFIG_PATH|GOOGLE_(?:AUTH|TOKEN|REVOKE)|oauth2\.googleapis\.com' apps/web .artifacts/compose-phase2.yml
+```
 
 ## Review gate
 

@@ -50,7 +50,7 @@ def test_resolve_rejects_symlink_that_escapes_allowed_root(tmp_path: Path) -> No
         adapter.validate(link)
 ```
 
-- [ ] Run `uv run --directory apps/worker pytest tests/adapters/filesystem/test_local_source.py -q`; expect import FAIL.
+- [ ] Create the declared modules and a `LocalSourceAdapter.validate` shell returning `SOURCE_NOT_ALLOWED`, run the test with `--collect-only`, and expect PASS. Run it normally; expect the named allowed-root assertion to FAIL with `SOURCE_NOT_ALLOWED` instead of a located source.
 
 - [ ] **GREEN: create exact realpath and file checks.**
 
@@ -80,7 +80,7 @@ class LocalSourceFilesystem:
 
 `LocalSourceValidationGateway.validate_and_persist(sourceAssetId)` calls `SourceLocatorClient.get(sourceAssetId)`, requires the internal `LOCAL_FILE` locator, passes its candidate path to `LocalSourceFilesystem`, and calls `SourceLocatorClient.apply_locator_validation(...)` with the raw resolved path/size/mtime/fingerprint over the authenticated no-body-log route. That update returns path-free health `LOCATED`; Task 11 owns the later media probe and `HEALTHY` transition. Unit tests serialize every application/Temporal result and assert `/Users/` is absent; HTTP fake tests assert the raw path appears only in the internal request body.
 
-- [ ] Run the test; expect PASS. Add exact tests for absent file, directory, unreadable file, relative path, and allowed nested symlink; make relative paths fail with `SOURCE_NOT_ABSOLUTE`.
+- [ ] Run `uv run --directory apps/worker pytest tests/adapters/filesystem/test_local_source.py -q`; expect PASS. Add exact tests for absent file, directory, unreadable file, relative path, and allowed nested symlink; make relative paths fail with `SOURCE_NOT_ABSOLUTE`.
 
 - [ ] **RED: specify the lightweight fingerprint.** A 300 KiB fixture with known first/middle/last 64 KiB samples must equal `sha256("size:mtimeNs:" + three sample digests joined by colon)` and changing a sampled byte must change the result.
 
@@ -100,15 +100,27 @@ def fingerprint(path: Path, stat: os.stat_result) -> str:
     return hashlib.sha256(material.encode("ascii")).hexdigest()
 ```
 
-- [ ] Run fingerprint tests; expect PASS and verify source mode/mtime/bytes do not change.
+- [ ] Run `uv run --directory apps/worker pytest tests/domain/test_source.py -q`; expect PASS and verify source mode/mtime/bytes do not change.
 
 - [ ] **RED: write relink policy test.** Same duration, video dimensions, audio presence, and codec family with a different fingerprint returns `confirmationRequired: true`; incompatible duration difference over 1000 ms or different dimensions throws `RELINK_INCOMPATIBLE`; identical fingerprint resumes without confirmation.
 
 - [ ] **GREEN:** implement `RelinkSourceService.execute({projectId, candidate, confirmedFingerprint})` using `SourceAssetDataService`, a worker validation port, and a workflow signal port. It sets `RELINKING_SOURCE`, compares the exact probe fields, requires the candidate fingerprint as confirmation token when changed, persists the new reference, and signals `source_relinked`; it never invokes delete on either path.
 
-- [ ] Run relink tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_source.py tests/adapters/filesystem/test_local_source.py -q
+# Expected: PASS
+```
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/application/services/relink-source.service.test.ts`; expect PASS.
 
 - [ ] **REFACTOR:** map `FileNotFoundError`, fingerprint mismatch, root violation, and compatibility failure to `SOURCE_MISSING`, `SOURCE_CHANGED`, `SOURCE_NOT_ALLOWED`, and typed API errors. Add converter tests for paths being absent from default log payloads.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_source.py tests/adapters/filesystem/test_local_source.py -q
+# Expected: PASS
+```
 
 ## Verification and commit
 

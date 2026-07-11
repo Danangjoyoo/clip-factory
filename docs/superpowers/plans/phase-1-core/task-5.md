@@ -62,7 +62,7 @@ Implement design §22 and acceptance criterion 13 with JSON Schema 2020-12 as on
 | Schema | Required fields beyond `schemaVersion` |
 |---|---|
 | `workflow-input` | `workflowId`, `projectId`, `sourceAssetId`, `mode`, `languageTag`, `maxClipSeconds`, `platformPreset`, `analysis` nullable object, `requestedAt` |
-| `workflow-result` | `workflowId`, `projectId`, `status`, `transcriptObjectKey` nullable, `clipIds`, `error` nullable, `completedAt` |
+| `workflow-result` | `workflowId`, `projectId`, `status`, `transcriptObject` nullable full `ObjectReference`, `clipIds`, `error` nullable, `completedAt` |
 | `progress-event` | `workflowId`, `projectId`, `scope`, `stage`, `completedUnits`, `totalUnits`, `unit`, `etaLowSeconds`, `etaHighSeconds`, `confidence`, `occurredAt` |
 | `worker-health` | `workerId`, `status`, `hardware`, `ffmpegVersion`, immutable `transcriber` revision/hash and cache status, `openAiConfigured`, sanitized `openAiModelAccess`, `heartbeatAt` |
 | `media-probe` | `durationMs`, `sizeBytes`, `container`, `video`, `audio`, `formatTags` |
@@ -98,7 +98,7 @@ describe('validateContract', () => {
 
 `valid-workflow.json` contains a MANUAL local-file input with `analysis: null`; `invalid-workflow.json` is identical except `mode: "NO_AI"` and an extra `apiKey` property.
 
-- [ ] Run `pnpm --filter @clip-factory/contracts test -- validate.test.ts`; expect FAIL because `validate.ts` is absent.
+- [ ] Create compile-safe validation exports that return success for every payload, verify package typecheck passes, then run `pnpm --filter @clip-factory/contracts test -- validate.test.ts`; expect the named invalid-additional-property assertion to FAIL because the shell accepts it.
 
 - [ ] **GREEN: create the exact first schema and validator.**
 
@@ -235,6 +235,7 @@ export const schemaBodies = {
     backend: { enum: ['MLX_WHISPER', 'FAKE'] },
     model: string,
     modelRevision: string,
+    weightsSha256: nullable({ type: 'string', pattern: '^[a-f0-9]{64}$' }),
     durationMs: integer,
   }),
   'highlight-response': versioned('HighlightResponse', {
@@ -331,7 +332,7 @@ def test_generated_python_rejects_an_unknown_project_mode() -> None:
         raise AssertionError("unknown mode was accepted")
 ```
 
-- [ ] Run `uv run --directory apps/worker pytest tests/entrypoints/contracts/test_generated_contracts.py -q`; expect import FAIL because generated Python does not exist.
+- [ ] Generate compile-safe Python contract modules from the checked-in schemas before the RED and verify test collection passes. Run the test; expect the named TS/Python canonical round-trip assertion to FAIL because the shell generator omits validation metadata.
 
 - [ ] **GREEN: create the deterministic generator.**
 
@@ -366,6 +367,12 @@ await writeFile(resolve(worker,'src/clip_factory/entrypoints/contracts/generated
 - [ ] Run `pnpm --filter @clip-factory/contracts generate && uv run --directory apps/worker pytest tests/entrypoints/contracts/test_generated_contracts.py -q`; expect PASS.
 
 - [ ] **REFACTOR:** add valid workflow/cost fixtures for `gpt-5.6-sol`/`max` and `gpt-5.5`/`xhigh`, plus invalid fixtures proving `gpt-5.5`/`max` is rejected identically in TypeScript and Python. Add backward-compatibility checks that reject required-field removal, enum narrowing, or type narrowing without a major schema version. Generate twice and assert byte-identical output.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Broader verification
 

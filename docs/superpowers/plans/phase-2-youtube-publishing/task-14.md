@@ -627,7 +627,7 @@ Expected RED: `getByRole('button', { name: 'Check the connected channel' })` fai
 
 - [ ] **GREEN 4.3 — Implement explicit recovery actions.**
 
-Cancel uses Task 12 endpoint and confirmation text based on remote ID. Ordinary retry is enabled only when all durable predicates hold: publication state `FAILED`, no `youtubeVideoId`, attempt `finalChunkDispatchStartedAt/outcomeUncertainAt/reconciliationResult` are null, and attempt number is below the bound. The server reloads and checks those fields in one transaction before inserting an attempt; UI state alone never authorizes retry. `UPLOAD_OUTCOME_UNCERTAIN` has no ordinary retry: Reconcile calls the dedicated endpoint and shows `VIDEO_FOUND`, `NO_MATCH_FOUND`, or `INCONCLUSIVE`. `VIDEO_FOUND` attaches the remote identity and can never expose replacement. Only `NO_MATCH_FOUND` or `INCONCLUSIVE` exposes the acknowledged-risk replacement path. The replacement endpoint requires `{ expectedAttemptNumber, duplicateRiskAcknowledged: true, confirmed: true }`, persists acknowledgement, and warns that a duplicate remote video may already exist. `REAUTH_REQUIRED` shows reconnect action and resumes only after connection signal. Thumbnail warning stays secondary to success. `PAID_CALL_UNCERTAIN` links to Task 10's possible-spend acknowledgement/new reservation; it cannot invoke the old generation request.
+Cancel uses Task 12 endpoint and confirmation text based on remote ID. Ordinary retry is enabled only when all durable predicates hold: publication state `FAILED`, no `youtubeVideoId`, attempt `finalChunkDispatchStartedAt/outcomeUncertainAt/reconciliationResult` are null, and attempt number is below the bound. The server reloads and locks those fields in one transaction, calls Task 2 `assertOrdinaryPreFinalRetry`, then inserts an attempt; UI state and a generic `FAILED -> READY_TO_UPLOAD` transition never authorize retry. `UPLOAD_OUTCOME_UNCERTAIN` has no ordinary retry: Reconcile calls the dedicated endpoint and shows `VIDEO_FOUND`, `NO_MATCH_FOUND`, or `INCONCLUSIVE`. `VIDEO_FOUND` attaches the remote identity and can never expose replacement. Only `NO_MATCH_FOUND` or `INCONCLUSIVE` with a durable acknowledgement exposes the guarded Task 2 replacement path; no generic `UPLOAD_OUTCOME_UNCERTAIN -> UPLOADING` transition exists. The replacement endpoint requires `{ expectedAttemptNumber, duplicateRiskAcknowledged: true, confirmed: true }`, persists acknowledgement, and warns that a duplicate remote video may already exist. `REAUTH_REQUIRED` shows reconnect action and resumes only after connection signal. Thumbnail warning stays secondary to success. `PAID_CALL_UNCERTAIN` links to Task 10's possible-spend acknowledgement/new reservation; it cannot invoke the old generation request.
 
 ```tsx
 it('never offers replacement after reconciliation finds the remote video', () => {
@@ -693,6 +693,10 @@ Expected GREEN: PASS.
 
 Create one `Record<PublishingUiState, PublicationActionVm>` covering `DISCONNECTED`, `REAUTH_REQUIRED`, `METADATA_EMPTY`, `METADATA_DRAFT`, `AWAITING_APPROVAL`, `READY_TO_UPLOAD`, `UPLOADING`, `UPLOAD_OUTCOME_UNCERTAIN`, `YOUTUBE_PROCESSING`, `PRIVATE_REVIEW`, `SCHEDULED`, `PUBLISHED`, `FAILED`, `CANCELLED`, and `PAID_CALL_UNCERTAIN`. Add a test comparing enum keys to map keys; no default branch. Rerun.
 
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/delivery/ui/publication-progress-list.test.tsx -t 'maps every publishing UI state exhaustively'
+```
+
 ## Broader verification
 
 - [ ] Run:
@@ -712,8 +716,22 @@ git diff --check
 ```
 
 - [ ] Confirm three clips keep three source timezones/UTC instants and three workflows.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/application/services/start-publication-batch.service.test.ts -t 'three source timezones and independent workflows'
+```
+
 - [ ] Confirm unverified UI and server can express only private review.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/delivery/ui/publication-controls.test.tsx src/modules/youtube-publishing/delivery/http/publication-controls.controller.test.ts -t 'unverified.*private'
+```
+
 - [ ] Confirm mixed batches preserve successful siblings, thumbnail warning preserves success, `PAID_CALL_UNCERTAIN` never retries/overwrites automatically, and `UPLOAD_OUTCOME_UNCERTAIN` never starts a replacement before reconciliation plus explicit duplicate-risk acknowledgement.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/delivery/ui/publication-progress-list.test.tsx src/modules/youtube-publishing/application/services/start-publication-batch.service.test.ts -t 'mixed batch|thumbnail warning|paid call uncertain|upload outcome uncertain'
+```
 
 ## Review gate
 

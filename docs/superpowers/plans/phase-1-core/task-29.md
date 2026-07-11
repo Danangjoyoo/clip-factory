@@ -42,19 +42,37 @@ it('separates actual, allocation, and uncertain possible spend', () => {
 });
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/analysis/delivery/ui/UsageView.test.tsx`; expect import FAIL.
+- [ ] Create a typed `UsageView` shell rendering zero totals, verify typecheck passes, then run the test; expect the named project/run/call allocation assertion to FAIL because no rows are rendered.
 
 - [ ] **GREEN:** render three distinct summary rows and six tables: projects, analysis runs, API calls, allocations, renders, model/pricing metadata. API calls show response ID, purpose, all token categories, model/effort, versions, tier, exact cost, UTC/local timestamps. Allocations show method and label.
 
-- [ ] Run label test; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/analysis/delivery/ui apps/web/src/modules/analysis/application/services/get-usage-report.service.test.ts
+# Expected: PASS
+```
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/analysis/delivery/ui/UsageView.test.tsx`; expect PASS.
 
 - [ ] **RED: sorting and accessibility.** Clicking column header toggles ascending/descending with `aria-sort`; money sorts by micro-USD bigint strings, timestamps by epoch, empty set has scoped message, and tables retain captions.
 
 - [ ] **GREEN:** generic `UsageTable<Row>` accepts typed columns `{id,header,cell,sortValue}` and stable-sorts by value then original index; buttons are header children and preserve focus.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/analysis/delivery/ui apps/web/src/modules/analysis/application/services/get-usage-report.service.test.ts
+# Expected: PASS
+```
+
 - [ ] **RED/GREEN report service:** aggregate from usage events only for known actual, allocations separately, render timing separately, uncertain reserved separately. Assert Manual projects return actual zero even with local ML timings. Pagination cursor is `(occurredAt,id)`, page size max 100.
 
 - [ ] **REFACTOR:** no raw transcript/path/object key/API key is returned; response uses decimal money strings and timezone-independent ISO timestamps; CSV export uses same presentation-safe fields.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/analysis/delivery/ui apps/web/src/modules/analysis/application/services/get-usage-report.service.test.ts
+# Expected: PASS
+```
 
 ## Verification and commit
 

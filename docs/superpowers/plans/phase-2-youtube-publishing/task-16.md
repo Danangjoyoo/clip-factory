@@ -24,9 +24,15 @@ Prove the complete Phase 2 product through deterministic fake-provider Playwrigh
 
 - Create: `tests/e2e/youtube-publishing.spec.ts`
 - Create: `tests/e2e/support/fake-youtube-control.ts`
-- Create: `tests/e2e/support/browser-credential-scan.ts`
+- Modify: `tests/e2e/support/fixtures.ts`
+- Create: `tests/e2e/support/fake-provider-suite.ts`
+- Modify: `tests/e2e/support/browser-credential-scan.ts`
 - Create: `tests/integration/youtube-publishing/full-phase-2.test.ts`
+- Create: `tests/integration/youtube-publishing/support/full-phase-2-harness.ts`
+- Create: `tests/integration/youtube-publishing/support/full-phase-2-scenarios.ts`
+- Modify: `tests/integration/support/test-environment.ts`
 - Create: `tests/architecture/phase-2-ci-policy.test.mjs`
+- Generate: `tests/fixtures/media/vertical-12s.mp4`
 - Create: `tests/fixtures/acceptance/phase-2-manifest.json`
 - Create: `tests/acceptance/phase-2-evidence-schema.test.mjs`
 - Create: `scripts/acceptance/run-phase-2.mjs`
@@ -110,6 +116,29 @@ test('generates separately costed metadata, edits it, and requires approval', as
   await expect(page.getByRole('button', { name: 'Upload private video' })).toBeEnabled();
 });
 ```
+
+Extend the listed Playwright fixture with explicit per-test fake-provider teardown; every method used above is declared on `FakeProviderSuite` in the separately listed support file:
+
+```ts
+import { test as base, expect } from '@playwright/test';
+
+import { FakeProviderSuite } from './fake-provider-suite';
+
+export const test = base.extend<{ fakeProviders: FakeProviderSuite }>({
+  fakeProviders: async ({ request }, use) => {
+    const providers = await FakeProviderSuite.start(request);
+    try {
+      await use(providers);
+    } finally {
+      await providers.stop();
+    }
+  },
+});
+
+export { expect };
+```
+
+`FakeProviderSuite.start` resets the loopback Google/OpenAI/YouTube controls and seeds the three accepted renders; `stop` cancels outstanding fake workflows, clears captured system-browser URLs/canaries, and resets all test-only provider state. The Playwright `webServer` lifecycle remains owned by `playwright.config.ts`. Create compile-safe fixture/control shells before RED; missing fixture imports or test-control 404s are not accepted RED.
 
 - [ ] **RED 1.2 — Write schedules, batch isolation, and uncertainty tests.**
 
@@ -283,6 +312,40 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import YAML from 'yaml';
 
+const RELEASE_JOB = /(?:^|[-_ ])(?:deploy|deployment|release|publish)(?:$|[-_ ])/iu;
+const RELEASE_ACTION = /^(?:docker\/login-action|actions\/deploy-pages|softprops\/action-gh-release)@/iu;
+const RELEASE_COMMANDS = [
+  /\b(?:npm|pnpm|yarn)\s+publish\b/iu,
+  /\bgh\s+release\b/iu,
+  /\bdocker\s+(?:login|push)\b/iu,
+  /\bkubectl\s+(?:apply|create|set\s+image)\b/iu,
+  /\bterraform\s+apply\b/iu,
+  /\bvercel\b[^\n]*\s--prod\b/iu,
+  /\bsemantic-release\b/iu,
+];
+
+function assertNoReleaseAuthority(workflow) {
+  for (const [jobId, job] of Object.entries(workflow.jobs ?? {})) {
+    assert.doesNotMatch(`${jobId} ${job.name ?? ''}`, RELEASE_JOB);
+    for (const permissions of [workflow.permissions, job.permissions]) {
+      if (!permissions || typeof permissions !== 'object') continue;
+      for (const name of ['packages', 'deployments', 'id-token']) {
+        assert.notEqual(permissions[name], 'write', `${jobId} grants ${name}: write`);
+      }
+    }
+    for (const step of job.steps ?? []) {
+      if (typeof step.uses === 'string') {
+        assert.doesNotMatch(step.uses, RELEASE_ACTION);
+      }
+      if (typeof step.run === 'string') {
+        for (const forbidden of RELEASE_COMMANDS) {
+          assert.doesNotMatch(step.run, forbidden);
+        }
+      }
+    }
+  }
+}
+
 test('default CI runs Phase 2 fakes/security and never real smoke or external secrets', async () => {
   const source = await readFile('.github/workflows/ci.yml', 'utf8');
   const workflow = YAML.parse(source);
@@ -293,19 +356,139 @@ test('default CI runs Phase 2 fakes/security and never real smoke or external se
   assert.match(source, /playwright test tests\/e2e\/youtube-publishing\.spec\.ts/u);
   assert.doesNotMatch(source, /CLIP_FACTORY_REAL_(?:YOUTUBE|OPENAI)_SMOKE/u);
   assert.doesNotMatch(source, /YOUTUBE_OAUTH_CLIENT_CONFIG_PATH|OPENAI_API_KEY/u);
-  assert.equal(workflow.jobs.deploy, undefined);
-  assert.equal(workflow.jobs.release, undefined);
-  assert.doesNotMatch(source, /(?:docker\/login-action|actions\/deploy-pages|packages:\s*write|deployments:\s*write)/iu);
+  assertNoReleaseAuthority(workflow);
   assert.match(source, /pnpm db:migrate:deploy/u); // local disposable DB migration is required
-  for (const match of source.matchAll(/uses:\s+[^\s]+@([^\s]+)/gu)) {
-    assert.match(match[1], /^[a-f0-9]{40}$/u);
+  for (const job of Object.values(workflow.jobs)) {
+    for (const step of job.steps ?? []) {
+      if (typeof step.uses !== 'string') continue;
+      assert.match(step.uses, /@[a-f0-9]{40}$/u);
+    }
   }
+});
+
+test('CI policy permits local migration deploy but rejects release operations', () => {
+  assert.doesNotThrow(() => assertNoReleaseAuthority({
+    jobs: {
+      integration: {
+        permissions: { contents: 'read' },
+        steps: [{ run: 'pnpm db:migrate:deploy' }],
+      },
+    },
+  }));
+  assert.throws(() => assertNoReleaseAuthority({
+    jobs: {
+      release: {
+        permissions: { packages: 'write' },
+        steps: [{ run: 'pnpm publish' }],
+      },
+    },
+  }));
 });
 ```
 
 - [ ] **RED 2.2 — Write full infrastructure integration before CI.**
 
-`full-phase-2.test.ts` composes fresh Phase 1+2 migrations, PostgreSQL/Redis/MinIO/Temporal, web/native worker, fake Google/OpenAI/YouTube, and a synthetic 9:16 MP4. It executes: connect -> restart worker/Keychain fake refresh -> generate/approve -> three schedules -> private/scheduled uploads -> offline publication -> sibling failure -> thumbnail warning -> disconnect -> credential sink scan -> both uncertainty flows. Assert all fourteen criterion IDs as test labels.
+Create `full-phase-2.test.ts` as a compile-safe test with explicit lifecycle:
+
+```ts
+import { afterEach, expect, it } from 'vitest';
+
+import {
+  FullPhase2Harness,
+} from './support/full-phase-2-harness';
+
+let harness: FullPhase2Harness | undefined;
+
+afterEach(async () => {
+  await harness?.stop();
+  harness = undefined;
+});
+
+it('produces deterministic PASS evidence for all fourteen Phase 2 criteria', async () => {
+  harness = await FullPhase2Harness.start();
+  const evidence = await harness.runAllCriteria();
+
+  expect(evidence.map((item) => item.id)).toEqual(
+    Array.from({ length: 14 }, (_, index) => index + 1),
+  );
+  expect(evidence.every((item) => item.status === 'PASS')).toBe(true);
+  expect(evidence.find((item) => item.id === 13)?.observations)
+    .toContain('one-provider-call-no-automatic-retry');
+  expect(evidence.find((item) => item.id === 14)?.observations)
+    .toContain('reconcile-then-explicit-duplicate-risk-acknowledgement');
+});
+```
+
+Create `support/full-phase-2-harness.ts` with the exact owner/teardown shape below. `runFullPhase2Scenarios` lives in the separately listed scenarios file and executes: connect → restart worker/Keychain-fake refresh → generate/approve → three schedules → private/scheduled uploads → offline publication → sibling failure → thumbnail warning → disconnect → credential scan → both uncertainty flows. It returns one typed result for every criterion, never mutates the result in the test.
+
+```ts
+import {
+  TestEnvironment,
+} from '../../support/test-environment';
+import {
+  runFullPhase2Scenarios,
+  type CriterionEvidence,
+} from './full-phase-2-scenarios';
+
+export class FullPhase2Harness {
+  private stopped = false;
+
+  private constructor(private readonly environment: TestEnvironment) {}
+
+  static async start(): Promise<FullPhase2Harness> {
+    const environment = await TestEnvironment.start({
+      freshState: true,
+      testAdapters: true,
+      fakeGoogle: true,
+      fakeOpenAI: true,
+      fakeYouTube: true,
+      mediaFixture: 'tests/fixtures/media/vertical-12s.mp4',
+    });
+    return new FullPhase2Harness(environment);
+  }
+
+  runAllCriteria(): Promise<readonly CriterionEvidence[]> {
+    return runFullPhase2Scenarios(this.environment);
+  }
+
+  async stop(): Promise<void> {
+    if (this.stopped) return;
+    this.stopped = true;
+    try {
+      await this.environment.scenarios.cancelOutstandingWorkflows();
+      await this.environment.scenarios.deleteTestKeychainEntries();
+    } finally {
+      await this.environment.stop();
+    }
+  }
+}
+```
+
+Create the scenarios module as a collecting RED shell before the command; GREEN replaces its body with the real ordered calls while retaining this exported contract:
+
+```ts
+import type {
+  TestEnvironment,
+} from '../../support/test-environment';
+
+export type CriterionEvidence = {
+  id: number;
+  status: 'PASS' | 'FAIL';
+  observations: readonly string[];
+};
+
+export async function runFullPhase2Scenarios(
+  _environment: TestEnvironment,
+): Promise<readonly CriterionEvidence[]> {
+  return Array.from({ length: 13 }, (_, index) => ({
+    id: index + 1,
+    status: 'FAIL' as const,
+    observations: ['NOT_IMPLEMENTED:full-phase-2-scenario'],
+  }));
+}
+```
+
+Extend the Phase 1 `TestEnvironment.start` implementation so it registers cleanup immediately after each resource starts and unwinds web, worker, fake servers, Temporal workflows, MinIO objects, Redis, PostgreSQL, and Compose volumes in reverse order on partial startup failure. Generate the 12-second 1080×1920 fixture with the pinned Phase 1 media helper before RED, and create signature shells for both support modules. The intended integration RED is the criterion-ID assertion omitting at least one named ID; imports, media `ENOENT`, process startup, migration, or teardown failures are not accepted.
 
 Run:
 
@@ -542,6 +725,11 @@ Expected when authorized: PASS and a private video awaiting manual Studio inspec
 
 `docs/youtube-publishing-setup.md` documents Desktop OAuth config creation/path/mode 0600, exact scopes, Testing seven-day warning, API audit/private restriction, feature/verification flags, Keychain service/opaque ID, reconnect/disconnect, Shorts/thumbnail limitation, quota/policy failure, deterministic commands, optional smoke gates, and manual Studio review. It contains environment names and nonsecret example paths only.
 
+```bash
+! rg -n 'OPENAI_API_KEY=|refresh_token=|client_secret=' docs/youtube-publishing-setup.md
+pnpm format:check
+```
+
 ## Complete final verification
 
 - [ ] Run:
@@ -570,8 +758,25 @@ git diff --check
 ```
 
 - [ ] On target Apple Silicon Mac, run deterministic acceptance commands from cycle 3. These require no external Google/OpenAI credential.
+
+```bash
+pnpm acceptance:phase2 --fixture tests/fixtures/acceptance/phase-2-manifest.json
+pnpm acceptance:phase2-privacy --evidence .artifacts/acceptance/phase-2/latest
+node --test tests/acceptance/phase-2-evidence-schema.test.mjs
+```
+
 - [ ] Record optional external smoke as `PASS` only when explicitly run, otherwise `NOT_RUN (NO EXTERNAL CREDENTIAL AUTHORIZATION)`; never convert not-run into a failed deterministic criterion.
+
+```bash
+jq -e '.optionalRealSmoke.status == "PASS" or (.optionalRealSmoke.status == "NOT_RUN" and .optionalRealSmoke.reason == "NO EXTERNAL CREDENTIAL AUTHORIZATION")' .artifacts/acceptance/phase-2/latest/evidence.json
+```
+
 - [ ] Confirm `git status --short` contains no acceptance artifacts, client config, Keychain export, logs, reports, or media beyond committed generated test fixtures.
+
+```bash
+! git status --short | rg '(\.artifacts/acceptance|client.*secret|keychain|\.log$|diagnostic|acceptance.*report)'
+git status --short -- tests/fixtures/media/vertical-12s.mp4
+```
 
 ## Review gate
 

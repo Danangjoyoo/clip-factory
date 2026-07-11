@@ -49,21 +49,45 @@ it('hides paid controls and says truthful manual copy', async () => {
 });
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/NewProjectForm.test.tsx`; expect import FAIL.
+- [ ] Create a typed `NewProjectForm` shell rendering a disabled submit button, verify typecheck passes, then run the test; expect the named default-values/source-mode assertion to FAIL.
 
 - [ ] **GREEN:** create controlled state with exact defaults `{sourceMethod:'FILEPATH', discoverHighlights:true, language:'en', model:'gpt-5.6-sol', reasoning:'high', maximumSpendUsd:'5.00', maximumClips:5, maximumClipSeconds:60, instruction:'', platform:'YOUTUBE_SHORTS'}`. Render tablist/tabs/panels, absolute-path input or resumable upload picker, and conditionally render paid controls.
 
-- [ ] Run conditional tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/NewProjectForm.test.tsx
+# Expected: PASS
+```
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/NewProjectForm.test.tsx`; expect PASS.
 
 - [ ] **RED: model/reasoning catalog test.** Model selector lists `gpt-5.6-sol` then `gpt-5.5`; an access projection marks unavailable/unknown entries with text rather than color, disables unavailable options, and never changes the current selection automatically. `gpt-5.6-sol` lists `none, low, medium, high, xhigh, max`; `gpt-5.5` omits `max`; high remains the explicit app default. Show each profile's single generated-token ceiling, explain that it includes reasoning and visible output, and reject a value absent from the selected model.
 
 - [ ] **GREEN:** map Task 3 catalog plus Task 15 sanitized model-access projection to `<option>` values. When the configured default is unavailable, keep it visibly selected with an error and require the user to choose `gpt-5.5`; do not silently fall back. Changing model selects its declared reasoning default only as part of that explicit user action and announces the change. An unknown access check or missing key disables AI project creation but leaves Manual mode available.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/NewProjectForm.test.tsx
+# Expected: PASS
+```
+
 - [ ] **RED: preflight and validation behavior.** Invalid/nonabsolute path, unsupported extension, spend with more than two decimals/negative, count outside `1..50`, max seconds outside `1..10800`, and instruction over 2000 chars each show associated error. Valid AI input calls `onEstimate`, displays pricing version, `1.5× safety reserve`, full coverage, `$x.xx–$y.yy`, and `Expected candidates: 0–5 (not guaranteed)` before enabled Create.
 
 - [ ] **GREEN:** debounce estimate 300 ms using injected scheduler, cancel stale requests with AbortController, render loading/error/retry, and require latest estimate hash in create request. Upload selection starts Task 9 multipart and shows bytes/parts resume; filepath sends no browser filesystem access.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/NewProjectForm.test.tsx
+# Expected: PASS
+```
+
 - [ ] **REFACTOR:** every input has label/error `aria-describedby`; status announcements use polite live region; disabled controls remain dimensionally stable; submit moves focus to first invalid field or routes to Processing on 201.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/NewProjectForm.test.tsx
+# Expected: PASS
+```
 
 ## Verification and commit
 

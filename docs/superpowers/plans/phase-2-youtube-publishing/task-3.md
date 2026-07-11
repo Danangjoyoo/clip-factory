@@ -548,7 +548,16 @@ git diff --check
 ```
 
 - [ ] Inspect the generated migration diff and confirm it is additive and contains no Phase 1 table alteration.
+
+```bash
+! rg -n '^\s*(alter|drop)\s+table\s+"?(projects|clips|renders|analysis_runs|ai_usage_events)"?' prisma/migrations/20260712000100_phase_2_youtube_connection/migration.sql
+```
+
 - [ ] Query `information_schema.columns` and confirm no credential-shaped column exists anywhere in `youtube_connections`.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/youtube-connection.repository.test.ts -t 'has no credential-shaped column'
+```
 
 ## Review gate
 

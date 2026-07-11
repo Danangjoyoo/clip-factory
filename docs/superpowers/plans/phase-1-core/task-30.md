@@ -46,36 +46,72 @@ Implement Settings and observability from design §§17, 24, and 28: allowed roo
 - Test: `apps/worker/tests/domain/test_redaction.py`
 - Test: `apps/worker/tests/application/test_health.py`
 - Test: `tests/integration/observability/diagnostics.test.ts`
+- Fixture: `packages/contracts/test-fixtures/redaction-cases.json`
 - Settings routes call one service; UI receives no secret/path beyond user-edited allowed roots.
 
 ## RED → GREEN → REFACTOR
 
 - [ ] **RED: redaction property/table tests.** Inputs containing `sk-proj-secret`, bearer token, `/Users/me/private.mov`, transcript sentence, MinIO secret, OAuth token keys, and nested variants must produce `[REDACTED_SECRET]`, `[REDACTED_PATH]`, or `[REDACTED_TEXT]`; safe IDs/stage/timing/model remain.
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/settings/domain/redaction.test.ts` and Python redaction test; expect import FAIL.
+- [ ] **SCAFFOLD:** create `packages/contracts/test-fixtures/redaction-cases.json` with one secret/path/transcript/safe-ID nested fixture and compile-safe TS/Python redaction shells that return `{}`; verify TS typecheck and Python test collection pass. Run both tests; expect the named category-token assertions to FAIL because the shells return no `[REDACTED_SECRET]`, `[REDACTED_PATH]`, or `[REDACTED_TEXT]` values.
+
+```bash
+# SCAFFOLD attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/settings
+# Expected: PASS
+```
 
 - [ ] **GREEN: create allowlist-based structured fields.**
 
 ```ts
-const SAFE_KEYS = new Set(['timestamp','level','event','projectId','workflowId','activityId','clipId','renderId','errorCode','stage','durationMs','retryCount','modelId','tokenCount','costMicrousd','queueDelayMs']);
+const SAFE_SCALAR_KEYS = new Set(['timestamp','level','event','projectId','workflowId','activityId','clipId','renderId','errorCode','stage','durationMs','retryCount','modelId','tokenCount','costMicrousd','queueDelayMs']);
+const SECRET_KEYS = /(?:secret|token|authorization|cookie|password|credential|apiKey)/iu;
+const PATH_KEYS = /(?:path|filename|sourceLocator|resolved|candidate)/iu;
+const TEXT_KEYS = /(?:transcript|caption|prompt|response|message|word|text)/iu;
 export function redactDiagnosticRecord(input: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(input).filter(([key]) => SAFE_KEYS.has(key)).map(([key,value]) => [key, typeof value === 'string' && /(?:sk-[A-Za-z0-9_-]+|Bearer\s+\S+|\/Users\/[^\s]+)/u.test(value) ? '[REDACTED]' : value]));
+  return Object.fromEntries(Object.entries(input).map(([key, value]) => {
+    if (SAFE_SCALAR_KEYS.has(key) && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || value === null)) return [key, value];
+    if (SECRET_KEYS.test(key) || (typeof value === 'string' && /(?:sk-[A-Za-z0-9_-]+|Bearer\s+\S+)/u.test(value))) return [key, '[REDACTED_SECRET]'];
+    if (PATH_KEYS.test(key) || (typeof value === 'string' && /(?:\/Users\/|file:\/\/|[A-Za-z]:\\)/u.test(value))) return [key, '[REDACTED_PATH]'];
+    if (TEXT_KEYS.test(key) || typeof value === 'string') return [key, '[REDACTED_TEXT]'];
+    return [key, '[REDACTED_TEXT]'];
+  }));
 }
 ```
 
-- [ ] Run redaction tests; expect PASS. Python uses identical safe-key fixture from `packages/contracts/test-fixtures/redaction-cases.json`.
+The Python implementation consumes the same category fixtures. Tests prove category precedence (`secret` before `path` before free text), nested array/object traversal, preservation of allowlisted UUIDs/timings/model IDs, and that arbitrary unknown strings are redacted as text rather than dropped or mislabeled.
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/settings/domain/redaction.test.ts && uv run --directory apps/worker pytest tests/domain/test_redaction.py -q`; expect PASS. Python uses identical category fixture from `packages/contracts/test-fixtures/redaction-cases.json`.
 
 - [ ] **RED: health aggregation.** Test statuses for Next.js, PostgreSQL, Redis, MinIO, Temporal, worker heartbeat, FFmpeg, the exact Task 12 transcriber revision/hash, OpenAI configuration presence, and sanitized per-allowlisted-model access from Task 15; one failure yields `DEGRADED`, not secret detail; heartbeat >30 seconds is offline. A missing key reports access `UNKNOWN`, 403/404 reports only `NOT_ENTITLED`/`NOT_FOUND`, and no health check performs inference.
 
 - [ ] **GREEN:** application `GetHealthService` concurrently invokes narrow health ports with 2-second deadlines, maps to `{component,status,checkedAt,message}`, and derives overall. Next.js never receives the OpenAI key and never constructs an OpenAI client: `worker-health.adapter.ts` reads the closed Task 5 heartbeat projection containing `openAiConfigured`, per-model sanitized access status, and the Task 12 cache revision/hash/status. The native Task 15 adapter refreshes access with `models.retrieve` on explicit Retry and at a bounded 15-minute TTL, never through a Responses inference call and never with silent fallback.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/settings
+# Expected: PASS
+```
+
 - [ ] **RED: settings UI.** Root add/remove validates absolute/nonoverlapping paths after worker check; cache actions show size/model/revision and require confirmation; default platform/caption profile and catalog versions/status render; health status has text/icon, focus, retry.
 
 - [ ] **GREEN:** create controlled Settings sections and API services. Persist nonsecret settings through local config file adapter with atomic temp+rename and mode 0600; API key remains environment-only and never rendered or persisted.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/settings
+# Expected: PASS
+```
+
 - [ ] **RED/GREEN diagnostics:** user click creates ZIP containing redacted JSON logs, metrics, health, versions, probes without media/transcript/raw path/secrets. Before download, scan archive bytes against secret/path/transcript fixtures and abort with `DIAGNOSTICS_REDACTION_FAILED` on match.
 
 - [ ] **REFACTOR:** local metrics include stage duration, real-time factor, ETA error, retries, token/cost, render success, queue delay; no exporter/network endpoint exists. Diagnostics have generated project-safe key and 24-hour cleanup.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/settings
+# Expected: PASS
+```
 
 ## Verification and commit
 

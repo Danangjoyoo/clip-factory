@@ -40,6 +40,7 @@ Provide manual zero-cost metadata creation, safe editing of generated/manual ver
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.tsx`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.module.css`
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/publishing-metadata-editor.test.tsx`
+- Modify: `tests/integration/youtube-publishing/metadata-generation.test.ts`
 - Modify: `apps/web/src/modules/youtube-publishing/composition/youtube-publishing.module.ts`
 
 ## Prerequisites
@@ -562,8 +563,22 @@ git diff --check
 ```
 
 - [ ] Verify manual draft create/edit/approval produces no `AIUsageEvent` and exactly zero cost.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/metadata-generation.test.ts -t 'manual draft create edit approval records zero AI usage and cost'
+```
+
 - [ ] Verify regeneration adds a row and approved/stale fields are never silently overwritten; `PAID_CALL_UNCERTAIN` adds no generated draft result and cannot auto-retry.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/application/services/manage-publishing-metadata.service.test.ts -t 'regeneration preserves approved and stale versions|paid call uncertain'
+```
+
 - [ ] Verify no upload/publication creation API accepts an unapproved or superseded draft.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/application/services/start-youtube-publication.service.test.ts -t 'rejects unapproved or superseded draft'
+```
 
 ## Review gate
 

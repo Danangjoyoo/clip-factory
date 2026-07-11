@@ -34,11 +34,11 @@ Implement design §§10 and 12: explicit user language, local large-v3-quality t
 - Create: `apps/web/src/modules/transcription/application/data-services/transcript.data-service.ts`
 - Create: `apps/web/src/modules/transcription/adapters/persistence/dto/record/transcript-record.dto.ts`
 - Create: `apps/web/src/modules/transcription/adapters/persistence/repositories/prisma-transcript.repository.ts`
-- Create: `apps/web/src/modules/transcription/converters/entity-record/transcript.converter.ts`
+- Create: `apps/web/src/modules/transcription/adapters/persistence/converters/transcript.converter.ts`
 - Create: `apps/web/src/modules/transcription/delivery/http/dto/api/transcript-result-api.dto.ts`
 - Create: `apps/web/src/modules/transcription/converters/api-entity/transcript-result.converter.ts`
 - Test: `apps/web/src/modules/transcription/application/data-services/transcript.data-service.test.ts`
-- Test: `apps/web/src/modules/transcription/converters/entity-record/transcript.converter.test.ts`
+- Test: `apps/web/src/modules/transcription/adapters/persistence/converters/transcript.converter.test.ts`
 - Test: `apps/web/src/modules/transcription/converters/api-entity/transcript-result.converter.test.ts`
 - Modify: `apps/worker/pyproject.toml`
 - Modify: `apps/worker/uv.lock`
@@ -62,8 +62,16 @@ class TranscriptDocument:
     words: Sequence[TranscriptWord]
     segments: Sequence[TranscriptSegment]
 
+@dataclass(frozen=True)
+class Transcription:
+    document: TranscriptDocument
+    backend: Literal["MLX_WHISPER", "FAKE"]
+    model: str
+    model_revision: str
+    weights_sha256: str | None
+
 class TranscriberPort(Protocol):
-    async def transcribe(self, audio_object: ObjectReference, language_tag: str, progress: ProgressCallback) -> TranscriptDocument:
+    async def transcribe(self, audio_object: ObjectReference, language_tag: str, progress: ProgressCallback) -> Transcription:
         raise NotImplementedError
 ```
 
@@ -78,13 +86,19 @@ async def test_transcribe_passes_explicit_language_and_persists_versioned_docume
     service = TranscribeSource(transcriber, store, clock=fixed_clock)
     result = await service.execute(TranscribeCommand(project_id=PROJECT_ID, audio_object=audio_reference(PROJECT_ID), language_tag="es"))
     assert transcriber.calls[0].language_tag == "es"
-    assert result.object_key == f"projects/{PROJECT_ID}/transcripts/{result.transcript_id}.v1.json"
+    assert result.object_reference.key == f"projects/{PROJECT_ID}/transcripts/{result.transcript_id}.v1.json"
+    assert result.object_reference.bucket == "clip-factory"
+    assert result.object_reference.version_id == "v1"
+    assert len(result.object_reference.sha256) == 64
     assert result.word_count == 3
-    assert store.json_objects[result.object_key]["words"][1] == {"text": "mundo", "startMs": 510, "endMs": 900, "confidenceMicros": 970000}
-    assert "hello" not in store.json_objects[result.object_key]["text"]
+    assert result.backend == "FAKE"
+    assert result.model_revision == "fixture-v1"
+    assert result.weights_sha256 is None
+    assert store.json_objects[result.object_reference.key]["words"][1] == {"text": "mundo", "startMs": 510, "endMs": 900, "confidenceMicros": 970000}
+    assert "hello" not in store.json_objects[result.object_reference.key]["text"]
 ```
 
-- [ ] Run `uv run --directory apps/worker pytest tests/application/test_transcribe_source.py -q`; expect import FAIL.
+- [ ] Create compile-safe transcription ports/dataclasses and a `TranscribeSource.execute` shell returning an empty transcript, verify collection passes, then run the test; expect the named word-timestamp assertion to FAIL with an empty word list.
 
 - [ ] **GREEN: create the use case.**
 
@@ -97,27 +111,46 @@ class TranscribeSource:
 
     async def execute(self, command: TranscribeCommand) -> TranscriptResult:
         started = self._clock.monotonic_ms()
-        document = await self._transcriber.transcribe(command.audio_object, command.language_tag, command.progress)
+        transcription = await self._transcriber.transcribe(command.audio_object, command.language_tag, command.progress)
+        document = transcription.document
         validate_document(document)
         transcript_id = command.transcript_id
         key = f"projects/{command.project_id}/transcripts/{transcript_id}.v1.json"
         reference = await self._store.put_json(key, transcript_to_contract(document))
-        return TranscriptResult(transcript_id, reference.key, len(document.words), document.words[-1].end_ms, self._clock.monotonic_ms() - started)
+        return TranscriptResult(transcript_id=transcript_id, object_reference=reference, word_count=len(document.words), duration_ms=document.words[-1].end_ms, runtime_ms=self._clock.monotonic_ms() - started, backend=transcription.backend, model=transcription.model, model_revision=transcription.model_revision, weights_sha256=transcription.weights_sha256)
 ```
 
-- [ ] Run use-case test; expect PASS.
+- [ ] Run `uv run --directory apps/worker pytest tests/application/test_transcribe_source.py -q`; expect PASS.
 
 - [ ] **RED: table-test invalid output:** overlapping/decreasing timestamps, negative times, `end <= start`, segment outside duration, blank language, confidence outside `0..1000000`, and empty document each raise `INVALID_TRANSCRIPT`.
 
-- [ ] **GREEN: implement `validate_document` as a linear scan that enforces those exact constraints and permits adjacent equal boundaries.** Add no translation branch or language detection fallback.
+- [ ] **GREEN:** implement `validate_document(document: TranscriptDocument) -> None` in `domain/transcript.py` as one linear ordered-word/segment scan enforcing the named bounds while allowing adjacent equal boundaries; add no translation or language-detection branch. Run `uv run --directory apps/worker pytest tests/domain/test_transcript.py -q`; expect PASS.
 
-- [ ] Run domain tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_transcript.py tests/application/test_transcribe_source.py tests/adapters/transcription -q
+# Expected: PASS
+```
+
+- [ ] Run `uv run --directory apps/worker pytest tests/domain/test_transcript.py -q`; expect PASS.
 
 - [ ] **RED: model-cache, audio materialization, and exact MLX-call tests.** Stub `huggingface_hub.snapshot_download` and assert repo `mlx-community/whisper-large-v3-mlx`, revision `49e6aa286ad60c14352c404340ded53710378a11`, and an application cache directory are supplied only by an explicit cache-download action. A mismatched `weights.npz` SHA-256 must delete the incomplete cache and raise `TRANSCRIPTION_MODEL_HASH_MISMATCH`. Feed the adapter a scoped MinIO audio object reference; assert Task 11's `MinioObjectMaterializer` verifies version/hash, exposes a private path only inside its async context, and cleans it on success/failure/cancel. Patch only `mlx_whisper.transcribe`; assert its audio argument is that temporary path, `path_or_hf_repo` is the verified local model directory, `language='es'`, `word_timestamps=True`, `task='transcribe'`, and the immutable revision/hash are stored in result metadata. Normal transcription/model use must perform no network call beyond the local MinIO read.
 
-- [ ] **GREEN:** define one adapter-owned immutable model manifest containing the repo, full revision, `weights.npz` hash `05ff791ce3630fae47e7c51004e9666204d786246ec07cac6110af768099b40d`, and expected size. `ModelCache.download()` calls `snapshot_download` with that revision into a private application cache, hashes the completed weight file, and atomically marks the snapshot ready; `ModelCache.require_verified()` never downloads. Implement `MlxWhisperAdapter` with injected Task 11 `MinioObjectMaterializer`; enter its context and run MLX in `asyncio.to_thread`, pass only the verified local model directory to MLX, validate raw output through adapter-only Pydantic Client models, map seconds to integer milliseconds with Decimal `ROUND_HALF_UP`, and emit segment-count progress. Implement `FakeTranscriber` from a checked-in JSON fixture for CI. No application/domain DTO contains `Path`.
+- [ ] **GREEN:** in `model_manifest.py` define the immutable repo/revision/hash/size record; implement `ModelCache.download` and `require_verified` in `model_cache.py`; implement `MlxWhisperAdapter.transcribe` in `mlx_whisper_adapter.py` with Task 11 `MinioObjectMaterializer`, `asyncio.to_thread`, adapter-only Pydantic Client models, Decimal `ROUND_HALF_UP` milliseconds, and segment-count progress; implement `FakeTranscriber.transcribe` from `tests/fixtures/transcription/fake-transcript.json`. No application/domain DTO contains `Path`. Run `uv run --directory apps/worker pytest tests/adapters/transcription/test_model_cache.py tests/adapters/transcription/test_mlx_whisper_adapter.py tests/adapters/transcription/test_fake_transcriber.py -q`; expect PASS.
 
-- [ ] **REFACTOR:** map contract→Entity and Entity→Record in TS, including backend `MLX_WHISPER`, model, revision, language, object key, duration, word count, runtime, UTC creation. Direct converter tests cover every field and invalid enum.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_transcript.py tests/application/test_transcribe_source.py tests/adapters/transcription -q
+# Expected: PASS
+```
+
+- [ ] **REFACTOR:** map contract→Entity at delivery and Entity→Record privately inside `PrismaTranscriptRepository`, including backend `MLX_WHISPER`, model, full immutable model revision, nullable weights SHA-256, language, and the complete artifact `{bucket,key,versionId,sha256}` plus duration, word count, runtime, and UTC creation. The repository writes `objectBucket`, `objectKey`, `objectVersionId`, and `objectSha256` atomically; its round-trip test proves none is lost. The internal callback rejects incomplete object references, rejects MLX results whose model revision/hash differ from the Task 12 manifest, and requires null model-weights hash only for `FAKE`. Re-run `uv run --directory apps/worker pytest tests/domain/test_transcript.py tests/application/test_transcribe_source.py tests/adapters/transcription -q && pnpm exec vitest run apps/web/src/modules/transcription && pnpm test:architecture`; expect PASS.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_transcript.py tests/application/test_transcribe_source.py tests/adapters/transcription -q
+# Expected: PASS
+```
 
 ## Verification and commit
 

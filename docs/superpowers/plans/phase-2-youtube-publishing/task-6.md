@@ -517,6 +517,11 @@ Expected GREEN: PASS.
 
 Keep `ActiveOAuthFlowStore` as a process-memory adapter interface with `put/pop` and no serialization method. Add denial, mismatch, expired, already-consumed, and missing-scope tests before refactoring. Rerun all Task 6 tests and import-linter.
 
+```bash
+uv run --directory apps/worker pytest tests/application/youtube_publishing/test_oauth_service.py -q
+uv run --directory apps/worker lint-imports
+```
+
 ## Broader verification
 
 - [ ] Run:
@@ -532,7 +537,16 @@ git diff --check
 ```
 
 - [ ] Require complete branch coverage for exact host/path, state mismatch, expiry, consume-once, missing scope, broad scope, denial, revoke failure, and redaction.
+
+```bash
+uv run --directory apps/worker pytest tests/domain/youtube_publishing tests/application/youtube_publishing --cov=clip_factory.domain.youtube_publishing --cov=clip_factory.application.youtube_publishing --cov-branch --cov-fail-under=100 -q
+```
+
 - [ ] Search Temporal payload and event types and confirm none contains a token/code/verifier/client-secret field.
+
+```bash
+! rg -n 'access_?token|refresh_?token|authorization_?code|code_?verifier|client_?secret' apps/worker/src/clip_factory/entrypoints/contracts apps/worker/src/clip_factory/entrypoints/temporal packages/contracts/schema/youtube-publishing.schema.json
+```
 
 ## Review gate
 

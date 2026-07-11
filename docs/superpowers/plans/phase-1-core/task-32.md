@@ -9,7 +9,7 @@ Implement design §27 integration coverage for PostgreSQL, Redis, MinIO, Tempora
 ## Boundaries and files
 
 - Requires Tasks 4–17 and 31.
-- Create: `infra/compose/docker-compose.test.yml`
+- Reuse/complete: `infra/compose/docker-compose.ci.yml`
 - Create: `tests/integration/setup/global-setup.ts`
 - Create: `tests/integration/setup/global-teardown.ts`
 - Create: `tests/integration/setup/wait-for-services.ts`
@@ -42,19 +42,45 @@ it('starts fresh disposable infrastructure with an empty product schema', async 
 });
 ```
 
-- [ ] Run `pnpm test:integration -- infrastructure-health.test.ts`; expect connection/setup FAIL.
+- [ ] First create `docker-compose.ci.yml` and setup/support shells, start the real Task 4 services with `docker compose -p clip-factory-test-local -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.ci.yml up -d --wait`, and verify the test collects. Run `pnpm test:integration -- infrastructure-health.test.ts`; expect the named empty-product-schema assertion to FAIL because the shell setup deliberately creates a sentinel `projects` table; connection/setup failures are not accepted.
 
-- [ ] **GREEN:** test overlay sets ephemeral PostgreSQL database, Redis no persistence, MinIO `clip-factory-test` bucket, Temporal namespace `clip-factory-test`, fake web/worker credentials, CPU/fake model adapters, and no host production volumes. Global setup uses `docker compose -p <unique> up -d --wait`; teardown uses `down -v --remove-orphans` in `finally`.
+- [ ] **GREEN:** implement the real-service overlay in `infra/compose/docker-compose.ci.yml`, `globalSetup` in `tests/integration/setup/global-setup.ts`, and `globalTeardown` in `tests/integration/setup/global-teardown.ts`: overlay Task 4's named services with ephemeral DB/no Redis persistence/test bucket+namespace/fake credentials, run exact Compose `up -d --wait`, initialize bucket/namespace, then spawn and capture `uv run --directory apps/worker clip-factory-worker --adapter fake`; teardown must await worker termination and matching `down -v --remove-orphans` in `finally`. Run `pnpm test:integration -- infrastructure-health.test.ts`; expect PASS.
 
-- [ ] Run health test; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm compose:config
+# Expected: PASS
+```
+
+- [ ] Run `pnpm test:integration -- infrastructure-health.test.ts`; expect PASS.
 
 - [ ] **RED: migration history test.** Apply `prisma migrate deploy` to empty DB, assert all Task 6 tables/checks/indexes, reapply no-op, insert invalid checks, then migrate a second independently created DB and compare normalized schema dump hashes.
 
-- [ ] **GREEN:** integration helper invokes pinned Prisma CLI with test `DATABASE_URL`, captures `_prisma_migrations`, and normalizes owner/ACL lines before SHA-256 comparison. No `migrate dev` runs in suite.
+- [ ] **GREEN:** implement `applyMigrations(databaseUrl)` and `normalizedSchemaHash(databaseUrl)` in `tests/integration/support/postgres.ts` to invoke pinned Prisma CLI against only test `DATABASE_URL`, capture `_prisma_migrations`, and normalize owner/ACL lines before SHA-256 comparison; forbid `migrate dev`. Run `pnpm test:integration -- migration-history.test.ts`; expect PASS.
 
-- [ ] **RED/GREEN vertical tests:** multipart part-1/resume/complete/head/delete; internal result duplicate/conflict; Redis loss/rebuild/SSE Last-Event-ID; Temporal wait/signal/replay; callback object-reference rejection; repository converter round trips; uncertain paid-call recorded-artifact reconciliation and confirmed-absence waiting.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm compose:config
+# Expected: PASS
+```
 
-- [ ] **REFACTOR:** use unique UUID/key prefixes per test, deterministic clocks/fakes, condition-based waits capped 30 seconds, and artifact capture only on failure. Assert cleanup leaves zero test objects/keys/workflows.
+- [ ] **RED:** add the listed vertical tests under `tests/integration/storage`, `jobs`, `workflows`, `recovery`, and `database`; run `pnpm test:integration`; expect each first named behavioral assertion to FAIL against compile-safe fake clients while setup remains healthy.
+
+- [ ] **GREEN:** replace only those fake clients with the Task 4 Compose clients in `support/{postgres,redis,minio,temporal}.ts`; implement multipart/resume/complete/head/delete, result duplicate/conflict, Redis rebuild/SSE, Temporal wait/signal/replay, callback object-reference rejection, repository round trips, and uncertain-call reconciliation. Run `pnpm test:integration`; expect PASS.
+
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm compose:config
+# Expected: PASS
+```
+
+- [ ] **REFACTOR:** centralize UUID/key prefix creation and 30-second condition waits in `tests/integration/support/test-environment.ts`, inject deterministic clocks/fakes, retain artifacts only on failure, and assert zero test objects/keys/workflows after cleanup. Re-run `pnpm test:integration && pnpm test:architecture`; expect PASS.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm compose:config
+# Expected: PASS
+```
 
 ## Verification and commit
 
@@ -62,7 +88,7 @@ it('starts fresh disposable infrastructure with an empty product schema', async 
 pnpm compose:config
 pnpm test:contracts
 pnpm test:integration
-docker compose -p clip-factory-test-local -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.test.yml ps --all
+docker compose -p clip-factory-test-local -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.ci.yml ps --all
 git diff --check
 ```
 

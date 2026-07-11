@@ -43,15 +43,27 @@ it.each(['AWAITING_BUDGET','PAID_CALL_UNCERTAIN','AWAITING_REVIEW'] as const)('s
 });
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/jobs/delivery/ui/ProcessingView.test.tsx`; expect import FAIL.
+- [ ] Create a typed `ProcessingView` shell rendering only its heading, verify typecheck passes, then run the test; expect the named stage/progress/ETA assertion to FAIL because no stage content is rendered.
 
 - [ ] **GREEN:** semantic ordered stage list includes text/icon status, progressbar only for measured running stage, ETA range when present, `Worker offline — job remains queued`, sanitized log disclosure, Cancel, and state-specific action panel. SSE hook sends `Last-Event-ID`, retries 1/2/4/8 seconds capped at 15, stops on abort, and fetches durable snapshot before reconnect.
 
-- [ ] Run processing tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/jobs/delivery/ui apps/web/src/modules/jobs/delivery/hooks
+# Expected: PASS
+```
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/jobs/delivery/ui/ProcessingView.test.tsx`; expect PASS.
 
 - [ ] **RED: budget actions.** Assert cap input previews new safe estimate, coverage requires explicit start/end and displays omitted range, Cancel says no OpenAI spend when no call occurred, and invalid action retains focus/error.
 
 - [ ] **GREEN:** `BudgetActions` exposes exactly `Raise cap`, `Use a contiguous time range`, `Cancel analysis`; each POST includes current analysis version/idempotency key and disables only its own submission.
+
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/jobs/delivery/ui apps/web/src/modules/jobs/delivery/hooks
+# Expected: PASS
+```
 
 - [ ] **RED: ambiguous paid-call disclosure and authorization.**
 
@@ -72,7 +84,19 @@ it('requires explicit acknowledgement and fresh reservation after an ambiguous p
 
 - [ ] **GREEN:** render exact copy above, separate possible spend from Actual OpenAI spend, offer `Abandon analysis` and disabled-until-checked `Reserve and retry`. The API request cannot carry a caller-supplied reserve amount; server recalculates Task 14 and returns `AWAITING_BUDGET` if fresh reserve no longer fits.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/jobs/delivery/ui apps/web/src/modules/jobs/delivery/hooks
+# Expected: PASS
+```
+
 - [ ] **REFACTOR:** visible focus, live announcements, reduced motion, long error wrapping, and keyboard-only action completion. Status never relies on color. `Finish project` signals Task 13 `complete_project`; until then `AWAITING_REVIEW` keeps the workflow open for Add Clip and render batches.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/jobs/delivery/ui apps/web/src/modules/jobs/delivery/hooks
+# Expected: PASS
+```
 
 ## Verification and commit
 

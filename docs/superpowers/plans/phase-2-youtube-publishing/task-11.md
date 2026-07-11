@@ -32,6 +32,7 @@ Implement a narrow `YouTubePublisher` port over the official resumable upload pr
 - Create: `apps/worker/tests/adapters/youtube/test_resumable_range.py`
 - Create: `apps/worker/tests/adapters/youtube/test_youtube_video_converter.py`
 - Create: `apps/worker/tests/adapters/youtube/test_youtube_publisher.py`
+- Create: `apps/worker/tests/contracts/test_youtube_publisher_contract.py`
 - Create: `apps/worker/tests/adapters/storage/test_minio_artifact_byte_source.py`
 - Create: `tests/integration/youtube-publishing/test_fake_youtube_resumable_upload.py`
 - Modify: `apps/worker/src/clip_factory/composition/worker_container.py`
@@ -709,6 +710,10 @@ Expected GREEN: PASS.
 
 Create one parameterized contract suite whose subject factory returns the HTTP adapter against the stateful fake and the in-memory deterministic fake used by application tests. Assert identical create/probe/chunk/completion/pre-final-expiry/final-uncertainty/error/warning semantics; do not assert fake implementation details in the shared suite.
 
+```bash
+uv run --directory apps/worker pytest tests/contracts/test_youtube_publisher_contract.py -q
+```
+
 ## Broader verification
 
 - [ ] Run:
@@ -725,8 +730,23 @@ git diff --check
 ```
 
 - [ ] Confirm every insert request is private, and only a verified scheduled request has `publishAt`.
+
+```bash
+uv run --directory apps/worker pytest tests/adapters/youtube/test_youtube_publisher.py -q -k 'private or publish_at or unverified'
+```
+
 - [ ] Confirm session/token/query/body values are absent from logs/errors and SDK/client DTOs are adapter-only.
+
+```bash
+uv run --directory apps/worker pytest tests/adapters/youtube/test_youtube_publisher.py -q -k 'redact or credential or session'
+pnpm test:architecture
+```
+
 - [ ] Confirm thumbnail failure never raises an upload-failure result.
+
+```bash
+uv run --directory apps/worker pytest tests/contracts/test_youtube_publisher_contract.py -q -k thumbnail
+```
 
 ## Review gate
 

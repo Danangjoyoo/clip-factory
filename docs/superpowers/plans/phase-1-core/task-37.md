@@ -39,9 +39,15 @@ test('acceptance bundle covers every numbered criterion without sensitive conten
 });
 ```
 
-- [ ] Run `node --test tests/acceptance/evidence-schema.test.mjs`; expect ENOENT for evidence.
+- [ ] Create a schema-valid evidence shell with all fourteen cases marked `NOT_RUN`, verify JSON parsing succeeds, then run `node --test tests/acceptance/evidence-schema.test.mjs`; expect the named all-cases-pass assertion to FAIL with `NOT_RUN`; ENOENT is not accepted.
 
-- [ ] **GREEN: create manifest and preflight.** Manifest declares sample duration `1800000..3600000`, max duration `10800000`, max bytes `10737418240`, required formats, output 1080×1920/H.264/AAC, presets, fourteen criterion IDs, and qualitative threshold three. Preflight requires Apple `arm64`, Docker/Compose/uv/Python/FFmpeg exact versions, writable artifact directory, both env paths regular/readable/allowed, worker model available, local ports free, and fake OpenAI default.
+- [ ] **GREEN: create manifest and preflight.** Manifest declares sample duration `1800000..3600000`, max duration `10800000`, max bytes `10737418240`, required formats, output 1080×1920/H.264/AAC, presets, fourteen criterion IDs, and qualitative threshold three. Preflight requires Apple `arm64`, Docker/Compose/uv/Python/FFmpeg exact versions, writable artifact directory, both env paths regular/readable/allowed, local ports free, fake OpenAI default, and the MLX cache at exact revision `49e6aa286ad60c14352c404340ded53710378a11` with weights SHA-256 `05ff791ce3630fae47e7c51004e9666204d786246ec07cac6110af768099b40d`. Normal acceptance transcription runs with Hugging Face network access blocked and fails if any download is attempted.
+
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 - [ ] Run `pnpm acceptance:preflight`; expect actionable failure until the two environment paths are set, then PASS without modifying either file.
 
@@ -49,7 +55,13 @@ test('acceptance bundle covers every numbered criterion without sensitive conten
 
 - [ ] **GREEN:** `run-phase-1.mjs` starts Task 4 lifecycle, drives Task 34/35 Playwright acceptance project, records source before/after stat/fingerprint, stage/progress/ETA events, workflow/activity IDs/counts, media probes, render sibling outcomes, costs, both paid ambiguity crash cases, service/worker restarts, three presets, upload/filepath, relink/delete, then stops only processes it started. It writes `.artifacts/acceptance/<UTC timestamp>/evidence.json` and updates `latest` symlink.
 
-- [ ] **RED/GREEN privacy audit:** recursively scan evidence, logs, diagnostics, Temporal payload exports, Redis values, MinIO metadata, public API **responses**, public request captures except the explicitly permitted filepath-create/relink input field, and every database JSON/JSONB or text column except the allowlisted `source_assets.display_path` and `source_assets.resolved_path` columns for API-key patterns, raw absolute paths, transcript phrases sampled by hash, and media magic bytes. Query PostgreSQL metadata to prove path-shaped values occur only in those two intended columns. Assert public project/source presentation returns a safe basename or user-entered display label rather than the resolved path, authenticated locator bodies are excluded from access/body logs, the OpenAI fake audit request contains only transcript/instruction/schema, and local source hashes are unchanged.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
+
+- [ ] **RED/GREEN privacy audit:** recursively scan evidence, logs, diagnostics, complete Temporal workflow histories/activity inputs/activity results, Redis values, MinIO metadata, public API **responses**, public request captures except the explicitly permitted filepath-create/relink input field, and every database JSON/JSONB or text column except the allowlisted `source_assets.display_path` and `source_assets.resolved_path` columns for API-key patterns, raw absolute paths, `file://`/capability URLs, transcript phrases sampled by hash, and media magic bytes. Query PostgreSQL metadata to prove path-shaped values occur only in those two intended columns. Assert render/preview payloads contain immutable local fingerprint/size/mtime or upload key/version/hash but no resolved/temp path; public project/source presentation returns a safe basename or user-entered display label rather than the resolved path; authenticated locator bodies are excluded from access/body logs; the OpenAI fake audit request contains only transcript/instruction/schema; and local source hashes are unchanged.
 
 - [ ] **Manual qualitative gate:** checklist records three clip IDs, hook/coherence/payoff review, minor edits performed, reviewer/date, and `MANUAL_PASS`. It states this is sample evidence, not a guaranteed model outcome. A failing qualitative gate keeps Phase 1 unaccepted without rewriting automated results.
 
@@ -57,7 +69,13 @@ test('acceptance bundle covers every numbered criterion without sensitive conten
 
 - [ ] **Ambiguous paid-call gate:** use deterministic fake crash after callback commit to prove one provider call after reconciliation; fake crash after send/before durable result to prove state `PAID_CALL_UNCERTAIN`, no ETA or automatic retry, possible-spend disclosure, explicit acknowledgement, fresh reservation, then second call.
 
-- [ ] **REFACTOR:** `privacy-audit.mjs` writes only rule IDs/counts, evidence hashes every artifact, runner is resumable/idempotent by acceptance run ID, and cleanup never deletes user source.
+- [ ] **REFACTOR:** `privacy-audit.mjs` writes only rule IDs/counts, evidence hashes every artifact, runner is resumable/idempotent by acceptance run ID, and cleanup never deletes user source. Before and after forced cancellation/failure at preprocess, preview, and render stages, enumerate the configured worker workspace and assert no materialized upload, ASS, partial MP4, or abandoned activity directory remains.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Complete final verification
 

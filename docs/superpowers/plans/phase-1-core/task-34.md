@@ -53,11 +53,17 @@ test('manual filepath transcribes, adds, edits, renders, and downloads with zero
 });
 ```
 
-- [ ] Run `pnpm test:e2e -- manual-filepath.spec.ts`; expect FAIL at first absent fixture/locator.
+- [ ] Create the deterministic fixture and locator fake first, start the app and fake worker, and verify the Playwright test is discovered. Run `pnpm test:e2e -- manual-filepath.spec.ts`; expect the named completed-project assertion to FAIL because the fake workflow shell remains `QUEUED`.
 
 - [ ] **GREEN:** add only seed fixture/routes/locators needed for this journey; wait on workflow/SSE conditions, never `waitForTimeout`. Capture console errors, failed requests, and download; ffprobe downloaded file through app fixture.
 
-- [ ] Run manual journey; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec playwright install --with-deps chromium
+# Expected: PASS
+```
+
+- [ ] Run `pnpm test:e2e -- manual-filepath.spec.ts`; expect PASS.
 
 - [ ] **RED/GREEN browser upload:** interrupt after part 1, reload, assert resume uploads remaining parts, completes probe, Manual editor path, no body through Next.js by request-size audit.
 
@@ -66,6 +72,12 @@ test('manual filepath transcribes, adds, edits, renders, and downloads with zero
 - [ ] **RED/GREEN responsive/accessibility:** Chromium 1440×1000 editor screenshot and 390×844 Projects/Processing screenshots; tab through controls with visible focus; run axe serious/critical zero; reduced-motion media emulation; assert no horizontal document overflow.
 
 - [ ] **REFACTOR:** shared fixture resets project-scoped data, preserves failure traces/screenshots/video, and asserts zero console errors/failed same-origin requests after every test.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec playwright install --with-deps chromium
+# Expected: PASS
+```
 
 ## Verification and commit
 

@@ -14,7 +14,7 @@ Create the smallest runnable pnpm/Next.js and uv/Python monorepo spine. This rea
 
 ## Exact files
 
-- Create: `.node-version`, `.python-version`, `.npmrc`, `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `vitest.workspace.ts`, `scripts/bootstrap-uv.sh`
+- Create: `.node-version`, `.python-version`, `.npmrc`, `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `vitest.workspace.ts`, `scripts/bootstrap-node.sh`, `scripts/bootstrap-uv.sh`
 - Modify: `.gitignore` by appending generated/tool directories while preserving `.superpowers/` and every existing rule
 - Create: `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/next.config.ts`, `apps/web/src/app/layout.tsx`, `apps/web/src/app/page.tsx`, `apps/web/src/app/page.test.tsx`
 - Create: `packages/contracts/package.json`, `packages/contracts/src/index.ts`, `packages/config/package.json`, `packages/config/src/index.ts`
@@ -30,7 +30,7 @@ Create the smallest runnable pnpm/Next.js and uv/Python monorepo spine. This rea
 
 ## RED → GREEN → REFACTOR
 
-- [ ] **RED: create the workspace contract test before any manifest.**
+- [ ] **RED: create minimal readable manifests with intentionally wrong identity/version sentinels, then create the workspace contract test.** This is a behavioral RED: JSON parsing and imports succeed before the assertion fails.
 
 ```js
 // tests/architecture/workspace.test.mjs
@@ -54,11 +54,30 @@ test('pins the four workspace identities and package manager', async () => {
 });
 ```
 
-- [ ] **Witness RED.** Run `node --test tests/architecture/workspace.test.mjs`. Expect FAIL with `ENOENT: no such file or directory, open 'package.json'`.
+- [ ] **Witness RED.** Run `node --test tests/architecture/workspace.test.mjs`. Expect the named assertion to FAIL with actual `pnpm@0.0.0` versus expected `pnpm@11.11.0`; no `ENOENT`, parse, or module-resolution error is accepted as RED evidence.
 
 - [ ] **GREEN: create pinned root files and workspace manifests.**
 
 ```bash
+# scripts/bootstrap-node.sh
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TOOLS="$ROOT/.tools"
+VERSION="24.18.0"
+BASE="https://nodejs.org/dist/v$VERSION"
+ARCHIVE="node-v$VERSION-darwin-arm64.tar.gz"
+mkdir -p "$TOOLS"
+curl --fail --location --silent --show-error "$BASE/$ARCHIVE" -o "$TOOLS/$ARCHIVE"
+curl --fail --location --silent --show-error "$BASE/SHASUMS256.txt" -o "$TOOLS/SHASUMS256.txt"
+(cd "$TOOLS" && grep "  $ARCHIVE\$" SHASUMS256.txt | shasum -a 256 --check)
+rm -rf "$TOOLS/node"
+mkdir -p "$TOOLS/node"
+tar -xzf "$TOOLS/$ARCHIVE" -C "$TOOLS/node" --strip-components=1
+"$TOOLS/node/bin/node" --version | grep -Fx "v$VERSION"
+PATH="$TOOLS/node/bin:$PATH" corepack enable --install-directory "$TOOLS/node/bin"
+PATH="$TOOLS/node/bin:$PATH" corepack prepare pnpm@11.11.0 --activate
+
 # scripts/bootstrap-uv.sh
 #!/usr/bin/env bash
 set -euo pipefail
@@ -87,11 +106,11 @@ install -m 0755 "$TOOLS/extract/uv-aarch64-apple-darwin/uvx" "$TOOLS/bin/uvx"
     "lint": "pnpm -r lint && pnpm worker:lint",
     "typecheck": "pnpm -r typecheck && pnpm worker:typecheck",
     "test:unit": "vitest run --project unit && pnpm worker:test",
-    "test:coverage": "vitest run --coverage && uv run --directory apps/worker pytest --cov=clip_factory --cov-report=term-missing --cov-fail-under=90",
+    "test:coverage": "vitest run --coverage && .tools/bin/uv run --directory apps/worker pytest --cov=clip_factory --cov-report=term-missing --cov-fail-under=90",
     "test:architecture": "node --test tests/architecture/*.test.mjs && pnpm worker:architecture",
     "test:contracts": "pnpm --filter @clip-factory/contracts test",
     "test:integration": "vitest run --project integration",
-    "test:media": "uv run --directory apps/worker pytest tests/media -v",
+    "test:media": ".tools/bin/uv run --directory apps/worker pytest tests/media -v",
     "test:e2e": "playwright test",
     "prisma:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
@@ -99,11 +118,11 @@ install -m 0755 "$TOOLS/extract/uv-aarch64-apple-darwin/uvx" "$TOOLS/bin/uvx"
     "compose:config": "docker compose --env-file .env -f infra/compose/docker-compose.yml config --quiet",
     "compose:up": "docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait",
     "compose:down": "docker compose --env-file .env -f infra/compose/docker-compose.yml down",
-    "worker:sync": "uv sync --directory apps/worker --frozen",
-    "worker:lint": "uv run --directory apps/worker ruff check src tests",
-    "worker:typecheck": "uv run --directory apps/worker mypy src tests",
-    "worker:test": "uv run --directory apps/worker pytest -q",
-    "worker:architecture": "uv run --directory apps/worker lint-imports",
+    "worker:sync": ".tools/bin/uv sync --directory apps/worker --frozen",
+    "worker:lint": ".tools/bin/uv run --directory apps/worker ruff check src tests",
+    "worker:typecheck": ".tools/bin/uv run --directory apps/worker mypy src tests",
+    "worker:test": ".tools/bin/uv run --directory apps/worker pytest -q",
+    "worker:architecture": ".tools/bin/uv run --directory apps/worker lint-imports",
     "dev": "node scripts/dev.mjs",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:architecture && pnpm test:contracts"
   },
@@ -218,7 +237,7 @@ python_version = "3.12"
 strict = true
 ```
 
-- [ ] Run `corepack enable && corepack prepare pnpm@11.11.0 --activate && ./scripts/bootstrap-uv.sh && pnpm install --lockfile-only && .tools/bin/uv lock --directory apps/worker`. Then run `node --test tests/architecture/workspace.test.mjs`; expect PASS.
+- [ ] Run `./scripts/bootstrap-node.sh && ./scripts/bootstrap-uv.sh`, then `export PATH="$PWD/.tools/node/bin:$PWD/.tools/bin:$PATH"`. Run `node --version`, `pnpm --version`, and `uv --version`; require exactly `v24.18.0`, `11.11.0`, and `uv 0.11.28`. Generate reviewed locks with `pnpm install --lockfile-only && uv lock --directory apps/worker`, then perform the real installs with `pnpm install --frozen-lockfile && uv sync --directory apps/worker --frozen`. Run the workspace test; expect PASS.
 
 - [ ] **RED: add smoke tests before app/package bodies.**
 
@@ -245,7 +264,7 @@ def test_worker_package_version_is_pinned() -> None:
     assert __version__ == "0.1.0"
 ```
 
-- [ ] Witness RED with `pnpm exec vitest run apps/web/src/app/page.test.tsx && uv run --directory apps/worker pytest tests/test_bootstrap.py -q`. Expect the web run to fail because `./page` is absent; after adding only the page, expect Python collection to fail because `__version__` is absent.
+- [ ] Before running the tests, create compiling shells whose page heading is `Bootstrap` and whose worker `__version__` is `0.0.0`. Witness RED with `pnpm exec vitest run apps/web/src/app/page.test.tsx`; expect only the heading assertion to FAIL. Run `uv run --directory apps/worker pytest tests/test_bootstrap.py -q`; expect only the version assertion to FAIL. Missing imports, collection errors, or missing dependencies are setup failures, not valid RED evidence.
 
 - [ ] **GREEN: add the smallest runnable shells.**
 
@@ -264,6 +283,12 @@ __version__ = "0.1.0"
 - [ ] Run `pnpm exec vitest run apps/web/src/app/page.test.tsx && uv run --directory apps/worker pytest tests/test_bootstrap.py -q`; expect both tests PASS.
 
 - [ ] **REFACTOR:** add strict base TS config (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `moduleResolution: Bundler`, `target: ES2023`), the smallest Next layout, Vitest jsdom setup, Prettier config, and package-level `lint`, `typecheck`, and `test` scripts. Keep smoke tests green.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Broader verification
 

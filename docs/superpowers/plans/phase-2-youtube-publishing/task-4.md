@@ -484,7 +484,16 @@ git diff --check
 ```
 
 - [ ] Confirm manual rows cannot persist nonzero actual cost or an AI usage link.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/publishing-metadata-draft.repository.test.ts -t 'manual.*zero cost|manual.*usage'
+```
+
 - [ ] Confirm OpenAI rows retain model/reasoning and the exact linked usage event while old versions remain queryable.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/publishing-metadata-draft.repository.test.ts -t 'OpenAI.*linked usage|old versions'
+```
 
 ## Review gate
 

@@ -119,6 +119,7 @@ export type FinishAttemptEntityDto = Pick<
 
 export interface PublicationRepositoryPort {
   findById(id: PublicationId): Promise<PublicationEntityDto | null>;
+  requireByIdForUpdate(id: PublicationId): Promise<PublicationEntityDto>;
   findByIdempotencyKey(key: string): Promise<PublicationEntityDto | null>;
   listByProject(projectId: ProjectId): Promise<readonly PublicationEntityDto[]>;
   insert(input: PublicationEntityDto): Promise<PublicationEntityDto>;
@@ -128,6 +129,7 @@ export interface PublicationRepositoryPort {
 
 export interface PublicationAttemptRepositoryPort {
   findById(id: PublicationAttemptId): Promise<PublicationAttemptEntityDto | null>;
+  requireCurrentForUpdate(publicationId: PublicationId): Promise<PublicationAttemptEntityDto>;
   listByPublication(publicationId: PublicationId): Promise<readonly PublicationAttemptEntityDto[]>;
   insert(input: PublicationAttemptEntityDto): Promise<PublicationAttemptEntityDto>;
   saveProgress(input: SaveAttemptProgressEntityDto): Promise<PublicationAttemptEntityDto | null>;
@@ -422,7 +424,7 @@ model PublicationAttempt {
 }
 ```
 
-Implement the two Entity-oriented application ports in explicit-select `PrismaPublicationRepository`/`PrismaPublicationAttemptRepository` adapters. Each adapter owns its complete snake-case Record DTO and Entity↔Record converter; Record/Prisma values never cross the adapter boundary. `saveProgress` updates only when the new acknowledged byte count is greater than or equal to the persisted count; stale heartbeats return the current Entity without decreasing progress. Add Entity-oriented `markFinalChunkDispatchStarted`, `markOutcomeUncertain`, `recordReconciliation`, and `acknowledgeDuplicateRisk` to `PublicationAttemptRepositoryPort`; the Prisma implementation uses guarded `updateMany` predicates so timestamps are monotonic and duplicate-risk acknowledgement is impossible before reconciliation.
+Implement the two Entity-oriented application ports in explicit-select `PrismaPublicationRepository`/`PrismaPublicationAttemptRepository` adapters. Each adapter owns its complete snake-case Record DTO and Entity↔Record converter; Record/Prisma values never cross the adapter boundary. `requireByIdForUpdate` and `requireCurrentForUpdate` run inside the caller's unit-of-work transaction using `SELECT … FOR UPDATE` and return only Entity DTOs; Task 12 uses them to derive recovery evidence from one durable snapshot. `saveProgress` updates only when the new acknowledged byte count is greater than or equal to the persisted count; stale heartbeats return the current Entity without decreasing progress. Add Entity-oriented `markFinalChunkDispatchStarted`, `markOutcomeUncertain`, `recordReconciliation`, and `acknowledgeDuplicateRisk` to `PublicationAttemptRepositoryPort`; the Prisma implementation uses guarded `updateMany` predicates so timestamps are monotonic and duplicate-risk acknowledgement is impossible before reconciliation.
 
 Run:
 
@@ -671,7 +673,16 @@ git diff --check
 ```
 
 - [ ] Confirm pre-final retries append bounded attempt rows under one publication; an uncertain post-final attempt cannot append a replacement until reconciliation and explicit duplicate-risk acknowledgement, and local records do not claim one `youtubeVideoId` when YouTube returned none.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/publication-repositories.test.ts -t 'bounded attempt|uncertain post-final|video ID'
+```
+
 - [ ] Confirm unverified scheduled rows and private rows with `publishAt` are impossible even through direct SQL.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/publication-repositories.test.ts -t 'unverified scheduled|private.*publishAt'
+```
 
 ## Review gate
 

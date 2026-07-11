@@ -30,8 +30,8 @@ Implement design §§8, 22–24: a worker-only authenticated boundary that valid
 - Create: `apps/web/src/modules/jobs/adapters/persistence/dto/record/idempotency-receipt-record.dto.ts`
 - Create: `apps/web/src/modules/jobs/adapters/persistence/repositories/prisma-job-projection.repository.ts`
 - Create: `apps/web/src/modules/jobs/adapters/persistence/repositories/prisma-idempotency-receipt.repository.ts`
-- Create: `apps/web/src/modules/jobs/converters/entity-record/job-projection.converter.ts`
-- Create: `apps/web/src/modules/jobs/converters/entity-record/idempotency-receipt.converter.ts`
+- Create: `apps/web/src/modules/jobs/adapters/persistence/converters/job-projection.converter.ts`
+- Create: `apps/web/src/modules/jobs/adapters/persistence/converters/idempotency-receipt.converter.ts`
 - Create: `apps/web/src/modules/jobs/delivery/http/dto/api/worker-result-api.dto.ts`
 - Create: `apps/web/src/modules/jobs/converters/api-entity/worker-result.converter.ts`
 - Create: `apps/web/src/shared/delivery/http/internal-auth.ts`
@@ -51,7 +51,7 @@ Implement design §§8, 22–24: a worker-only authenticated boundary that valid
 - Test: `apps/web/src/shared/delivery/http/internal-auth.test.ts`
 - Test: `apps/web/src/modules/jobs/application/services/apply-worker-result.service.test.ts`
 - Test: `apps/web/src/modules/jobs/converters/api-entity/worker-result.converter.test.ts`
-- Test: `apps/web/src/modules/jobs/converters/entity-record/job-projection.converter.test.ts`
+- Test: `apps/web/src/modules/jobs/adapters/persistence/converters/job-projection.converter.test.ts`
 - Test: `apps/web/src/modules/jobs/delivery/http/worker-result.controller.test.ts`
 - Create: `apps/web/src/app/api/internal/v1/workflows/[workflowId]/result/route.ts`, `apps/web/src/app/api/internal/v1/workflows/[workflowId]/progress/route.ts`, `apps/web/src/app/api/internal/v1/worker/heartbeat/route.ts`
 - Create: `apps/web/src/app/api/internal/v1/sources/[sourceAssetId]/locator/route.ts`, `apps/web/src/app/api/internal/v1/sources/[sourceAssetId]/validation/route.ts`
@@ -82,7 +82,7 @@ it('accepts only the exact bearer service credential', () => {
 });
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/shared/delivery/http/internal-auth.test.ts`; expect import FAIL.
+- [ ] Create a compile-safe auth adapter shell returning unauthorized for every request, verify typecheck passes, then run the test; expect the named valid-credential assertion to FAIL with 401.
 
 - [ ] **GREEN: create timing-safe authentication.**
 
@@ -97,7 +97,7 @@ export function authenticateInternalRequest(header: string|null, expected: strin
 export const INTERNAL_UNAUTHORIZED = { code:'INTERNAL_UNAUTHORIZED', message:'Internal service authentication failed' } as const;
 ```
 
-- [ ] Run auth test; expect PASS.
+- [ ] Run `pnpm exec vitest run apps/web/src/shared/delivery/http/internal-auth.test.ts`; expect PASS.
 
 - [ ] **RED: prove the private locator lifecycle without Temporal/path leakage.**
 
@@ -118,7 +118,7 @@ it('never writes locator request or response bodies to the internal logger', asy
 });
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/application/services/{get-worker-source-locator,apply-source-validation}.service.test.ts apps/web/src/modules/projects/delivery/http/worker-source-locator.controller.test.ts`; expect import FAIL for the two services.
+- [ ] Create compile-safe service/controller shells returning typed `NOT_IMPLEMENTED`, verify test collection passes, then run the exact targets; expect the named authorized-locator and validation-transition assertions to FAIL with `NOT_IMPLEMENTED`.
 
 - [ ] **GREEN: add closed internal locator read/update delivery.**
 
@@ -159,7 +159,7 @@ import { makeJobServiceHarness } from '../../testing/job-service-harness';
 
 it('returns the recorded response without applying the same terminal result twice', async () => {
   const harness = makeJobServiceHarness();
-  const command = { workflowId: '00000000-0000-4000-8000-000000000001', projectId: '00000000-0000-4000-8000-000000000002', status: 'COMPLETED', transcriptObjectKey: 'transcripts/p1/t1.json', clipIds: [], error: null, completedAt: '2026-07-11T00:00:00Z', idempotencyKey: '00000000-0000-4000-8000-000000000003', requestHash: '7d6f9e7f8be1d41e3607b94dbb6c21a779f8019a01bc0a7b39e3107db4a92721' } as const;
+  const command = { workflowId: '00000000-0000-4000-8000-000000000001', projectId: '00000000-0000-4000-8000-000000000002', status: 'COMPLETED', transcriptObject: { bucket:'clip-factory', key:'projects/00000000-0000-4000-8000-000000000002/transcripts/t1.json', versionId:'v1', sha256:'7d6f9e7f8be1d41e3607b94dbb6c21a779f8019a01bc0a7b39e3107db4a92721' }, clipIds: [], error: null, completedAt: '2026-07-11T00:00:00Z', idempotencyKey: '00000000-0000-4000-8000-000000000003', requestHash: '8d6f9e7f8be1d41e3607b94dbb6c21a779f8019a01bc0a7b39e3107db4a92720' } as const;
   const first = await harness.service.execute(command);
   const second = await harness.service.execute(command);
   expect(second).toEqual(first);
@@ -167,7 +167,7 @@ it('returns the recorded response without applying the same terminal result twic
 });
 ```
 
-- [ ] Run the service test; expect import FAIL for the service.
+- [ ] Create a compile-safe `ApplyWorkerResultService` shell returning the unchanged projection, verify test collection passes, then run the exact service test; expect the named completed-projection/object-reference assertion to FAIL on the unchanged projection.
 
 - [ ] **GREEN: create the atomic callback service.**
 
@@ -193,7 +193,7 @@ export class ApplyWorkerResultService {
 }
 ```
 
-- [ ] Run service test; expect PASS. Add witnessed tests for hash conflict, missing key, progress after terminal, and artifact key outside the project prefix.
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/jobs/application/services/apply-worker-result.service.test.ts`; expect PASS. Add witnessed tests for hash conflict, missing key, progress after terminal, and artifact key outside the project prefix.
 
 - [ ] **RED: integration-test transport status.** POST a valid result twice and assert 200 with identical bodies; omit token and assert 401; change payload under the same key and assert 409; use invalid contract version and assert 422.
 
@@ -201,7 +201,19 @@ export class ApplyWorkerResultService {
 
 - [ ] **GREEN: create strict callback delivery.** `WorkerResultApiSchema` is a closed Zod object matching Task 5 object references and canonical states including `PAID_CALL_UNCERTAIN`; it has no transcript/media byte field. `WorkerResultController.apply` authenticates, requires UUID `Idempotency-Key`, hashes canonical JSON, converts API→Entity, calls `ApplyWorkerResultService`, and maps validation/auth/conflict to 422/401/409. `route.ts` contains only `return jobsComposition().workerResultController.apply(request, params.workflowId)`. The separate uncertain-retry schema is `z.object({acknowledgePossiblePriorSpend:z.literal(true)}).strict()` and its service calls Task 14 fresh reservation before the Temporal signal.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
+
 - [ ] **REFACTOR:** use typed errors and constant response envelopes, test API enum mapping and timestamps, and run architecture scans to prove no route imports Prisma/Redis/Temporal.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Broader verification
 

@@ -48,7 +48,7 @@ test('rejects Prisma imports from application code', async () => {
 });
 ```
 
-- [ ] Witness RED with `node --test tests/architecture/typescript-boundaries.test.mjs`; expect FAIL because `scripts/check-ts-boundaries.mjs` does not exist and status is not the asserted policy result.
+- [ ] Before RED, create a compile-safe `scripts/check-ts-boundaries.mjs` shell that always exits `0`; run `node --check scripts/check-ts-boundaries.mjs` and expect PASS. Then run `node --test tests/architecture/typescript-boundaries.test.mjs`; expect the named status assertion to FAIL with actual `0` versus expected `1`, while module loading succeeds.
 
 - [ ] **GREEN: implement the narrow leak scanner.**
 
@@ -103,7 +103,7 @@ def test_import_linter_contract_names_are_stable() -> None:
     assert "temporal-entrypoints-are-outer" in config
 ```
 
-- [ ] Run `node scripts/check-ts-boundaries.mjs apps/web/src`; expect FAIL naming `bad.ts`. Run `uv run --directory apps/worker pytest tests/architecture/test_import_boundaries.py -q`; expect FAIL because `.importlinter` is absent.
+- [ ] Create a compile-safe `.importlinter` containing the declared contracts and verify `uv run --directory apps/worker lint-imports` parses it. Run `node scripts/check-ts-boundaries.mjs apps/web/src`; expect the named forbidden-import assertion to FAIL naming `bad.ts`. Run `uv run --directory apps/worker pytest tests/architecture/test_import_boundaries.py -q`; expect the named forbidden fixture import assertion to FAIL, never a missing-config/setup failure.
 
 - [ ] **GREEN: delete the seeded TypeScript file and create the Python import contracts.**
 
@@ -142,6 +142,12 @@ forbidden_modules = clip_factory.entrypoints.temporal
 - [ ] Run `pnpm test:architecture`; expect PASS.
 
 - [ ] **REFACTOR:** configure dependency-cruiser to reject cycles, outer-to-outer imports, and non-composition concrete construction; configure ESLint `no-restricted-imports` for generated/SDK/DTO leaks. Add a scanner fixture for each rule and assert its exact diagnostic before removing it.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Architecture checks
 

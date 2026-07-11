@@ -622,6 +622,50 @@ it('records final-upload uncertainty and blocks an unacknowledged replacement', 
   })).rejects.toMatchObject({ code: 'UPLOAD_DUPLICATE_RISK_ACKNOWLEDGEMENT_REQUIRED' });
   expect(attempts.insert).not.toHaveBeenCalled();
 });
+
+it('refuses generic recovery and permits ordinary retry only with locked pre-final evidence', async () => {
+  const service = makePublicationEventService({
+    state: 'FAILED',
+    attempt: makeAttempt({
+      finalChunkDispatchStartedAt: new Date('2026-07-11T01:00:00Z'),
+      outcomeUncertainAt: null,
+      reconciliationCheckedAt: null,
+      reconciliationResult: null,
+      duplicateRiskAcknowledgedAt: null,
+      youtubeVideoId: null,
+    }),
+  });
+  await expect(service.retryFailed({ publicationId, expectedAttemptNumber: 1, confirmed: true }))
+    .rejects.toMatchObject({ code: 'FINAL_DISPATCH_RECOVERY_REQUIRED' });
+  expect(publications.updateState).not.toHaveBeenCalledWith(expect.objectContaining({
+    nextState: 'READY_TO_UPLOAD',
+  }));
+  expect(attempts.insert).not.toHaveBeenCalled();
+});
+
+it('creates an acknowledged uncertain replacement through the guarded policy only', async () => {
+  const service = makePublicationEventService({
+    state: 'UPLOAD_OUTCOME_UNCERTAIN',
+    attempt: makeAttempt({
+      finalChunkDispatchStartedAt: fixedTime,
+      outcomeUncertainAt: new Date(fixedTime.getTime() + 1_000),
+      reconciliationCheckedAt: new Date(fixedTime.getTime() + 1_500),
+      reconciliationResult: 'NO_MATCH_FOUND',
+      duplicateRiskAcknowledgedAt: new Date(fixedTime.getTime() + 2_000),
+      youtubeVideoId: null,
+    }),
+  });
+  await service.startReplacementAttempt({
+    publicationId,
+    expectedAttemptNumber: 1,
+    duplicateRiskAcknowledged: true,
+    confirmed: true,
+  });
+  expect(publications.updateState).toHaveBeenCalledWith(expect.objectContaining({
+    nextState: 'READY_TO_UPLOAD',
+  }));
+  expect(attempts.insert).toHaveBeenCalledOnce();
+});
 ```
 
 Append this table and the bounded-attempt assertion:
@@ -657,7 +701,9 @@ Expected RED: service/controller/internal-route shells collect; a `VIDEO_CREATED
 
 - [ ] **GREEN 3.3 — Implement state policy and internal endpoints.**
 
-`ApplyPublicationEventService` validates current publication/attempt IDs, calls Task 2 `assertPublicationTransition` only for an actual state change, updates through application-owned persistence ports in a unit-of-work, attaches remote identity once, clamps progress monotonically, and copies only generated sanitized codes/messages. Progress/heartbeat events update the attempt and return the unchanged publication without asking the transition policy to accept a self-transition. It appends pre-final expired-session attempts with number +1 up to 3. For `UPLOAD_OUTCOME_UNCERTAIN`, it persists final-dispatch/uncertainty audit fields and refuses a replacement until channel reconciliation has a durable result and the user has explicitly acknowledged duplicate risk; then it timestamps acknowledgement, appends the replacement, and signals the workflow.
+`ApplyPublicationEventService` validates current publication/attempt IDs, calls Task 2 `assertPublicationTransition` only for ordinary actual state changes, updates through application-owned persistence ports in a unit-of-work, attaches remote identity once, clamps progress monotonically, and copies only generated sanitized codes/messages. Progress/heartbeat events update the attempt and return the unchanged publication without asking the transition policy to accept a self-transition. `eventToPublicationState` is closed over worker events and cannot emit `READY_TO_UPLOAD`, `UPLOADING`, or `YOUTUBE_PROCESSING` from `UPLOAD_OUTCOME_UNCERTAIN`/`FAILED` recovery.
+
+Recovery uses separate application methods, never `apply` or a generic state setter: `retryFailed` locks the publication and attempt, converts the durable fields to Task 2 `OrdinaryPreFinalRetryEvidence`, calls `assertOrdinaryPreFinalRetry`, then appends a bounded next attempt and sets `READY_TO_UPLOAD`; a non-null final-dispatch marker, outcome uncertainty, reconciliation, acknowledgement, or remote ID returns `FINAL_DISPATCH_RECOVERY_REQUIRED` without mutation. `startReplacementAttempt` locks the same rows, requires `UPLOAD_OUTCOME_UNCERTAIN`, builds `AcknowledgedReplacementEvidence` from persisted final-dispatch/outcome/reconciliation/acknowledgement fields, calls `assertAcknowledgedReplacementAttempt`, then appends the replacement and sets `READY_TO_UPLOAD`. It never accepts a caller-provided acknowledgement as evidence. Reconciliation with `VIDEO_FOUND` attaches the video identity first, calls `assertReconciledRemoteVideo`, and alone may set `YOUTUBE_PROCESSING`. Thus no HTTP/event/UI caller can reach a recovery state through Task 2's generic policy.
 
 All checkpoint/event/attempt internal routes require Phase 1 worker authentication before closed DTO validation. Checkpoint GET exposes only attempt ID/number, opaque session reference, acknowledged/total bytes, video ID, final-chunk-dispatch timestamp, uncertainty timestamp, reconciliation result, duplicate-risk-acknowledged boolean, and cancel flag. Event POST accepts the generated event union. Attempts POST atomically appends a replacement and returns the generated checkpoint; after final dispatch it rejects unless reconciliation and duplicate-risk acknowledgement are already durable. Public start/cancel/retry/reconcile/duplicate-risk routes call one application service method and require explicit confirmation/idempotency.
 
@@ -687,6 +733,55 @@ async apply(input: PublicationProgressEventV1): Promise<PublicationEntityDto> {
   });
 }
 ```
+
+```ts
+async retryFailed(input: RetryFailedPublicationInput): Promise<PublicationEntityDto> {
+  return this.unitOfWork.execute(async (transaction) => {
+    const publication = await transaction.publications.requireByIdForUpdate(input.publicationId);
+    const attempt = await transaction.publicationAttempts.requireCurrentForUpdate(publication.id);
+    let authorization: { nextState: PublicationState.ReadyToUpload };
+    try {
+      authorization = assertOrdinaryPreFinalRetry(publication.state, {
+        kind: 'PRE_FINAL_RETRY',
+        finalChunkDispatchStartedAt: attempt.finalChunkDispatchStartedAt,
+        outcomeUncertainAt: attempt.outcomeUncertainAt,
+        reconciliationCheckedAt: attempt.reconciliationCheckedAt,
+        reconciliationResult: attempt.reconciliationResult,
+        duplicateRiskAcknowledgedAt: attempt.duplicateRiskAcknowledgedAt,
+        youtubeVideoId: publication.youtubeVideoId,
+        attemptNumber: attempt.attemptNumber,
+        maxAttempts: 3,
+      });
+    } catch {
+      throw new PublicationRecoveryError('FINAL_DISPATCH_RECOVERY_REQUIRED');
+    }
+    await transaction.publicationAttempts.insert(nextAttempt(publication, attempt, input));
+    return transaction.publications.updateState(publication.id, authorization.nextState);
+  });
+}
+
+async startReplacementAttempt(input: AcknowledgedReplacementInput): Promise<PublicationEntityDto> {
+  return this.unitOfWork.execute(async (transaction) => {
+    const publication = await transaction.publications.requireByIdForUpdate(input.publicationId);
+    const attempt = await transaction.publicationAttempts.requireCurrentForUpdate(publication.id);
+    const authorization = assertAcknowledgedReplacementAttempt(publication.state, {
+      kind: 'ACKNOWLEDGED_REPLACEMENT',
+      finalChunkDispatchStartedAt: requireValue(attempt.finalChunkDispatchStartedAt),
+      outcomeUncertainAt: requireValue(attempt.outcomeUncertainAt),
+      reconciliationCheckedAt: requireValue(attempt.reconciliationCheckedAt),
+      reconciliationResult: requireValue(attempt.reconciliationResult),
+      duplicateRiskAcknowledgedAt: attempt.duplicateRiskAcknowledgedAt,
+      youtubeVideoId: publication.youtubeVideoId,
+      attemptNumber: attempt.attemptNumber,
+      maxAttempts: 3,
+    });
+    await transaction.publicationAttempts.insert(nextAttempt(publication, attempt, input));
+    return transaction.publications.updateState(publication.id, authorization.nextState);
+  });
+}
+```
+
+`requireByIdForUpdate`/`requireCurrentForUpdate` are Entity-oriented application repository methods added to the Task 5 ports and implemented with `SELECT … FOR UPDATE`; they return Entity DTOs, never Prisma/Record values. `nextAttempt` copies only immutable publication intent and creates a new idempotency key. The request flag `duplicateRiskAcknowledged` is only a confirmation gate; it cannot replace the persisted acknowledgement timestamp passed to the pure policy.
 
 ```bash
 pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/application/services/apply-publication-event.service.test.ts src/modules/youtube-publishing/delivery/http/youtube-publication.controller.test.ts
@@ -849,8 +944,22 @@ git diff --check
 ```
 
 - [ ] Confirm workflow histories contain connection/publication/attempt IDs, object references, snapshot, session reference, offsets, final-dispatch/uncertainty/reconciliation state, and sanitized events only—no token, code, verifier, client secret, media bytes, provider SDK object, or raw error body.
+
+```bash
+uv run --directory apps/worker pytest tests/entrypoints/temporal/youtube_publishing/test_publication_workflow.py -q -k 'history and sanitized'
+```
+
 - [ ] Confirm cancellation after video ID stops polling but never invokes remote delete.
+
+```bash
+uv run --directory apps/worker pytest tests/entrypoints/temporal/youtube_publishing/test_publication_workflow.py -q -k 'cancel and video_id'
+```
+
 - [ ] Confirm worker/app shutdown after accepted schedule does not change YouTube-owned publication.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/publication-workflow-restart.test.ts -t 'accepted schedule survives worker and app shutdown'
+```
 
 ## Review gate
 

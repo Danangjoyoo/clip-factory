@@ -9,7 +9,7 @@ Implement design §27 media coverage: probe, trim, audio normalization, caption 
 ## Boundaries and files
 
 - Requires Tasks 11, 18–23.
-- Create `tests/fixtures/media/generate-source.sh`, `tests/media/test_media_pipeline.py`, `tests/media/assert_probe.py`, golden ASS text, and `.gitignore` fixture output rules.
+- Create `tests/fixtures/media/generate-source.sh`, `apps/worker/tests/media/test_media_pipeline.py`, `apps/worker/tests/media/assert_probe.py`, `apps/worker/tests/media/golden/captions.ass`, and `.gitignore` fixture output rules.
 - CI runs software encoder; native acceptance separately runs VideoToolbox.
 
 ## RED → GREEN → REFACTOR
@@ -29,7 +29,7 @@ def test_synthetic_source_renders_vertical_captioned_clip(media_workspace: Path)
     assert result.caption_difference_pixels > 1000
 ```
 
-- [ ] Run `pnpm test:media`; expect FAIL because fixture generator/pipeline harness is absent.
+- [ ] Create compile-safe fixture-generator and pipeline-harness shells, generate a valid one-second black/silent fixture, and verify ffprobe can read it. Run `pnpm test:media`; expect the named duration/pattern assertion to FAIL because the shell fixture is one second and lacks the requested pattern.
 
 - [ ] **GREEN: create deterministic 10-second source generator.**
 
@@ -45,15 +45,27 @@ ffmpeg -nostdin -hide_banner \
   -c:a aac -b:a 128k -shortest -movflags +faststart -y "$OUT"
 ```
 
-- [ ] Run generator then test; expect pipeline test still FAIL at absent renderer harness, proving fixture itself is valid.
+- [ ] Run the generator and ffprobe validation, then run `pnpm test:media`; expect the named rendered-output assertion to FAIL because the compile-safe renderer shell returns no output while all harness imports and setup succeed.
 
-- [ ] **GREEN:** harness invokes Task 11 probe/extract, Task 18 fixed fake detector track, Task 19 render spec with two cues, Task 21 preview, Task 22 software full render, MinIO local adapter, then ffprobe. Caption pixel difference compares a frame during cue with same source frame rendered without subtitle filter.
+- [ ] **GREEN:** `apps/worker/tests/media/test_media_pipeline.py` invokes Task 11 probe/extract, Task 18 fixed fake detector track, Task 19 render spec with two cues, Task 21 preview, Task 22 software full render, MinIO local adapter, then ffprobe. Caption pixel difference compares a frame during cue with same source frame rendered without subtitle filter. Run `uv run --directory apps/worker pytest tests/media -q`; expect PASS.
 
-- [ ] Run media test; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+PATH="$PWD/.tools/bin:$PATH" tests/fixtures/media/generate-source.sh .artifacts/media-fixtures/talking-head.mp4
+# Expected: PASS
+```
+
+- [ ] Run `uv run --directory apps/worker pytest tests/media -q`; expect PASS.
 
 - [ ] **RED/GREEN additional matrix:** MOV/MKV/WebM probes, unsupported AVI rejection, malformed file, exact trim, source audio preservation, Unicode/ASS escaping, center fallback, manual focus, independent one-of-two render failure, SRT/ZIP contents, subprocess cancellation/partial cleanup.
 
 - [ ] **REFACTOR:** fixture output lives under `.artifacts/media-fixtures`, is regenerated when absent, records FFmpeg version/hash, and failure artifact retention is 3 days in CI.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+PATH="$PWD/.tools/bin:$PATH" tests/fixtures/media/generate-source.sh .artifacts/media-fixtures/talking-head.mp4
+# Expected: PASS
+```
 
 ## Verification and commit
 

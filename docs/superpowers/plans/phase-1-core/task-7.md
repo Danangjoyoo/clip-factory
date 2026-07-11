@@ -39,13 +39,13 @@ Implement persistent projects/source metadata and localhost create/list/get/dele
 - Create: `apps/web/src/modules/projects/delivery/http/dto/api/project-api.dto.ts`
 - Create: `apps/web/src/modules/projects/delivery/http/project.controller.ts`
 - Create: `apps/web/src/modules/projects/converters/api-entity/project.converter.ts`
-- Create: `apps/web/src/modules/projects/converters/entity-record/project.converter.ts`
-- Create: `apps/web/src/modules/projects/converters/entity-record/source-asset.converter.ts`
+- Create: `apps/web/src/modules/projects/adapters/persistence/converters/project.converter.ts`
+- Create: `apps/web/src/modules/projects/adapters/persistence/converters/source-asset.converter.ts`
 - Create: `apps/web/src/modules/projects/composition/projects.composition.ts`
 - Create: `apps/web/src/modules/projects/testing/repositories.ts`
 - Test: `apps/web/src/modules/projects/converters/api-entity/project.converter.test.ts`
-- Test: `apps/web/src/modules/projects/converters/entity-record/project.converter.test.ts`
-- Test: `apps/web/src/modules/projects/converters/entity-record/source-asset.converter.test.ts`
+- Test: `apps/web/src/modules/projects/adapters/persistence/converters/project.converter.test.ts`
+- Test: `apps/web/src/modules/projects/adapters/persistence/converters/source-asset.converter.test.ts`
 - Test: `apps/web/src/modules/projects/application/data-services/project.data-service.test.ts`
 - Test: `apps/web/src/modules/projects/application/data-services/source-asset.data-service.test.ts`
 - Test: `apps/web/src/modules/projects/application/services/create-project.service.test.ts`
@@ -75,7 +75,7 @@ it('maps API enums and source union explicitly', () => {
 });
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/converters/api-entity/project.converter.test.ts`; expect import FAIL because the converter is absent.
+- [ ] Create the declared DTO/converter shells with the converter returning a neutral Entity value, verify typecheck passes, then run the test; expect the named normalized-project assertion to FAIL on the neutral value.
 
 - [ ] **GREEN: create distinct enums and this exhaustive converter.**
 
@@ -94,7 +94,7 @@ export function createProjectApiToEntity(input: CreateProjectApiRequest): Create
 }
 ```
 
-- [ ] Run the converter test; expect PASS. Add and witness failing tests for unknown values, local/upload union exclusivity, optional display fields, and timestamp serialization, then implement only those mappings.
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/converters/api-entity/project.converter.test.ts`; expect PASS. Add and witness failing tests for unknown values, local/upload union exclusivity, optional display fields, and timestamp serialization, then implement only those mappings.
 
 - [ ] **RED: test application policy with in-memory owned-port fakes.**
 
@@ -119,15 +119,15 @@ it('creates a DRAFT manual project and one local source atomically', async () =>
 });
 ```
 
-- [ ] Run the service test; expect import FAIL for `CreateProjectService`.
+- [ ] Create a compile-safe `CreateProjectService` shell returning a neutral Entity without persistence, verify test collection passes, then run the exact service test; expect the named repository-call assertion to FAIL with zero calls.
 
 - [ ] **GREEN: create one-table ports/data services and the transactional service.**
 
 ```ts
-export interface ProjectRepository { insert(record: InsertProjectRecordDto, transaction: TransactionContext): Promise<ProjectRecordDto>; findById(id: string): Promise<ProjectRecordDto|null>; list(): Promise<readonly ProjectRecordDto[]>; delete(id: string, transaction: TransactionContext): Promise<void>; }
-export interface SourceAssetRepository { insert(record: InsertSourceAssetRecordDto, transaction: TransactionContext): Promise<SourceAssetRecordDto>; findByProjectId(projectId: string): Promise<SourceAssetRecordDto|null>; deleteByProjectId(projectId: string, transaction: TransactionContext): Promise<void>; }
-export class ProjectDataService { constructor(private readonly repository: ProjectRepository) {} create(input: CreateProjectEntityDto, transaction: TransactionContext) { return this.repository.insert(projectEntityToRecord(input), transaction).then(projectRecordToEntity); } }
-export class SourceAssetDataService { constructor(private readonly repository: SourceAssetRepository) {} create(input: CreateSourceAssetEntityDto, transaction: TransactionContext) { return this.repository.insert(sourceAssetEntityToRecord(input), transaction).then(sourceAssetRecordToEntity); } }
+export interface ProjectRepository { insert(entity: CreateProjectEntityDto, transaction: TransactionContext): Promise<ProjectEntityDto>; findById(id: string): Promise<ProjectEntityDto|null>; list(): Promise<readonly ProjectEntityDto[]>; delete(id: string, transaction: TransactionContext): Promise<void>; }
+export interface SourceAssetRepository { insert(entity: CreateSourceAssetEntityDto, transaction: TransactionContext): Promise<SourceAssetEntityDto>; findByProjectId(projectId: string): Promise<SourceAssetEntityDto|null>; deleteByProjectId(projectId: string, transaction: TransactionContext): Promise<void>; }
+export class ProjectDataService { constructor(private readonly repository: ProjectRepository) {} create(input: CreateProjectEntityDto, transaction: TransactionContext) { return this.repository.insert(input, transaction); } }
+export class SourceAssetDataService { constructor(private readonly repository: SourceAssetRepository) {} create(input: CreateSourceAssetEntityDto, transaction: TransactionContext) { return this.repository.insert(input, transaction); } }
 export class CreateProjectService {
   constructor(private readonly unitOfWork: UnitOfWork, private readonly projects: ProjectDataService, private readonly sources: SourceAssetDataService) {}
   execute(input: CreateProjectEntityRequest) {
@@ -140,7 +140,9 @@ export class CreateProjectService {
 }
 ```
 
-- [ ] Run service and converter tests; expect PASS.
+`PrismaProjectRepository` and `PrismaSourceAssetRepository` own Entity↔Record conversion internally at the adapter boundary. No application port, service, or data service imports `dto/record`, Prisma-generated types, or an Entity↔Record converter.
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/application/services/create-project.service.test.ts apps/web/src/modules/projects/adapters/persistence/converters`; expect PASS.
 
 - [ ] **RED: test thin HTTP behavior.** Add controller tests asserting invalid input is 400, create is 201 with string micro-USD, list/get is 200, missing is 404, and delete invokes cancellation/artifact cleanup but never a local-source delete method.
 
@@ -164,6 +166,12 @@ export async function POST(request: Request) { return projectsComposition().cont
 `projectEntityToApi` returns a source presentation `{kind,displayLabel,health}` only. For a filepath, `displayLabel` is the basename derived from the submitted display path; it never serializes `displayPath` or `resolvedPath`. The raw submitted path is accepted only in the create/relink request and is available afterward solely through Task 8's authenticated worker locator endpoint.
 
 - [ ] **REFACTOR:** add Prisma repository integration tests, Record↔Entity tests for every enum/null/timestamp/money field, and deletion transaction ordering. Verify repository files reference one Prisma model each and no API/Record type enters services.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Broader verification
 

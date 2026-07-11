@@ -19,6 +19,10 @@ Implement design §26 and acceptance criteria 12–13: all web/worker/architectu
 - Create: `.github/workflows/codeql.yml`
 - Create: `.github/dependabot.yml`
 - Create: `tests/architecture/github-workflows.test.mjs`
+- Create: `scripts/ci-integration.mjs`
+- Create: `scripts/ci-e2e.mjs`
+- Create: `tests/e2e/global-setup.ts`
+- Create: `tests/e2e/global-teardown.ts`
 - Modify: `package.json`
 - Modify: `pnpm-lock.yaml`
 - Pin `yaml` to `2.8.2` without a range.
@@ -41,13 +45,17 @@ test('workflows use immutable actions and contain no deployment authority', asyn
     const workflow = YAML.parse(source);
     assert.equal('pull_request_target' in (workflow.on ?? {}), false);
     assert.doesNotMatch(source, /uses:\s+[^\s]+@(?![a-f0-9]{40}(?:\s|$))/u);
-    assert.doesNotMatch(source, /OPENAI_API_KEY|YOUTUBE|docker\/login-action|packages:\s*write|deploy|release/u);
+    assert.doesNotMatch(source, /OPENAI_API_KEY|YOUTUBE|docker\/login-action|packages:\s*write/u);
+    assert.equal(Object.values(workflow.jobs ?? {}).some((job) => 'environment' in job), false);
+    const commands = Object.values(workflow.jobs ?? {}).flatMap((job) => job.steps ?? []).map((step) => String(step.run ?? '')).join('\n');
+    assert.doesNotMatch(commands, /(?:^|\s)(?:docker\s+(?:login|push)|npm\s+publish|pnpm\s+publish|gh\s+release|kubectl\s|helm\s+upgrade|terraform\s+apply)(?:\s|$)/u);
+    assert.equal((commands.match(/pnpm db:migrate:deploy/gu) ?? []).length <= 1, true);
     assert.deepEqual(workflow.permissions, { contents:'read' });
   }
 });
 ```
 
-- [ ] Run `node --test tests/architecture/github-workflows.test.mjs`; expect FAIL because workflows are absent.
+- [ ] Create parseable least-privilege `ci.yml` and `codeql.yml` shells with no jobs, verify both parse with `yaml`, then run `node --test tests/architecture/github-workflows.test.mjs`; expect the named required-job/action-pin assertion to FAIL with an empty job set.
 
 - [ ] **GREEN: create `ci.yml` with this complete job topology and exact action pins.** Repeat the shown checkout/setup/install preamble in every job; no local composite action is introduced.
 
@@ -142,7 +150,12 @@ jobs:
         with: { version: "0.11.28", python-version: "3.12.11", enable-cache: true }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
       - run: pnpm install --frozen-lockfile && uv sync --directory apps/worker --frozen
-      - run: pnpm test:integration
+      - run: node scripts/ci-integration.mjs -- pnpm test:integration
+        env:
+          COMPOSE_PROJECT_NAME: clip-factory-ci-${{ github.run_id }}
+          COMPOSE_FILES: "-f infra/compose/docker-compose.yml -f infra/compose/docker-compose.ci.yml"
+          WORKER_COMMAND: "uv run --directory apps/worker clip-factory-worker --adapter fake"
+          WEB_COMMAND: "pnpm --filter @clip-factory/web start --hostname 127.0.0.1 --port 3000"
       - if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: { name: integration-failure, path: .artifacts/integration, retention-days: 3 }
@@ -151,7 +164,11 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - run: docker compose -p clip-factory-media -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.test.yml --profile media run --rm media-test
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+        with: { version: "0.11.28", python-version: "3.12.11", enable-cache: true }
+      - run: uv sync --directory apps/worker --frozen
+      - run: scripts/bootstrap-native.sh --platform linux-x86_64 --check-sha256
+      - run: PATH="$PWD/.tools/bin:$PATH" uv run --directory apps/worker pytest tests/media -q
       - if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: { name: media-failure, path: .artifacts/media, retention-days: 3 }
@@ -162,10 +179,17 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with: { node-version: "24.18.0", cache: pnpm }
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+        with: { version: "0.11.28", python-version: "3.12.11", enable-cache: true }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile && uv sync --directory apps/worker --frozen
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - run: node scripts/ci-e2e.mjs -- pnpm test:e2e
+        env:
+          COMPOSE_PROJECT_NAME: clip-factory-e2e-${{ github.run_id }}
+          COMPOSE_FILES: "-f infra/compose/docker-compose.yml -f infra/compose/docker-compose.ci.yml"
+          WORKER_COMMAND: "uv run --directory apps/worker clip-factory-worker --adapter fake"
+          WEB_COMMAND: "pnpm --filter @clip-factory/web start --hostname 127.0.0.1 --port 3000"
       - if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with: { name: playwright-failure, path: "playwright-report\ntest-results", retention-days: 3 }
@@ -179,6 +203,8 @@ jobs:
         with: { context: ., file: infra/compose/web.Dockerfile, push: false, load: false, cache-from: type=gha, cache-to: "type=gha,mode=max" }
       - run: docker compose --env-file .env.example -f infra/compose/docker-compose.yml config --quiet
 ```
+
+`ci-integration.mjs` and `ci-e2e.mjs` use `spawn(command,args,{shell:false})` and parse `COMPOSE_FILES` into the exact `-f` pairs. In `try`, each runs `docker compose -p "$COMPOSE_PROJECT_NAME" -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.ci.yml up -d --wait`, `pnpm db:migrate:deploy`, starts the web command and the fake worker command as tracked children, waits on health endpoints, then runs the passed test command. In `finally`, each sends SIGTERM/awaits the web and worker children and runs exactly `docker compose -p "$COMPOSE_PROJECT_NAME" -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.ci.yml down -v --remove-orphans`; teardown runs on both success and failure. Playwright `globalSetup` verifies the app/fake-worker fixture is healthy and `globalTeardown` asserts no tracked child remains; `playwright.config.ts` names both files explicitly. Tests in `github-workflows.test.mjs` execute the scripts with fake spawners and assert the startup/migration/web/worker/teardown order and no shell invocation.
 
 - [ ] Run architecture workflow test; expect PASS after adding `yaml@2.8.2` dev dependency.
 
@@ -239,7 +265,13 @@ updates:
     groups: { actions-minor-patch: { update-types: [minor, patch] } }
 ```
 
-- [ ] **REFACTOR:** pin service/container digests from Task 4 lock, set all timeouts, caches with no env secrets, upload artifacts only on failure/3 days, and add explicit tests that default CI never invokes smoke tests, registry, deployment, release, or production migration.
+- [ ] **REFACTOR:** pin service/container digests from Task 4 `image-lock.json`, set all timeouts, caches with no env secrets, upload artifacts only on failure/3 days, and add semantic absence tests for registry authentication/push, package publish, release creation, deployment environments, production credentials, `kubectl`/Helm/Terraform apply, and production database URLs. The exact CI-only `pnpm db:migrate:deploy` command is allowed once in the migration job because it targets the job's disposable `clip_factory_test` service; a bare `/deploy/` text regex is forbidden. Task 32 global setup must run the real Task 4 services via `docker-compose.ci.yml`, start the fake native worker, and always terminate the worker plus `docker compose down -v --remove-orphans`; tests assert both commands. Re-run `node --test tests/architecture/github-workflows.test.mjs && pnpm test:architecture`; expect PASS.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+node --test tests/architecture/github-workflows.test.mjs
+# Expected: PASS
+```
 
 ## Verification and commit
 

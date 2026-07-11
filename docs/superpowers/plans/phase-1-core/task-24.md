@@ -47,7 +47,7 @@ it('renders source health, mode, progress, eta, counts, and spend without color-
 });
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/ProjectLibrary.test.tsx`; expect import FAIL.
+- [ ] Create a typed `ProjectLibrary` shell rendering an empty `<main aria-label="Projects">`, verify typecheck passes, then run the test; expect the named persisted-project-card assertion to FAIL because no card is rendered.
 
 - [ ] **GREEN: create explicit presentation props and semantic markup.**
 
@@ -58,11 +58,17 @@ export function ProjectLibrary({ projects, onDelete }: Readonly<{ projects: read
 }
 ```
 
-- [ ] Run component test; expect PASS. Add concrete tests for empty/loading/error/retry, 100-character name wrapping, keyboard link order, and ETA absent in waiting states.
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/ProjectLibrary.test.tsx`; expect PASS. Add concrete tests for empty/loading/error/retry, 100-character name wrapping, keyboard link order, and ETA absent in waiting states.
 
 - [ ] **RED: deletion dialog behavior.** Assert native dialog has heading `Delete <name>?`, copy `Local filepath sources are never deleted.`, Cancel restores focus, Delete disables during request, failure stays open with alert, success removes card.
 
 - [ ] **GREEN:** controlled `DeleteProjectDialog` receives `open`, `projectName`, `busy`, `error`, `onCancel`, `onConfirm`; use `<dialog>`, labeled buttons, `aria-describedby`, and no deletion policy. Hook calls DELETE once and refreshes presentation list.
+
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/projects/delivery/ui
+# Expected: PASS
+```
 
 - [ ] **RED: token contract test** reads `tokens.css` and asserts mint focus token, dark surfaces, spacing scale, 1024 breakpoint custom media query usage, and reduced-motion rule.
 
@@ -93,6 +99,12 @@ button, input, select, textarea { font: inherit; }
 ```
 
 - [ ] **REFACTOR:** component CSS uses tokens; at `<1024px` cards become one column and actions wrap, without global overflow hiding. Run axe component smoke with zero serious violations.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/projects/delivery/ui
+# Expected: PASS
+```
 
 ## Verification and commit
 

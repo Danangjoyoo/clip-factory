@@ -507,7 +507,16 @@ git diff --check
 ```
 
 - [ ] Confirm every latest successful rendered clip appears exactly once and no failed/in-progress render is upload-enabled.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/application/services/get-youtube-workspace.service.test.ts -t 'latest successful render exactly once|failed or in-progress disabled'
+```
+
 - [ ] Inspect localStorage/sessionStorage/IndexedDB in component tests and confirm only the view preference is written.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/delivery/ui/youtube-workspace.test.tsx -t 'persists only gallery or list view preference'
+```
 
 ## Review gate
 

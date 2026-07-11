@@ -15,7 +15,7 @@ Let the user connect, inspect, reconnect, and disconnect one channel from the lo
 ## Clean Architecture ownership
 
 - **Affected layers:** application services/ports, Temporal adapter/workflow entrypoint, HTTP delivery/converters, React UI/view model, composition.
-- **Owned ports:** `YouTubeConnectionWorkflowScheduler`, `WorkerAvailability`, `YouTubeConnectionDataServiceContract` consumption.
+- **Owned ports:** `YouTubeConnectionWorkflowScheduler`, `WorkerAvailability`, `OAuthCompletionReceiptStore`, `YouTubeConnectionDataServiceContract` consumption.
 - **DTO boundaries:** public/internal API DTOs convert to/from Entity DTOs; Temporal inputs come from Task 1; UI view model is separate.
 - **Forbidden:** routes/components import Prisma, Temporal, Google, keyring, worker adapters, or Entity DTOs directly.
 
@@ -39,7 +39,14 @@ Let the user connect, inspect, reconnect, and disconnect one channel from the lo
 - Create: `apps/web/src/modules/youtube-publishing/delivery/ui/youtube-connection-panel.test.tsx`
 - Create: `apps/worker/src/clip_factory/entrypoints/temporal/youtube_publishing/oauth_workflow.py`
 - Create: `apps/worker/src/clip_factory/entrypoints/temporal/youtube_publishing/oauth_activities.py`
+- Create: `apps/worker/src/clip_factory/ports/youtube_publishing/oauth_completion_receipt_store.py`
+- Create: `apps/worker/src/clip_factory/adapters/youtube/redis_oauth_completion_receipt_store.py`
+- Modify: `apps/worker/src/clip_factory/adapters/youtube/connection_event_http_sink.py`
 - Create: `apps/worker/tests/entrypoints/temporal/youtube_publishing/test_oauth_workflow.py`
+- Create: `apps/worker/tests/entrypoints/temporal/youtube_publishing/oauth_workflow_harness.py`
+- Create: `apps/worker/tests/adapters/youtube/test_redis_oauth_completion_receipt_store.py`
+- Create: `apps/worker/tests/adapters/youtube/test_connection_event_http_sink.py`
+- Create: `tests/integration/youtube-publishing/youtube-connection-lifecycle.test.ts`
 - Modify: `apps/web/src/modules/youtube-publishing/composition/youtube-publishing.module.ts`
 - Modify: `apps/worker/src/clip_factory/composition/worker_container.py`
 
@@ -64,6 +71,32 @@ export interface YouTubeConnectionWorkflowScheduler {
     connectionId: YouTubeConnectionId;
   }): Promise<WorkflowId>;
 }
+```
+
+Worker application port; its value is sanitized Task 6 Entity data, never a generated/HTTP/Redis DTO:
+
+```python
+from datetime import timedelta
+from typing import Protocol
+
+from clip_factory.ports.youtube_publishing.oauth import (
+    SanitizedChannelConnection,
+)
+
+
+class OAuthCompletionReceiptStore(Protocol):
+    async def get_connected(
+        self,
+        connection_id: str,
+    ) -> SanitizedChannelConnection | None:
+        raise NotImplementedError
+
+    async def put_connected(
+        self,
+        connection: SanitizedChannelConnection,
+        ttl: timedelta,
+    ) -> None:
+        raise NotImplementedError
 ```
 
 Public response shape:
@@ -253,17 +286,25 @@ from clip_factory.entrypoints.contracts.generated.youtube_publishing import (
 from clip_factory.entrypoints.temporal.youtube_publishing.oauth_workflow import (
     YouTubeOAuthWorkflow,
 )
+from tests.entrypoints.temporal.youtube_publishing.oauth_workflow_harness import (
+    CapturingAuthorizationActivity,
+    CapturingDeliveryActivity,
+    OAuthWorkflowHarness,
+    make_connected_result,
+    make_oauth_workflow_input,
+)
 
 
 @pytest.mark.asyncio
-async def test_oauth_workflow_executes_one_native_activity_with_token_free_input() -> None:
+async def test_oauth_workflow_separates_authorization_from_result_delivery() -> None:
     async with await WorkflowEnvironment.start_time_skipping() as env:
-        activity = CapturingOAuthActivity()
+        authorization = CapturingAuthorizationActivity(make_connected_result())
+        delivery = CapturingDeliveryActivity()
         async with Worker(
             env.client,
             task_queue='test-youtube-oauth',
             workflows=[YouTubeOAuthWorkflow],
-            activities=[activity.run],
+            activities=[authorization.run, delivery.run],
         ):
             result = await env.client.execute_workflow(
                 YouTubeOAuthWorkflow.run,
@@ -280,33 +321,49 @@ async def test_oauth_workflow_executes_one_native_activity_with_token_free_input
                 execution_timeout=timedelta(minutes=12),
             )
             assert result.status == 'CONNECTED'
-            assert activity.inputs[0].model_dump().keys() == {
+            assert authorization.inputs[0].model_dump().keys() == {
                 'contractVersion', 'connectionId', 'requestedScopes'
             }
+            assert delivery.results == [result]
 ```
 
 Append these workflow tests:
 
 ```python
 @pytest.mark.asyncio
-async def test_transient_callback_failure_retries_activity_without_second_browser_flow() -> None:
-    harness = await OAuthWorkflowHarness.start(callback_failures=1)
-    result = await harness.run(make_oauth_workflow_input())
-    assert result.status == 'CONNECTED'
-    assert harness.activity.browser_open_count == 1
-    assert harness.activity.callback_attempt_count == 2
+async def test_transient_delivery_failure_never_reopens_browser_consent() -> None:
+    async with await OAuthWorkflowHarness.start(delivery_failures=1) as harness:
+        result = await harness.run(make_oauth_workflow_input())
+        assert result.status == 'CONNECTED'
+        assert harness.browser_open_count == 1
+        assert harness.authorization_attempt_count == 1
+        assert harness.delivery_attempt_count == 2
+
+
+@pytest.mark.asyncio
+async def test_lost_authorization_ack_resumes_receipt_or_keychain_without_browser() -> None:
+    async with await OAuthWorkflowHarness.start(
+        lose_authorization_ack_after_credential_store=True,
+    ) as harness:
+        result = await harness.run(make_oauth_workflow_input())
+        assert result.status == 'CONNECTED'
+        assert harness.authorization_attempt_count == 2
+        assert harness.browser_open_count == 1
+        assert harness.keychain_write_count == 1
+        assert harness.delivery_attempt_count == 1
 
 
 @pytest.mark.asyncio
 async def test_consent_denial_is_terminal_and_not_retried() -> None:
-    harness = await OAuthWorkflowHarness.start(consent_denied=True)
-    result = await harness.run(make_oauth_workflow_input())
-    assert result.status == 'DISCONNECTED'
-    assert result.safe_reason_code == 'CONSENT_DENIED'
-    assert harness.activity.run_count == 1
+    async with await OAuthWorkflowHarness.start(consent_denied=True) as harness:
+        result = await harness.run(make_oauth_workflow_input())
+        assert result.status == 'DISCONNECTED'
+        assert result.safe_reason_code == 'CONSENT_DENIED'
+        assert harness.authorization_attempt_count == 1
+        assert harness.browser_open_count == 1
 ```
 
-Run the workflow file and witness RED on the missing retry classification/heartbeat checkpoint. Implement the callback-only retry and nonretryable denial mapping, then rerun; expected GREEN is PASS.
+Create `oauth_workflow_harness.py` with an async-context-manager `OAuthWorkflowHarness.start(...)`, a real time-skipping `WorkflowEnvironment`, one `Worker`, in-memory receipt/Keychain fakes, and counters exposed above. `__aexit__` always shuts down the worker/environment. Its authorization fake writes the fake Keychain and sanitized receipt before simulating the lost acknowledgement, so the second activity attempt can prove it does not call the browser. Run the workflow file and witness the named browser-count assertion fail against the one-activity implementation.
 
 - [ ] **RED 2.2 — Witness missing workflow.**
 
@@ -314,7 +371,7 @@ Run the workflow file and witness RED on the missing retry classification/heartb
 uv run --directory apps/worker pytest tests/entrypoints/temporal/youtube_publishing/test_oauth_workflow.py -q
 ```
 
-Expected RED: workflow/activity signature shells collect; the Temporal environment records zero `run_native_oauth_activity` calls instead of exactly one.
+Expected RED: workflow/activity signature shells collect; the first test observes no separate `authorize_or_resume_oauth_activity` then `deliver_oauth_result_activity` sequence. Missing modules/imports are not accepted RED.
 
 - [ ] **GREEN 2.3 — Implement deterministic wrapper and web scheduler adapter.**
 
@@ -330,7 +387,10 @@ with workflow.unsafe.imports_passed_through():
         OAuthConnectionWorkflowInputV1,
         OAuthConnectionWorkflowResultV1,
     )
-    from .oauth_activities import run_native_oauth_activity
+    from .oauth_activities import (
+        authorize_or_resume_oauth_activity,
+        deliver_oauth_result_activity,
+    )
 
 
 @workflow.defn
@@ -340,16 +400,25 @@ class YouTubeOAuthWorkflow:
         self,
         payload: OAuthConnectionWorkflowInputV1,
     ) -> OAuthConnectionWorkflowResultV1:
-        return await workflow.execute_activity(
-            run_native_oauth_activity,
+        authorization = await workflow.execute_activity(
+            authorize_or_resume_oauth_activity,
             payload,
             start_to_close_timeout=timedelta(minutes=11),
             heartbeat_timeout=timedelta(seconds=15),
-            retry_policy=oauth_activity_retry_policy(),
+            retry_policy=authorization_retry_policy(),
         )
+        await workflow.execute_activity(
+            deliver_oauth_result_activity,
+            authorization,
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=idempotent_delivery_retry_policy(),
+        )
+        return authorization
 ```
 
-`run_native_oauth_activity` resolves Task 7 adapters from the activity composition container and calls Task 6 service; it performs every browser/network/clock/Redis/Keychain/event-sink action outside workflow code.
+`authorize_or_resume_oauth_activity` is retry-safe in this exact order: read the sanitized Redis completion receipt by connection ID; if present, return it; otherwise, if Keychain already contains the connection credential, call `refresh_and_check`, write the sanitized receipt, and return without opening a browser; only when neither exists call the Task 6 service. For that call, composition injects `RedisOAuthCompletionReceiptStore` as the Task 6 `ConnectionEventSink`, so successful credential storage is followed by a sanitized receipt with a 24-hour TTL rather than HTTP delivery. The receipt contains channel metadata/scopes/mode/expiry only—never state, verifier, code, access/refresh token, or client config. A crash after Keychain write but before receipt write is therefore recovered by `refresh_and_check`; a crash after receipt write returns the receipt. Consent denial is nonretryable.
+
+`deliver_oauth_result_activity` alone invokes `ConnectionEventHttpSink`. The sink posts a closed generated event with worker authentication and `Idempotency-Key: oauth-result:<connectionId>:<status>`; exact repeats return the same `204`. Its retries cannot call the browser, token endpoint, or Keychain writer. `test_redis_oauth_completion_receipt_store.py` round-trips every safe field, verifies TTL, and rejects/does not serialize credential-like keys. `test_connection_event_http_sink.py` proves two identical deliveries use identical bytes/idempotency key and that no response body or credential is logged.
 
 The TypeScript scheduler adapter imports `@temporalio/client` only under `adapters/clients`, uses workflow ID `youtube-oauth:<connectionId>`, rejects an already-running duplicate as an idempotent existing workflow, and passes only generated `OAuthConnectionWorkflowInputV1`.
 
@@ -370,6 +439,7 @@ async def test_oauth_workflow_replays_recorded_history() -> None:
 
 ```bash
 uv run --directory apps/worker pytest tests/entrypoints/temporal/youtube_publishing/test_oauth_workflow.py -q
+uv run --directory apps/worker pytest tests/adapters/youtube/test_redis_oauth_completion_receipt_store.py tests/adapters/youtube/test_connection_event_http_sink.py -q
 pnpm test:architecture
 uv run --directory apps/worker lint-imports
 ```
@@ -613,7 +683,7 @@ Witness RED for any unhandled state, implement an exhaustive `Record<ConnectionV
 
 ```bash
 pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/application/services/manage-youtube-connection.service.test.ts src/modules/youtube-publishing/converters/api-entity/youtube-connection.converter.test.ts src/modules/youtube-publishing/delivery/http/youtube-connection.controller.test.ts src/modules/youtube-publishing/delivery/ui/youtube-connection-panel.test.tsx
-uv run --directory apps/worker pytest tests/entrypoints/temporal/youtube_publishing/test_oauth_workflow.py -q
+uv run --directory apps/worker pytest tests/entrypoints/temporal/youtube_publishing/test_oauth_workflow.py tests/adapters/youtube/test_redis_oauth_completion_receipt_store.py tests/adapters/youtube/test_connection_event_http_sink.py -q
 pnpm test:integration
 pnpm test:architecture
 pnpm typecheck
@@ -622,7 +692,16 @@ git diff --check
 ```
 
 - [ ] Confirm response bodies, server-rendered HTML, hydration data, and browser storage contain no credential-like names/values.
+
+```bash
+pnpm --filter @clip-factory/web exec vitest run src/modules/youtube-publishing/delivery/http/youtube-connection.controller.test.ts src/modules/youtube-publishing/delivery/ui/youtube-connection-panel.test.tsx -t 'credential|token-free'
+```
+
 - [ ] Confirm disconnect retains drafts/renders/publication history and never deletes a remote video or accepted YouTube schedule.
+
+```bash
+pnpm exec vitest run tests/integration/youtube-publishing/youtube-connection-lifecycle.test.ts -t 'disconnect retains history and remote video'
+```
 
 ## Review gate
 

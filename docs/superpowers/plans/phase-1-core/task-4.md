@@ -14,7 +14,7 @@ Deliver design §§5, 8, 24–26: localhost web plus PostgreSQL, Redis, MinIO, a
 
 ## Exact files
 
-- Create: `Brewfile`, `infra/compose/docker-compose.yml`, `infra/compose/docker-compose.ci.yml`, `infra/compose/web.Dockerfile`, `infra/compose/temporal-dynamicconfig.yaml`
+- Create: `Brewfile`, `infra/compose/docker-compose.yml`, `infra/compose/docker-compose.ci.yml`, `infra/compose/image-lock.json`, `infra/compose/web.Dockerfile`, `infra/compose/temporal-dynamicconfig.yaml`
 - Create: `scripts/bootstrap-native.sh`, `scripts/preflight.mjs`, `scripts/dev.mjs`, `scripts/stop.mjs`, `tests/architecture/compose.test.mjs`, `tests/architecture/preflight.test.mjs`
 - Modify: `.env.example`, `package.json`
 
@@ -22,7 +22,7 @@ Deliver design §§5, 8, 24–26: localhost web plus PostgreSQL, Redis, MinIO, a
 
 - Requires Tasks 1 and 3.
 - Named services: `web`, `postgres`, `redis`, `minio`, `minio-init`, `temporal`, `temporal-ui`.
-- Named volumes: `postgres-data`, `redis-data`, `minio-data`, `temporal-data`.
+- Named volumes: exactly `postgres-data`, `redis-data`, and `minio-data`; Temporal persists in the shared PostgreSQL volume and therefore has no fourth data volume.
 - Native command: `uv run --directory apps/worker clip-factory-worker`.
 
 ## RED → GREEN → REFACTOR
@@ -46,9 +46,9 @@ test('compose is localhost-only and never receives the OpenAI key', () => {
 });
 ```
 
-- [ ] Run `node --test tests/architecture/compose.test.mjs`; expect FAIL because the Compose file is absent.
+- [ ] Before RED, create parseable `docker-compose.yml`, `docker-compose.ci.yml`, and `image-lock.json` shells with empty service/volume/image objects; run `docker compose --env-file .env.example -f infra/compose/docker-compose.yml config --quiet`; expect PASS. Then run `node --test tests/architecture/compose.test.mjs`; expect the named service-set assertion to FAIL with `[]` rather than seven services.
 
-- [ ] **GREEN: create the exact service graph with the verified multi-architecture digests below.** Record the same six name/tag/digest triples in `infra/compose/image-lock.json`; `tests/architecture/compose.test.mjs` asserts Compose and lock values match byte-for-byte.
+- [ ] **GREEN: create the exact service graph with the verified multi-architecture digests below.** Record the same six name/tag/digest triples—`postgres`, `redis`, `minio`, `minio-init`, `temporal`, and `temporal-ui`—in `infra/compose/image-lock.json`; the file list in this task explicitly includes that lock file, and `tests/architecture/compose.test.mjs` asserts Compose and lock values match byte-for-byte. Run `node --test tests/architecture/compose.test.mjs && pnpm compose:config`; expect PASS.
 
 ```yaml
 # infra/compose/docker-compose.yml
@@ -174,7 +174,7 @@ test('preflight reports every absent native dependency in check mode', () => {
 });
 ```
 
-- [ ] Run `node --test tests/architecture/preflight.test.mjs`; expect FAIL because `preflight.mjs` is absent.
+- [ ] Create a compile-safe `scripts/preflight.mjs` shell that exits zero and prints no diagnostics; run `node --check scripts/preflight.mjs`; expect PASS. Then run `node --test tests/architecture/preflight.test.mjs`; expect the named exit-status assertion to FAIL with `0` instead of `1`.
 
 - [ ] **GREEN: use Homebrew only for build libraries and install the two runtime tools from pinned archives.**
 
@@ -187,7 +187,7 @@ brew "x264"
 ```
 
 ```bash
-# scripts/bootstrap-native.sh
+# scripts/bootstrap-native.sh (macOS arm64 and Ubuntu x86_64)
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -196,23 +196,45 @@ TOOLS="$ROOT/.tools"
 DOWNLOADS="$TOOLS/downloads"
 FFMPEG_VERSION="8.1.2"
 FFMPEG_SHA256="464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c"
+PLATFORM="${1:-}"
+if [[ "$PLATFORM" == "--platform" ]]; then PLATFORM="${2:?--platform requires darwin-arm64 or linux-x86_64}"; shift 2
+elif [[ -z "$PLATFORM" && "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then PLATFORM="darwin-arm64"
+elif [[ -z "$PLATFORM" && "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then PLATFORM="linux-x86_64"
+fi
 mkdir -p "$DOWNLOADS" "$TOOLS/bin"
 "$ROOT/scripts/bootstrap-uv.sh"
+
+case "$PLATFORM" in
+  darwin-arm64)
+    command -v brew >/dev/null
+    PKG_CONFIG_PATH="$(brew --prefix libass)/lib/pkgconfig:$(brew --prefix x264)/lib/pkgconfig"
+    FFMPEG_PLATFORM_FLAGS=(--enable-videotoolbox)
+    BUILD_JOBS="$(sysctl -n hw.logicalcpu)"
+    ;;
+  linux-x86_64)
+    sudo apt-get update
+    sudo apt-get install --yes --no-install-recommends build-essential pkg-config nasm libass-dev libx264-dev ca-certificates curl xz-utils
+    PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig"
+    FFMPEG_PLATFORM_FLAGS=()
+    BUILD_JOBS="$(getconf _NPROCESSORS_ONLN)"
+    ;;
+  *) echo "unsupported platform: $PLATFORM" >&2; exit 64 ;;
+esac
 
 curl --fail --location --silent --show-error "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz" -o "$DOWNLOADS/ffmpeg.tar.xz"
 echo "$FFMPEG_SHA256  $DOWNLOADS/ffmpeg.tar.xz" | shasum -a 256 --check
 rm -rf "$DOWNLOADS/ffmpeg-$FFMPEG_VERSION"
 tar -xJf "$DOWNLOADS/ffmpeg.tar.xz" -C "$DOWNLOADS"
 pushd "$DOWNLOADS/ffmpeg-$FFMPEG_VERSION"
-PKG_CONFIG_PATH="$(brew --prefix libass)/lib/pkgconfig:$(brew --prefix x264)/lib/pkgconfig" ./configure \
+PKG_CONFIG_PATH="$PKG_CONFIG_PATH" ./configure \
   --prefix="$TOOLS/ffmpeg/$FFMPEG_VERSION" \
   --enable-gpl \
   --enable-libass \
   --enable-libx264 \
-  --enable-videotoolbox \
+  "${FFMPEG_PLATFORM_FLAGS[@]}" \
   --disable-debug \
   --disable-doc
-make -j "$(sysctl -n hw.logicalcpu)"
+make -j "$BUILD_JOBS"
 make install
 popd
 ln -sfn "$TOOLS/ffmpeg/$FFMPEG_VERSION/bin/ffmpeg" "$TOOLS/bin/ffmpeg"
@@ -220,9 +242,9 @@ ln -sfn "$TOOLS/ffmpeg/$FFMPEG_VERSION/bin/ffprobe" "$TOOLS/bin/ffprobe"
 PATH="$TOOLS/bin:$PATH" uv python install 3.12.11
 ```
 
-Add `.tools/` to `.gitignore`. Implement `preflight.mjs` using `spawnSync(command, ['--version'])`, never a shell string. Prepend `<repo>/.tools/bin` to the inspected path and verify Docker 29.4.0, Compose 5.1.2, uv 0.11.28, Python 3.12.11 through `uv run`, and FFmpeg/ffprobe 8.1.2. Its exact recovery message is `Run: brew bundle && ./scripts/bootstrap-native.sh`.
+Add `.tools/` to `.gitignore`. Implement `preflight.mjs` using `spawnSync(command, ['--version'])`, never a shell string. Prepend `<repo>/.tools/bin` to the inspected path and verify Docker 29.4.0, Compose 5.1.2, uv 0.11.28, Python 3.12.11 through `uv run`, and FFmpeg/ffprobe 8.1.2. On macOS its recovery message is `Run: brew bundle && ./scripts/bootstrap-native.sh --platform darwin-arm64`; on Linux it is `Run: ./scripts/bootstrap-native.sh --platform linux-x86_64`. Linux must not execute Homebrew, `sysctl`, or enable VideoToolbox.
 
-- [ ] Run the preflight test; expect PASS. Run `brew bundle && ./scripts/bootstrap-native.sh && node scripts/preflight.mjs`; expect exit 0.
+- [ ] Run `node --test tests/architecture/preflight.test.mjs`; expect PASS. On macOS run `brew bundle && ./scripts/bootstrap-native.sh --platform darwin-arm64 && node scripts/preflight.mjs`; on Ubuntu run `./scripts/bootstrap-native.sh --platform linux-x86_64 && node scripts/preflight.mjs`; expect exit 0 in each supported platform test.
 
 - [ ] **RED: add `tests/architecture/lifecycle.test.mjs`.** Inject a fake spawner, invoke shutdown, and assert event order `worker:SIGTERM`, `worker:exit`, `compose:down`; a stubborn worker adds `worker:SIGKILL` exactly after fake clock advances 15000 ms.
 

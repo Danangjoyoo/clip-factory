@@ -42,7 +42,7 @@ Integrate design §23 and acceptance criteria 9, 10, and 14: bounded safe retrie
 
 - [ ] **RED: exact retry classification table and replay.** MinIO/Redis/Temporal/internal HTTP/process I/O transient errors retry from bases 1/2/4/8 seconds with max five attempts and ±20% deterministic workflow jitter; malformed source/path/spec/credential-confirmed/invalid provider schema are nonretryable. OpenAI post-send ambiguity is never in retryable set. Capture/replay history and assert identical timers.
 
-- [ ] Run Python/TS retry tests; expect import FAIL.
+- [ ] Create compile-safe retry decision/helper shells that classify every error as nonretryable and schedule no timer, verify TS typecheck and Python collection pass, then run the exact retry tests; expect the named transient-error retry schedule assertion to FAIL with no timers.
 
 - [ ] **GREEN: use single-attempt activities and deterministic workflow timers, not an unsupported RetryPolicy jitter option.**
 
@@ -101,9 +101,21 @@ async def test_ambiguous_paid_call_never_auto_retries_after_worker_restart() -> 
 
 - [ ] **GREEN:** `ReconcileJob` reads PostgreSQL terminal/intermediate references, Temporal description/history, and MinIO heads; it reuses verified artifacts, rebuilds Redis, and never schedules completed activity output. For uncertain calls it runs Task 15 reconciliation first; recorded artifact/callback resumes with one call, confirmed absence stays waiting until acknowledged/freshly reserved.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_retry.py tests/application/test_cancel_job.py tests/application/test_cleanup_job.py tests/entrypoints/temporal/test_restart_recovery.py -q
+# Expected: PASS
+```
+
 - [ ] **RED/GREEN project deletion:** cancel live project workflow, await bounded cancellation, remove DB/MinIO artifacts transactionally with retry ledger, never pass local filepath to delete, and make repeated deletion return 204. Inject failure after MinIO batch and prove retry completes.
 
 - [ ] **REFACTOR:** worker heartbeat >30 seconds maps `WORKER_OFFLINE`, jobs remain queued, recovery logs use IDs/codes only, and cleanup/reconciliation are idempotent under duplicate Temporal delivery.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_retry.py tests/application/test_cancel_job.py tests/application/test_cleanup_job.py tests/entrypoints/temporal/test_restart_recovery.py -q
+# Expected: PASS
+```
 
 ## Verification and commit
 

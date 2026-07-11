@@ -9,7 +9,7 @@ Implement design §§19 and 25 with PostgreSQL from the first application commit
 ## Layers and boundaries
 
 - Prisma and generated types live only in `apps/web/src/infrastructure/prisma` and feature persistence adapters.
-- Repositories later expose Record DTOs, never Prisma models.
+- Application repository ports and data services expose Entity DTOs only. Concrete persistence adapters keep Record DTOs, Prisma models, and Entity↔Record converters private to the adapter boundary.
 - Python has no database dependency or schema import.
 
 ## Exact files
@@ -46,8 +46,8 @@ Implement design §§19 and 25 with PostgreSQL from the first application commit
 | Model / table | Fields |
 |---|---|
 | `Project` / `projects` | `id`, `name`, `mode`, `languageTag`, `defaultMaxClipSeconds`, `defaultPlatformPreset`, `status`, `activeWorkflowId`, `openaiSpendMicrousd`, `createdAt`, `updatedAt` |
-| `SourceAsset` / `source_assets` | `id`, `projectId`, `kind`, `displayPath`, `resolvedPath`, `objectKey`, `sizeBytes`, `modifiedAt`, `fingerprint`, `probeJson`, `health`, `createdAt`, `updatedAt` |
-| `Transcript` / `transcripts` | `id`, `projectId`, `sourceAssetId`, `backend`, `model`, `modelRevision`, `languageTag`, `objectKey`, `durationMs`, `wordCount`, `runtimeMs`, `createdAt` |
+| `SourceAsset` / `source_assets` | `id`, `projectId`, `kind`, `displayPath`, `resolvedPath`, `objectKey`, `objectVersionId`, `objectSha256`, `sizeBytes`, `modifiedAt`, `fingerprint`, `probeJson`, `health`, `createdAt`, `updatedAt` |
+| `Transcript` / `transcripts` | `id`, `projectId`, `sourceAssetId`, `backend`, `model`, `modelRevision`, `languageTag`, `objectBucket`, `objectKey`, `objectVersionId`, `objectSha256`, `durationMs`, `wordCount`, `runtimeMs`, `createdAt` |
 | `AnalysisRun` / `analysis_runs` | `id`, `projectId`, `modelId`, `reasoning`, `promptVersion`, `schemaVersion`, `pricingVersion`, `budgetMicrousd`, `safetyNumerator`, `safetyDenominator`, `coverageStartMs`, `coverageEndMs`, `estimatedMaxMicrousd`, `actualMicrousd`, `status`, `createdAt`, `updatedAt` |
 | `AIUsageEvent` / `ai_usage_events` | `id`, `projectId`, `analysisRunId`, `clipId`, `providerResponseId`, `purpose`, `modelId`, `reasoning`, `promptVersion`, `schemaVersion`, `pricingVersion`, `inputTokens`, `cachedInputTokens`, `outputTokens`, `reasoningTokens`, `pricingTier`, `costMicrousd`, `occurredAt`, `createdAt` |
 | `CostAllocation` / `cost_allocations` | `id`, `analysisRunId`, `clipId`, `method`, `amountMicrousd`, `createdAt` |
@@ -74,18 +74,18 @@ describe('Phase 1 core schema', () => {
   beforeAll(() => resetDatabase());
   afterAll(() => prisma.$disconnect());
 
-  it('rejects negative spend and duplicate provider response IDs', async () => {
+  it('rejects negative spend and the named unique provider-response constraint', async () => {
     await expect(prisma.project.create({ data: { name: 'Sample', mode: 'MANUAL', languageTag: 'en', defaultMaxClipSeconds: 60, defaultPlatformPreset: 'YOUTUBE_SHORTS', status: 'DRAFT', openaiSpendMicrousd: -1n } })).rejects.toThrow();
     const project = await prisma.project.create({ data: { name: 'Sample', mode: 'AI_HIGHLIGHTS', languageTag: 'en', defaultMaxClipSeconds: 60, defaultPlatformPreset: 'YOUTUBE_SHORTS', status: 'DRAFT' } });
     const run = await prisma.analysisRun.create({ data: { projectId: project.id, modelId: 'gpt-5.6-sol', reasoning: 'HIGH', promptVersion: 'highlights-1', schemaVersion: '1.0.0', pricingVersion: 'openai-2026-07-11.1', budgetMicrousd: 1000000n, safetyNumerator: 3, safetyDenominator: 2, coverageStartMs: 0, coverageEndMs: 60000, estimatedMaxMicrousd: 500000n, actualMicrousd: 0n, status: 'PLANNED' } });
-    const usage = { projectId: project.id, analysisRunId: run.id, providerResponseId: 'resp_001', purpose: 'HIGHLIGHT_WINDOW', modelId: 'gpt-5.6-sol', reasoning: 'HIGH', promptVersion: 'highlights-1', schemaVersion: '1.0.0', pricingVersion: 'openai-2026-07-11.1', inputTokens: 100, cachedInputTokens: 0, outputTokens: 50, reasoningTokens: 20, pricingTier: 'STANDARD', costMicrousd: 900n, occurredAt: new Date('2026-07-11T00:00:00Z') };
+    const usage = { projectId: project.id, analysisRunId: run.id, providerResponseId: 'resp_001', requestHash: 'a'.repeat(64), purpose: 'HIGHLIGHT_WINDOW', modelId: 'gpt-5.6-sol', reasoning: 'HIGH', promptVersion: 'highlights-1', schemaVersion: '1.0.0', pricingVersion: 'openai-2026-07-11.1', inputTokens: 100, cachedInputTokens: 0, cacheWriteInputTokens: 0, outputTokens: 50, reasoningTokens: 20, pricingTier: 'STANDARD', costMicrousd: 900n, occurredAt: new Date('2026-07-11T00:00:00Z') };
     await prisma.aIUsageEvent.create({ data: usage });
-    await expect(prisma.aIUsageEvent.create({ data: usage })).rejects.toThrow();
+    await expect(prisma.aIUsageEvent.create({ data: usage })).rejects.toMatchObject({ code: 'P2002', meta: { target: expect.arrayContaining(['provider_response_id']) } });
   });
 });
 ```
 
-- [ ] Run `pnpm compose:up && pnpm exec vitest run tests/integration/database/core-schema.test.ts`; expect module-resolution FAIL because generated Prisma/client support is absent.
+- [ ] Create a compile-safe Prisma schema/migration shell containing only `Project`, `AnalysisRun`, and `AIUsageEvent`, including the named database constraint `ai_usage_events_provider_response_id_key`, but intentionally omit the `projects_spend_nonnegative` CHECK. Generate the client, deploy that shell migration to a disposable DB, and run `pnpm --filter @clip-factory/web typecheck`; expect PASS. Then run `pnpm compose:up && pnpm db:migrate:deploy && pnpm exec vitest run tests/integration/database/core-schema.test.ts`; expect the named negative-spend assertion to FAIL while the duplicate provider-response assertion already passes; no absent-schema/setup failure is accepted.
 
 - [ ] **GREEN: create the complete Prisma 7 schema below.**
 
@@ -101,7 +101,7 @@ datasource db {
 }
 
 enum ProjectModeRecord { AI_HIGHLIGHTS MANUAL }
-enum ProjectStatusRecord { DRAFT VALIDATING_SOURCE UPLOADING QUEUED PREPROCESSING TRANSCRIBING VERIFYING_BUDGET AWAITING_BUDGET ANALYZING GENERATING_PREVIEWS AWAITING_REVIEW RENDERING COMPLETED FAILED CANCELLED SOURCE_MISSING SOURCE_CHANGED SOURCE_NOT_ALLOWED RELINKING_SOURCE }
+enum ProjectStatusRecord { DRAFT VALIDATING_SOURCE UPLOADING QUEUED PREPROCESSING TRANSCRIBING VERIFYING_BUDGET AWAITING_BUDGET ANALYZING PAID_CALL_UNCERTAIN GENERATING_PREVIEWS AWAITING_REVIEW RENDERING COMPLETED FAILED CANCELLED SOURCE_MISSING SOURCE_CHANGED SOURCE_NOT_ALLOWED RELINKING_SOURCE }
 enum SourceKindRecord { LOCAL_FILE BROWSER_UPLOAD }
 enum SourceHealthRecord { UNKNOWN LOCATED HEALTHY MISSING CHANGED NOT_ALLOWED INVALID }
 enum AnalysisStatusRecord { PLANNED VERIFYING_BUDGET AWAITING_BUDGET RUNNING PAID_CALL_UNCERTAIN COMPLETED FAILED CANCELLED }
@@ -148,6 +148,8 @@ model SourceAsset {
   displayPath  String             @map("display_path") @db.Text
   resolvedPath String?            @map("resolved_path") @db.Text
   objectKey    String?            @map("object_key") @db.Text
+  objectVersionId String?         @map("object_version_id") @db.Text
+  objectSha256 String?            @map("object_sha256") @db.Char(64)
   sizeBytes    BigInt?            @map("size_bytes")
   modifiedAt   DateTime?          @map("modified_at") @db.Timestamptz(3)
   fingerprint  String?            @db.VarChar(128)
@@ -168,8 +170,12 @@ model Transcript {
   backend       String      @db.VarChar(100)
   model         String      @db.VarChar(200)
   modelRevision String      @map("model_revision") @db.VarChar(200)
+  weightsSha256 String?     @map("weights_sha256") @db.Char(64)
   languageTag   String      @map("language_tag") @db.VarChar(35)
+  objectBucket  String      @default("clip-factory") @map("object_bucket") @db.VarChar(63)
   objectKey     String      @map("object_key") @db.Text
+  objectVersionId String?   @map("object_version_id") @db.Text
+  objectSha256  String      @map("object_sha256") @db.Char(64)
   durationMs    Int         @map("duration_ms")
   wordCount     Int         @map("word_count")
   runtimeMs     Int         @map("runtime_ms")
@@ -203,6 +209,7 @@ model AnalysisRun {
   usageEvents           AIUsageEvent[]
   allocations           CostAllocation[]
   clips                 Clip[]
+  paidCallReservations  PaidCallReservation[]
   @@index([projectId, createdAt])
   @@index([status])
   @@map("analysis_runs")
@@ -214,6 +221,7 @@ model AIUsageEvent {
   analysisRunId        String          @map("analysis_run_id") @db.Uuid
   clipId               String?         @map("clip_id") @db.Uuid
   providerResponseId   String          @unique @map("provider_response_id") @db.VarChar(200)
+  requestHash          String          @map("request_hash") @db.Char(64)
   purpose              String          @db.VarChar(100)
   modelId              String          @map("model_id") @db.VarChar(200)
   reasoning            ReasoningRecord
@@ -239,6 +247,7 @@ model AIUsageEvent {
 
 model PaidCallReservation {
   id                     String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId              String               @map("project_id") @db.Uuid
   analysisRunId          String               @map("analysis_run_id") @db.Uuid
   callId                 String               @unique @map("call_id") @db.Uuid
   requestHash            String               @map("request_hash") @db.Char(64)
@@ -250,8 +259,10 @@ model PaidCallReservation {
   createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
   sentAt                 DateTime?            @map("sent_at") @db.Timestamptz(3)
   completedAt            DateTime?            @map("completed_at") @db.Timestamptz(3)
+  project                Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
   analysisRun            AnalysisRun          @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
   usageEvent             AIUsageEvent?         @relation(fields: [usageEventId], references: [id], onDelete: SetNull)
+  @@index([projectId, status])
   @@index([analysisRunId, status])
   @@map("paid_call_reservations")
 }
@@ -359,6 +370,9 @@ model UploadSession {
   uploadId           String             @unique @map("upload_id") @db.VarChar(300)
   sizeBytes          BigInt             @map("size_bytes")
   completedPartsJson Json               @map("completed_parts_json") @db.JsonB
+  completionPartsHash String?           @map("completion_parts_hash") @db.Char(64)
+  objectVersionId    String?            @map("object_version_id") @db.Text
+  objectSha256       String?            @map("object_sha256") @db.Char(64)
   status             UploadStatusRecord @default(CREATED)
   expiresAt          DateTime           @map("expires_at") @db.Timestamptz(3)
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -386,22 +400,27 @@ Append these exact checks to the generated SQL before its first commit:
 ```sql
 ALTER TABLE projects ADD CONSTRAINT projects_spend_nonnegative CHECK (openai_spend_microusd >= 0);
 ALTER TABLE source_assets ADD CONSTRAINT source_assets_display_path_nonempty CHECK (length(btrim(display_path)) > 0);
-ALTER TABLE source_assets ADD CONSTRAINT source_assets_reference_by_kind CHECK ((kind = 'LOCAL_FILE' AND object_key IS NULL) OR (kind = 'BROWSER_UPLOAD' AND resolved_path IS NULL));
-ALTER TABLE source_assets ADD CONSTRAINT source_assets_located_reference_complete CHECK (health NOT IN ('LOCATED','HEALTHY') OR (size_bytes IS NOT NULL AND ((kind = 'LOCAL_FILE' AND resolved_path IS NOT NULL AND modified_at IS NOT NULL AND fingerprint IS NOT NULL) OR (kind = 'BROWSER_UPLOAD' AND object_key IS NOT NULL))));
+ALTER TABLE source_assets ADD CONSTRAINT source_assets_reference_by_kind CHECK ((kind = 'LOCAL_FILE' AND object_key IS NULL AND object_version_id IS NULL AND object_sha256 IS NULL) OR (kind = 'BROWSER_UPLOAD' AND resolved_path IS NULL));
+ALTER TABLE source_assets ADD CONSTRAINT source_assets_located_reference_complete CHECK (health NOT IN ('LOCATED','HEALTHY') OR (size_bytes IS NOT NULL AND ((kind = 'LOCAL_FILE' AND resolved_path IS NOT NULL AND modified_at IS NOT NULL AND fingerprint IS NOT NULL) OR (kind = 'BROWSER_UPLOAD' AND object_key IS NOT NULL AND object_sha256 ~ '^[0-9a-f]{64}$'))));
 ALTER TABLE source_assets ADD CONSTRAINT source_assets_healthy_probe_complete CHECK (health <> 'HEALTHY' OR probe_json IS NOT NULL);
 ALTER TABLE source_assets ADD CONSTRAINT source_assets_size_positive CHECK (size_bytes IS NULL OR size_bytes > 0);
 ALTER TABLE transcripts ADD CONSTRAINT transcripts_metrics_nonnegative CHECK (duration_ms >= 0 AND word_count >= 0 AND runtime_ms >= 0);
+ALTER TABLE transcripts ADD CONSTRAINT transcripts_object_reference_valid CHECK (object_bucket = 'clip-factory' AND length(btrim(object_key)) > 0 AND object_sha256 ~ '^[0-9a-f]{64}$');
+ALTER TABLE transcripts ADD CONSTRAINT transcripts_model_hash_valid CHECK ((backend = 'FAKE' AND weights_sha256 IS NULL) OR (backend = 'MLX_WHISPER' AND weights_sha256 ~ '^[0-9a-f]{64}$'));
 ALTER TABLE analysis_runs ADD CONSTRAINT analysis_runs_money_nonnegative CHECK (budget_microusd >= 0 AND estimated_max_microusd >= 0 AND actual_microusd >= 0 AND uncertain_call_count >= 0 AND uncertain_reserved_microusd >= 0);
 ALTER TABLE analysis_runs ADD CONSTRAINT analysis_runs_coverage_valid CHECK (coverage_start_ms >= 0 AND coverage_end_ms > coverage_start_ms);
 ALTER TABLE analysis_runs ADD CONSTRAINT analysis_runs_safety_valid CHECK (safety_numerator > 0 AND safety_denominator > 0);
 ALTER TABLE ai_usage_events ADD CONSTRAINT ai_usage_events_usage_nonnegative CHECK (input_tokens >= 0 AND cached_input_tokens >= 0 AND cache_write_input_tokens >= 0 AND output_tokens >= 0 AND reasoning_tokens >= 0 AND cost_microusd >= 0);
 ALTER TABLE ai_usage_events ADD CONSTRAINT ai_usage_events_input_details_valid CHECK (cached_input_tokens + cache_write_input_tokens <= input_tokens);
+ALTER TABLE ai_usage_events ADD CONSTRAINT ai_usage_events_request_hash_valid CHECK (request_hash ~ '^[0-9a-f]{64}$');
 ALTER TABLE paid_call_reservations ADD CONSTRAINT paid_call_reservation_cost_nonnegative CHECK (worst_case_microusd >= 0);
+ALTER TABLE paid_call_reservations ADD CONSTRAINT paid_call_reservation_request_hash_valid CHECK (request_hash ~ '^[0-9a-f]{64}$');
 ALTER TABLE cost_allocations ADD CONSTRAINT cost_allocations_amount_nonnegative CHECK (amount_microusd >= 0);
 ALTER TABLE clips ADD CONSTRAINT clips_range_valid CHECK (start_ms >= 0 AND end_ms > start_ms);
 ALTER TABLE job_projections ADD CONSTRAINT job_progress_range CHECK (progress_basis_points BETWEEN 0 AND 10000);
 ALTER TABLE stage_timing_observations ADD CONSTRAINT stage_timing_positive CHECK (work_units > 0 AND duration_ms > 0 AND throughput_microunits > 0);
 ALTER TABLE upload_sessions ADD CONSTRAINT upload_size_positive CHECK (size_bytes > 0);
+ALTER TABLE upload_sessions ADD CONSTRAINT upload_completion_reference_valid CHECK (status <> 'COMPLETED' OR (completion_parts_hash ~ '^[0-9a-f]{64}$' AND object_sha256 ~ '^[0-9a-f]{64}$'));
 ```
 
 ```ts
@@ -415,13 +434,25 @@ const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 export const prisma = new PrismaClient({ adapter });
 ```
 
-- [ ] Run `pnpm prisma:generate && pnpm db:migrate:deploy && pnpm exec vitest run tests/integration/database/core-schema.test.ts`; expect PASS.
+- [ ] Run `pnpm prisma:generate && pnpm exec prisma validate`; expect PASS before generating migration history.
 
-- [ ] **RED: test migration history from zero.** Drop and recreate the disposable database, then run `pnpm db:migrate:deploy` twice. The first run must fail until the checked-in baseline SQL exists; the second must become a no-op after it exists.
+- [ ] **RED: test the migration behavior, not a missing setup artifact.** Create the reviewed baseline migration with `pnpm db:migrate:dev --name phase_1_core --create-only`, move it to exact directory `prisma/migrations/20260711000100_phase_1_core`, append the checks above, and write `tests/integration/database/core-schema.test.ts` with a deliberately unsupported invalid-row expectation. Run it against a disposable database after `pnpm db:migrate:deploy`; expect the named assertion to FAIL while schema generation, validation, and migration deployment succeed.
 
-- [ ] **GREEN:** generate the migration only with `pnpm db:migrate:dev --name phase_1_core`, review the SQL into exact directory `20260711000100_phase_1_core`, and add explicit checks/indexes omitted by generation. Never edit it after a later migration exists.
+- [ ] **GREEN:** implement the omitted constraint/index that makes the named invalid-row assertion pass. Drop and recreate the disposable database, run `pnpm db:migrate:deploy` twice, and verify the first applies the checked-in baseline while the second reports no pending migrations. Never edit this baseline after any later migration exists.
+
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 - [ ] **REFACTOR:** add direct tests proving pending `LOCAL_FILE` and `BROWSER_UPLOAD` rows may have null validated locators while health is `UNKNOWN`; `LOCATED` local rows require resolved path/mtime/fingerprint/size; `LOCATED` uploads require object key/size; and `HEALTHY` additionally requires a probe. Also cover UTC normalization, 64-bit micro-USD round-trip, cascade behavior, kind exclusivity, clip bounds, and every unique constraint. Ensure tests access Prisma only from integration support or persistence adapters.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Broader verification
 

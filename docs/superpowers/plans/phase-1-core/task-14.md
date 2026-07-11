@@ -19,12 +19,13 @@ This task's reservation API is also the only path out of `PAID_CALL_UNCERTAIN` a
 - Create: `apps/worker/src/clip_factory/application/verify_budget.py`
 - Create: `apps/worker/src/clip_factory/adapters/tokenization/openai_tokenizer.py`
 - Create: `apps/worker/src/clip_factory/adapters/http/cost_reservation_adapter.py`
-- Create: `apps/worker/src/clip_factory/entrypoints/temporal/analysis_workflow.py`
+- Create: `apps/worker/src/clip_factory/application/execute_analysis_child.py`
+- Create: `apps/worker/src/clip_factory/ports/analysis_child_executor.py`
 - Test: `apps/worker/tests/domain/test_cost.py`
 - Test: `apps/worker/tests/application/test_verify_budget.py`
 - Test: `apps/worker/tests/adapters/tokenization/test_openai_tokenizer.py`
 - Test: `apps/worker/tests/adapters/http/test_cost_reservation_adapter.py`
-- Test: `apps/worker/tests/entrypoints/temporal/test_analysis_workflow.py`
+- Test: `apps/worker/tests/entrypoints/temporal/test_analysis_child_workflow.py`
 - Create: `apps/web/src/modules/analysis/application/services/preflight-cost.service.ts`
 - Test: `apps/web/src/modules/analysis/application/services/preflight-cost.service.test.ts`
 - Modify: `packages/config/package.json`
@@ -53,7 +54,7 @@ it('reserves ceil(1.5 times every remaining worst-case call)', () => {
 });
 ```
 
-- [ ] Run `pnpm --filter @clip-factory/config test -- cost-policy.test.ts`; expect import FAIL.
+- [ ] Create the declared cost-policy exports with `quoteCost` returning `0n`, verify TypeScript compilation passes, then run the test; expect the named micro-USD total assertion to FAIL with `0n`.
 
 - [ ] **GREEN: create integer formulas.**
 
@@ -163,13 +164,13 @@ def verify_remaining_budget(remaining_budget: int, worst_case_calls: Sequence[in
     return BudgetDecision(allowed=reserve <= remaining_budget, required_microusd=reserve, remaining_microusd=remaining_budget)
 ```
 
-`CostReservationPort.reserve(callId, worstCaseMicrousd, idempotencyKey)` calls an internal Next.js endpoint that atomically rejects over-cap or duplicate-different reservations and returns the existing reservation for duplicate-identical input.
+`CostReservationPort.reserve({projectId,analysisRunId,callId,requestHash,worstCaseMicrousd,idempotencyKey})` calls an internal Next.js endpoint that atomically verifies project/run ownership, rejects over-cap or duplicate-different reservations, and returns the existing reservation only when every immutable field matches. The adapter test sends a mismatched project, run, call ID, request hash, and worst-case cost in turn and asserts typed `RESERVATION_OWNERSHIP_CONFLICT` or `PAID_CALL_CONFLICT`.
 
-- [ ] Run budget tests; expect PASS.
+- [ ] Run `uv run --directory apps/worker pytest tests/application/test_budget_gate.py tests/entrypoints/temporal/test_analysis_child_workflow.py -q`; expect PASS.
 
-- [ ] **RED: time-skipping tests** assert `AnalysisWorkflow` enters `AWAITING_BUDGET` with no provider activity, accepts only `raise_budget(newCap)`, `choose_coverage(startMs,endMs)`, or `cancel`, and never silently changes model/reasoning/retries.
+- [ ] **RED: time-skipping tests** assert Task 13's `AnalysisChildWorkflow` invokes the registered `AnalysisChildExecutorPort`, enters `AWAITING_BUDGET` with no provider activity, accepts only `raise_budget(newCap)`, `choose_coverage(startMs,endMs)`, or `cancel`, and never silently changes model/reasoning/retries.
 
-- [ ] **GREEN: add exact budget signals and wait loop.**
+- [ ] **GREEN: bind the analysis child executor and add exact budget signals/wait loop.** Implement `AnalysisChildExecutorPort.execute(AnalysisChildInput) -> AnalysisChildResult` in `ports/analysis_child_executor.py` and `ExecuteAnalysisChild.execute` in `application/execute_analysis_child.py`; Task 13's `AnalysisChildWorkflow` composition delegates to this port and Task 14 never imports `ProjectWorkflow`.
 
 ```python
 @workflow.signal
@@ -197,13 +198,19 @@ The activity tokenizes every exact prompt+transcript input, returns the immutabl
 
 - [ ] **REFACTOR:** add boundary tests for exactly 272000/272001 input tokens, every profile's single generated-token ceiling, zero candidates, retry denied/allowed, and micro-USD overflow guards. Assert `reasoning_tokens <= output_tokens` is stored as detail but never added to billed output or the reserve.
 
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm --filter @clip-factory/config test -- cost-policy.test.ts
+# Expected: PASS
+```
+
 ## Verification and commit
 
 ```bash
 pnpm --filter @clip-factory/config test -- cost-policy.test.ts
 pnpm test:contracts
 pnpm exec vitest run apps/web/src/modules/analysis/application/services/preflight-cost.service.test.ts
-uv run --directory apps/worker pytest tests/domain/test_cost.py tests/application/test_verify_budget.py tests/entrypoints/temporal/test_analysis_workflow.py -q
+uv run --directory apps/worker pytest tests/domain/test_cost.py tests/application/test_verify_budget.py tests/entrypoints/temporal/test_analysis_child_workflow.py -q
 pnpm test:architecture
 git diff --check
 ```

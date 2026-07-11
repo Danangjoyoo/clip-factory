@@ -41,7 +41,7 @@ Implement design §§13.1–13.2 and failure rules: quality-first overlapping wi
 
 - [ ] **RED: exact window construction test.** Given sentence/silence boundaries at `[0,400000,800000,1200000,1600000]`, maximum 1200000 ms and overlap target 120000 ms, assert windows `[0,1200000]` and `[800000,1600000]`; no word is split and every word has coverage.
 
-- [ ] Run `uv run --directory apps/worker pytest tests/application/test_build_transcript_windows.py -q`; expect import FAIL.
+- [ ] Create compile-safe window DTOs and a `build_transcript_windows` shell returning `()`, verify collection passes, then run the test; expect the named overlap/window-bound assertion to FAIL with no windows.
 
 - [ ] **GREEN: create boundary-only windowing.**
 
@@ -59,7 +59,7 @@ def build_windows(boundaries_ms: Sequence[int], duration_ms: int, maximum_ms: in
     return tuple(windows)
 ```
 
-- [ ] Run window tests; expect PASS. Add table rows for short transcript, one long sentence, exact boundary, duplicate boundaries, and silence-derived boundary.
+- [ ] Run `uv run --directory apps/worker pytest tests/application/test_build_transcript_windows.py -q`; expect PASS. Add table rows for short transcript, one long sentence, exact boundary, duplicate boundaries, and silence-derived boundary.
 
 - [ ] **RED: assert provider request privacy and schema.**
 
@@ -82,17 +82,29 @@ async def test_openai_request_contains_only_prompt_transcript_and_instruction() 
     assert "media" not in serialized.lower()
 ```
 
-- [ ] Run adapter test; expect import FAIL.
+- [ ] Create a compile-safe Responses adapter shell returning a typed empty result, verify collection passes, then run the exact adapter test; expect the named request-schema assertion to FAIL because no provider request was recorded.
 
 - [ ] **GREEN:** before any reservation/provider response call, `CheckModelAccess` invokes a fakeable `ModelAccessPort` backed by OpenAI `models.retrieve(modelId)` and returns `AVAILABLE`, `NOT_ENTITLED`, `NOT_FOUND`, or sanitized `CHECK_UNAVAILABLE`; it performs no inference and never selects a fallback. Call `client.responses.create` with `store=False`, fixed `highlights-v1` system prompt naming all seven rubric dimensions, selected model/effort, and strict `highlight-response` JSON Schema. For `gpt-5.6-sol`, send `prompt_cache_options={"mode":"explicit"}` and no breakpoints so cache reads/writes are disabled; omit unsupported cache options for `gpt-5.5`. Set `max_output_tokens` to Task 3 profile `maxGeneratedTokens`; this one cap includes reasoning, visible output, and formatting tokens. Convert response Client DTOs explicitly and retain response ID/usage; never include path, media probe, project name, or object reference.
 
-- [ ] Run adapter tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/application/test_build_transcript_windows.py tests/application/test_analyze_highlights.py tests/adapters/openai -q
+# Expected: PASS
+```
+
+- [ ] Run `uv run --directory apps/worker pytest tests/adapters/openai/test_responses_adapter.py -q`; expect PASS.
 
 - [ ] Add a failing access matrix: a fake 200 for each allowlisted ID enables only that ID; 403/404 disables it with explanatory presentation metadata; missing key reports `CHECK_UNAVAILABLE`; a transient check failure blocks a new paid call rather than guessing; selecting unavailable `gpt-5.6-sol` never invokes `gpt-5.5`. Implement the port/adapter/service and rerun `tests/application/test_check_model_access.py` plus `tests/adapters/openai/test_model_access_adapter.py`; expect PASS with zero Responses calls.
 
 - [ ] **RED: validate/rank candidates.** Reject end before start, outside window/source, over max duration, duplicate rank, score outside `0..1000000`, more than requested maximum, and malformed output. Accept fewer/zero candidates. Prefer at least 15000 ms but allow a shorter complete thought.
 
 - [ ] **GREEN:** validate every field, deduplicate candidates with intersection-over-union above `0.8` by keeping higher overall score, then globally sort `overallScore desc`, `startMs asc`, assign contiguous ranks, and truncate to `maximumClips`.
+
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/application/test_build_transcript_windows.py tests/application/test_analyze_highlights.py tests/adapters/openai -q
+# Expected: PASS
+```
 
 - [ ] **RED: distinguish safe and ambiguous paid failures.** A failure before request bytes are written returns `PRE_SEND_FAILURE` and may consume a planned retry; a timeout/read error after send or worker loss returns `PAID_CALL_UNCERTAIN`, enters a no-ETA wait, and schedules no provider activity. A received invalid Structured Output first records response ID and usage durably, then may reserve one validation retry.
 
@@ -113,8 +125,9 @@ def retry_uncertain_paid_call(self, acknowledge_possible_prior_spend: bool) -> N
 async def run_paid_call(self, request: HighlightRequest) -> HighlightResponse:
     try:
         return await workflow.execute_activity(call_openai_once, request, **PAID_ACTIVITY_OPTIONS)
-    except ApplicationError as error:
-        if error.type == "OPENAI_PRE_SEND_FAILURE":
+    except ActivityError as activity_error:
+        application_error = unwrap_application_error(activity_error.cause)
+        if application_error.type == "OPENAI_PRE_SEND_FAILURE":
             return await self.run_reserved_planned_retry(request)
         self._state = "PAID_CALL_UNCERTAIN"
         self._uncertain_retry_approved = False
@@ -124,15 +137,33 @@ async def run_paid_call(self, request: HighlightRequest) -> HighlightResponse:
         reconciled = await workflow.execute_activity(reconcile_paid_call, ReconcilePaidCallInput(request.call_id, request.request_hash, request.response_object_key), start_to_close_timeout=timedelta(minutes=2), retry_policy=RetryPolicy(maximum_attempts=3))
         if reconciled is not None:
             return reconciled
-        await workflow.execute_activity(reserve_uncertain_retry, request.call_id, start_to_close_timeout=timedelta(seconds=30))
-        return await workflow.execute_activity(call_openai_once, request.with_new_call_id(), **PAID_ACTIVITY_OPTIONS)
+        fresh_request = request.with_new_call_id_and_hash()
+        await workflow.execute_activity(
+            reserve_uncertain_retry,
+            ReservePaidCallInput(
+                prior_call_id=request.call_id,
+                call_id=fresh_request.call_id,
+                request_hash=fresh_request.request_hash,
+                worst_case_microusd=fresh_request.worst_case_microusd,
+            ),
+            start_to_close_timeout=timedelta(seconds=30),
+        )
+        return await workflow.execute_activity(call_openai_once, fresh_request, **PAID_ACTIVITY_OPTIONS)
 ```
 
-`call_openai_once` marks the reservation `SENT` immediately before invoking the SDK. Connection/configuration failures before `SENT` map to `OPENAI_PRE_SEND_FAILURE`; timeouts, EOF, worker crash, and any exception after `SENT` map to `OPENAI_OUTCOME_UNCERTAIN`. It does not claim provider idempotency. After a response arrives it writes `{callId,requestHash,providerResponseId,normalizedUsage,validatedResponse}` to deterministic MinIO key `projects/<projectId>/analysis/<analysisRunId>/calls/<callId>.json`, then posts that object reference to Task 16. Task 16 atomically creates usage and marks the reservation completed before acknowledging. `reconcile_paid_call` first queries the idempotent internal callback by call ID/hash; if completed, it reads the recorded artifact. If not completed, it heads the deterministic MinIO key and replays the callback from that artifact. Only a confirmed absence from both stores permits a fresh reservation after user acknowledgement.
+Import `ActivityError` from `temporalio.exceptions`; activity application failures arrive through its `cause`. `unwrap_application_error` must accept only the explicitly modeled `ApplicationError` chain and map any unknown cause after `SENT` to `OPENAI_OUTCOME_UNCERTAIN`.
 
-- [ ] Add two time-skipping tests: (1) provider response artifact and Task 16 transaction complete but callback HTTP acknowledgement is lost; acknowledgement signal reconciles the recorded result and provider call count stays one; (2) worker loss after `SENT` with no durable response in PostgreSQL or MinIO remains `PAID_CALL_UNCERTAIN`, performs zero automatic provider retries, and creates a second call only after explicit acknowledgement plus fresh reservation.
+`call_openai_once` marks the reservation for **that exact request call ID and hash** `SENT` immediately before invoking the SDK. Connection/configuration failures before `SENT` map to `OPENAI_PRE_SEND_FAILURE`; timeouts, EOF, worker crash, and any exception after `SENT` map to `OPENAI_OUTCOME_UNCERTAIN`. It does not claim provider idempotency. After a response arrives it writes `{callId,requestHash,providerResponseId,normalizedUsage,validatedResponse}` to deterministic MinIO key `projects/<projectId>/analysis/<analysisRunId>/calls/<callId>.json`, then posts that object reference to Task 16. Task 16 atomically creates usage and marks the reservation completed before acknowledging. `reconcile_paid_call` first queries the idempotent internal callback by call ID/hash; if completed, it reads the recorded artifact. If not completed, it heads the deterministic MinIO key and replays the callback from that artifact. Only a confirmed absence from both stores permits a fresh request with a newly computed hash and a reservation for its exact new call ID/hash after user acknowledgement.
+
+- [ ] Add two time-skipping tests: (1) provider response artifact and Task 16 transaction complete but callback HTTP acknowledgement is lost; acknowledgement signal reconciles the recorded result and provider call count stays one; (2) worker loss after `SENT` with no durable response in PostgreSQL or MinIO remains `PAID_CALL_UNCERTAIN`, performs zero automatic provider retries, and creates a second call only after explicit acknowledgement plus fresh reservation. In the second test, assert the new reservation call ID/hash exactly equal the SDK request, artifact key/body, and callback call ID/hash across a worker restart.
 
 - [ ] **REFACTOR:** deterministic fake reads `tests/fixtures/highlights/fake-response.json`; opt-in command is `OPENAI_SMOKE=1 OPENAI_MAX_SPEND_MICROUSD=10000 uv run --directory apps/worker pytest tests/smoke/test_openai.py -q`, skipped otherwise. Add a time-skipping test that restarts the worker after an ambiguous failure and proves provider call count remains one until the acknowledgement signal.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/application/test_build_transcript_windows.py tests/application/test_analyze_highlights.py tests/adapters/openai -q
+# Expected: PASS
+```
 
 ## Verification and commit
 

@@ -27,6 +27,12 @@ Cover design §§13.4–13.6, 21, 23, and acceptance criteria 2, 7–10, 14: bou
 
 - [ ] **GREEN:** fake returns fixed response ID/token details and records sanitized request envelope; test helper queries audit endpoint. Application truncates after ranking and persists exact/allocated provenance.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm test:e2e -- ai-highlights.spec.ts budget-pause.spec.ts restart-reconnect.spec.ts render-failure.spec.ts paid-call-uncertain.spec.ts
+# Expected: PASS
+```
+
 - [ ] **RED/GREEN verified budget:** fake tokenizer makes verified reserve exceed cap; assert `AWAITING_BUDGET`, no provider call, no ETA; choose explicit contiguous range, server shows coverage, fresh verification fits, one provider call starts. Separate cap raise and cancel cases.
 
 - [ ] **RED/GREEN restart:** pause worker during transcription, restart, reconnect SSE with Last-Event-ID, completed audio/transcript activity counts remain one; restart Compose during review, workflow remains open and accepts render signal; completed render is not duplicated.
@@ -63,7 +69,19 @@ test('missing durable response requires explicit fresh reservation', async ({ pa
 
 - [ ] **GREEN:** first crash mode commits Task 16 and drops HTTP acknowledgement; reconciliation retrieves recorded artifact and makes no call/reservation. Second marks reservation uncertain without artifact; UI shows possible separate spend, acknowledgement triggers server-calculated fresh reserve then second call.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm test:e2e -- ai-highlights.spec.ts budget-pause.spec.ts restart-reconnect.spec.ts render-failure.spec.ts paid-call-uncertain.spec.ts
+# Expected: PASS
+```
+
 - [ ] **REFACTOR:** assert all tests have no external requests, no API key, no fixed sleeps, clean console/network, and failure trace retention.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm test:e2e -- ai-highlights.spec.ts budget-pause.spec.ts restart-reconnect.spec.ts render-failure.spec.ts paid-call-uncertain.spec.ts
+# Expected: PASS
+```
 
 ## Verification and commit
 

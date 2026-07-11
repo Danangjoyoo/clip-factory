@@ -28,11 +28,17 @@ Complete design §§14–17 editor controls: caption correction/style, title, fo
 
 - [ ] **RED: caption form contract.** Assert text corrections, font, size, four colors, vertical position, max words/line, active emphasis, and title controls have labels/current values; invalid fields show related errors; Save emits complete versioned edit.
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/clips/delivery/ui/CaptionInspector.test.tsx`; expect import FAIL.
+- [ ] Create typed inspector shells that render read-only labels, verify typecheck passes, then run the test; expect the named caption-edit callback assertion to FAIL because the shell never calls `onChange`.
 
 - [ ] **GREEN:** create controlled form with fonts `Inter`, `Arial`, `Helvetica Neue`; number bounds from Task 19; native color input plus alpha text field; cue words keyed by ID; one Save callback receives full `CaptionDocumentV1`, `CaptionStyleV1`, and nullable title. Do not mutate props.
 
-- [ ] Run caption tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/clips/delivery/ui/{CaptionInspector,FrameInspector,MetadataInspector,SafeAreaOverlay}.test.tsx
+# Expected: PASS
+```
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/clips/delivery/ui/CaptionInspector.test.tsx`; expect PASS.
 
 - [ ] **RED: safe-area guide switch.** Each preset draws four noninteractive edges at exact Task 3 normalized coordinates; switching guide changes preview overlay only and persists selected platform, never canvas size; status text names selected guide.
 
@@ -45,15 +51,27 @@ export function SafeAreaOverlay({ preset }: Readonly<{ preset: PlatformPresetVie
 }
 ```
 
-- [ ] Run overlay tests; expect PASS and assert canvas aspect remains `9/16`.
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/clips/delivery/ui/SafeAreaOverlay.test.tsx`; expect PASS and assert canvas aspect remains `9/16`.
 
 - [ ] **RED: frame override.** Clicking/keyboard moving focal marker emits integer micros, reset restores automatic track, out-of-safe crop shows error, and low-confidence automatic fallback label is visible.
 
 - [ ] **GREEN:** preview click converts bounding rect coordinates with clamped half-up micros; arrow keys ±1000 micros, Shift ±10000; reset calls Task 18 service with `manualFocalPoint:null`; crop path interpolates current track for playhead.
 
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/clips/delivery/ui/{CaptionInspector,FrameInspector,MetadataInspector,SafeAreaOverlay}.test.tsx
+# Expected: PASS
+```
+
 - [ ] **RED/GREEN metadata:** read-only tab lists origin, analysis/model/reasoning/prompt/pricing, rank/scores, exact or allocated cost label, boundaries, algorithm/spec versions, render timing/encoder, object metadata without raw object key/path. Manual clip displays `$0.00 OpenAI selection cost` and no rank.
 
 - [ ] **REFACTOR:** tabs follow ARIA automatic activation pattern, arrow/Home/End keys, persistent focus, no nested cards, long transcript text wraps, and changes debounce with explicit Saving/Saved/Error states.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/clips/delivery/ui/{CaptionInspector,FrameInspector,MetadataInspector,SafeAreaOverlay}.test.tsx
+# Expected: PASS
+```
 
 ## Verification and commit
 

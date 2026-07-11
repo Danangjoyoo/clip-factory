@@ -53,7 +53,7 @@ describe('versioned catalogs', () => {
 });
 ```
 
-- [ ] Run `pnpm --filter @clip-factory/config test -- catalog.test.ts`; expect FAIL because `./catalog` is absent.
+- [ ] First create compile-safe `catalog.ts` exports returning empty/unsupported values and verify `pnpm --filter @clip-factory/config exec tsc --noEmit`; expect PASS. Then run `pnpm --filter @clip-factory/config test -- catalog.test.ts`; expect the named approved-model assertion to FAIL with `[]` instead of the two model IDs.
 
 - [ ] **GREEN: create validated catalogs and lookup functions.** Store this exact default entry in `model-catalog.json`:
 
@@ -195,7 +195,7 @@ export function getPricing(modelId: string, catalogVersion: string) {
 }
 ```
 
-- [ ] Run the catalog test; expect PASS. Run `pnpm test:architecture`; expect PASS because catalog policy imports no app/framework/provider.
+- [ ] Run `pnpm --filter @clip-factory/config test -- catalog.test.ts`; expect PASS. Run `pnpm test:architecture`; expect PASS because catalog policy imports no app/framework/provider.
 
 - [ ] **RED: test secret placement and environment validation.**
 
@@ -212,7 +212,7 @@ def test_worker_requires_openai_key_only_when_paid_adapter_is_selected() -> None
         WorkerSettings.from_mapping({"OPENAI_ADAPTER": "live", "INTERNAL_SERVICE_TOKEN": "local-test-token"})
 ```
 
-- [ ] Run `uv run --directory apps/worker pytest tests/composition/test_settings.py -q`; expect collection FAIL because `settings.py` is absent.
+- [ ] First create `settings.py` with the declared dataclass and a `from_mapping` shell that returns fake defaults, then run `uv run --directory apps/worker pytest tests/composition/test_settings.py --collect-only -q`; expect PASS. Run the test normally; expect the named live-adapter missing-key assertion to FAIL because the shell does not raise.
 
 - [ ] **GREEN: create the complete worker setting object.**
 
@@ -265,7 +265,7 @@ class WorkerSettings:
         )
 ```
 
-Create `loadServerEnv()` from a strict Zod object containing exactly `DATABASE_URL`, `REDIS_URL`, `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `TEMPORAL_ADDRESS`, and `INTERNAL_SERVICE_TOKEN`; call `.strict()` and return `schema.parse(process.env)`. The literal string `OPENAI_API_KEY` must not occur in that production file.
+Create `loadServerEnv()` from a strict Zod object containing exactly `DATABASE_URL`, `REDIS_URL`, `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `TEMPORAL_ADDRESS`, and `INTERNAL_SERVICE_TOKEN`. Construct a new owned-key object by reading only those seven properties from `process.env`, then call `schema.parse(ownedValues)`; never pass ambient `process.env` directly to a strict schema. Tests add unrelated `PATH`, `HOME`, and CI variables and still pass, while an unknown key supplied directly to the schema fails. The literal string `OPENAI_API_KEY` must not occur in that production file.
 
 Create `.env.example` with these exact nonsecret local values:
 
@@ -289,6 +289,12 @@ OPENAI_API_KEY=
 - [ ] Run the Python test and `pnpm exec vitest run apps/web/src/config/server-env.test.ts`; expect PASS. Run `rg -n 'OPENAI_API_KEY' apps/web packages`; expect no matches outside tests that assert its absence.
 
 - [ ] **REFACTOR:** freeze parsed objects, return typed catalog errors, test malformed JSON, duplicate IDs, unknown enum values, invalid money integers, invalid normalized safe areas, and model/reasoning incompatibility. Keep catalog and environment tests green.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm verify
+# Expected: PASS
+```
 
 ## Broader verification
 

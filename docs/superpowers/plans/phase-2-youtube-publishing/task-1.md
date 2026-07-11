@@ -30,6 +30,7 @@ Establish the token-free cross-runtime payloads and executable dependency rules 
 - Create (generated): `apps/worker/src/clip_factory/entrypoints/contracts/generated/youtube_publishing.py`
 - Create: `apps/worker/tests/entrypoints/contracts/test_youtube_publishing_contract.py`
 - Create: `tests/architecture/fixtures/ts/youtube-sdk-leak.ts`
+- Create: `tests/architecture/fixtures/ts/application/ports/record-repository-leak.ts`
 - Create: `scripts/check-youtube-boundaries.test.mjs`
 - Modify: `apps/web/src/shared/domain/identifiers.ts`
 - Modify: `packages/contracts/src/index.ts`
@@ -349,13 +350,37 @@ def test_oauth_contract_accepts_only_required_scopes() -> None:
     assert tuple(payload.requested_scopes) == SCOPES
 ```
 
+Before running, add this temporary generator input as the `oauthConnectionWorkflowInputV1` signature shell in `schema-bodies.mjs` and run the existing contract generator. This creates the Python module through the generator—never by hand—and deliberately leaves extra-field closure unimplemented:
+
+```js
+const oauthConnectionWorkflowInputV1SignatureShell = {
+  type: 'object',
+  additionalProperties: true,
+  required: ['contractVersion', 'connectionId', 'requestedScopes'],
+  properties: {
+    contractVersion: { const: 1 },
+    connectionId: { type: 'string', format: 'uuid' },
+    requestedScopes: {
+      type: 'array',
+      minItems: 2,
+      maxItems: 2,
+      items: { type: 'string' },
+    },
+  },
+};
+```
+
+```bash
+pnpm --filter @clip-factory/contracts generate
+```
+
 Run:
 
 ```bash
 uv run --directory apps/worker pytest tests/entrypoints/contracts/test_youtube_publishing_contract.py -q
 ```
 
-Expected RED: collection FAIL with `ModuleNotFoundError` for generated `youtube_publishing`.
+Expected RED: collection succeeds; `test_oauth_contract_forbids_token_material` fails because the signature shell accepts `refreshToken`. A missing generated module, generator failure, syntax error, or empty test collection is not accepted.
 
 - [ ] **GREEN 1.4 — Add the minimum complete schema and generation exports.**
 
@@ -840,6 +865,34 @@ test('application boundary scanner rejects Google SDK types', () => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Google SDK import is adapter-only/);
 });
+
+test('application repository ports reject Record DTO signatures', () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      'scripts/check-ts-boundaries.mjs',
+      'tests/architecture/fixtures/ts/application/ports/record-repository-leak.ts',
+    ],
+    { encoding: 'utf8' },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /repository ports must use application Entity DTOs/);
+});
+```
+
+The second fixture is deliberately self-contained so RED is scanner behavior, not module resolution:
+
+```ts
+export type PublishingDraftRecordDto = {
+  id: string;
+  clip_id: string;
+};
+
+export interface LeakyPublishingDraftRepositoryPort {
+  findById(id: string): Promise<PublishingDraftRecordDto | null>;
+  insert(input: PublishingDraftRecordDto): Promise<PublishingDraftRecordDto>;
+}
 ```
 
 Run:
@@ -855,7 +908,7 @@ Expected RED: FAIL because the scanner currently accepts the `googleapis` type o
 Make these exact rules executable:
 
 1. `.dependency-cruiser.cjs`: `youtube-publishing/domain` imports no outer layer; `application` imports only its own domain/ports and Phase 1 Entity/ID public exports; delivery and adapters are peers; only composition imports both. Reject cycles.
-2. `scripts/check-ts-boundaries.mjs`: reject imports matching `googleapis`, `google-auth-library`, `openai`, `@prisma/client`, `@temporalio/client`, or files under `adapters/` from any `domain/`, `application/`, or `delivery/ui/` file. Reject names matching `/access_?token|refresh_?token|authorization_?code|code_?verifier|client_?secret/i` in API, Entity, Record, Temporal, or UI DTO declaration files.
+2. `scripts/check-ts-boundaries.mjs`: reject imports matching `googleapis`, `google-auth-library`, `openai`, `@prisma/client`, `@temporalio/client`, or files under `adapters/` from any `domain/`, `application/`, or `delivery/ui/` file. Reject names matching `/access_?token|refresh_?token|authorization_?code|code_?verifier|client_?secret/i` in API, Entity, Record, Temporal, or UI DTO declaration files. Using the TypeScript AST, reject any `application/ports` import from `adapters/persistence` or `/dto/record/`, any Record DTO declaration under `application/ports`, and any exported `*RepositoryPort` method whose parameter/return type graph references a `*Record`/`*RecordDto`; report `repository ports must use application Entity DTOs: <path>`.
 3. `apps/web/eslint.config.mjs`: add `no-restricted-imports` with the same provider/framework packages for `src/modules/youtube-publishing/{domain,application,delivery/ui}/**/*.{ts,tsx}`.
 4. `apps/worker/.importlinter`: add contracts so `clip_factory.domain.youtube_publishing`, `clip_factory.application.youtube_publishing`, and `clip_factory.ports.youtube_publishing` cannot import `keyring`, `httpx`, `openai`, `temporalio`, or `clip_factory.adapters.youtube`; workflow modules may import Temporal decorators/types but no adapter/provider packages.
 
@@ -868,11 +921,16 @@ node --test scripts/check-youtube-boundaries.test.mjs
 pnpm test:architecture
 ```
 
-Expected GREEN: the focused test PASSes by observing rejection; the production tree passes all dependency, cycle, DTO leak, ESLint, and Python import-linter checks. The intentionally invalid fixture must be excluded from the production-tree success scan and exercised only by the negative test.
+Expected GREEN: the focused tests PASS by observing rejection; the production tree passes all dependency, cycle, DTO leak, Entity-oriented repository-port, ESLint, and Python import-linter checks. The intentionally invalid fixtures must be excluded from the production-tree success scan and exercised only by the negative tests.
 
 - [ ] **REFACTOR 2.3 — Share forbidden-pattern data inside the scanner, not DTOs across layers.**
 
 Use one immutable scanner pattern list for CLI and test execution. Keep ESLint/import-linter native configuration explicit because those tools have different semantics. Rerun `pnpm test:architecture`.
+
+```bash
+node --test scripts/check-youtube-boundaries.test.mjs
+pnpm test:architecture
+```
 
 ## Broader verification
 
@@ -889,7 +947,17 @@ git diff --check
 ```
 
 - [ ] Confirm `packages/contracts/schema/youtube-publishing.schema.json` has no property whose normalized name is `accessToken`, `refreshToken`, `authorizationCode`, `codeVerifier`, or `clientSecret`.
+
+```bash
+! rg -n 'access_?[Tt]oken|refresh_?[Tt]oken|authorization_?[Cc]ode|code_?[Vv]erifier|client_?[Ss]ecret' packages/contracts/schema/youtube-publishing.schema.json
+```
+
 - [ ] Confirm no Phase 1 schema, generated type, DTO, migration, or application service was renamed or broadened.
+
+```bash
+pnpm test:contracts
+git diff --check
+```
 
 ## Review gate
 

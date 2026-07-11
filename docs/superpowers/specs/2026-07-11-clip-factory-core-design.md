@@ -839,7 +839,7 @@ Enums also belong to their boundary. Generated types, Prisma models, provider SD
 - Route handlers/controllers validate transport input, obtain request context, invoke one application entry point, map errors/status codes, and serialize output. They contain no pricing, workflow, persistence, media, or provider policy.
 - Application services own use-case orchestration, business decisions, transaction boundaries, idempotency, authorization decisions when later introduced, and typed application errors.
 - A data service imports exactly one repository, exposes Entity DTOs, applies table-level access policy, and maps persistence failures without leaking Record DTOs.
-- A repository owns exactly one table/entity boundary and works only with Prisma plus Record DTOs. Cross-table business workflows belong in application services, not repositories.
+- An application-owned repository port is Entity-oriented. Its concrete persistence adapter owns exactly one table/entity boundary, implements that port, and keeps Prisma plus Record DTOs and Entity↔Record conversion private. Cross-table business workflows belong in application services, not repositories.
 - Adapters implement narrow application-owned ports for PostgreSQL, Redis, MinIO, Temporal, OpenAI, filesystem access, and the native worker boundary. Provider-specific retry/serialization details remain inside the adapter.
 - UI components receive presentation-ready values and callbacks. They do not call Prisma, provider SDKs, or infrastructure clients.
 

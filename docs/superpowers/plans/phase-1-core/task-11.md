@@ -20,6 +20,7 @@ Implement design §§9 and 12 plus privacy controls in §24: early source valida
 - Create: `apps/worker/src/clip_factory/adapters/storage/minio_object_materializer.py`
 - Create: `apps/worker/src/clip_factory/adapters/process/asyncio_process_runner.py`
 - Create: `apps/worker/src/clip_factory/entrypoints/temporal/activities/media_activities.py`
+- Create: `apps/worker/src/clip_factory/adapters/media/source_media_lease.py`
 - Test: `apps/worker/tests/domain/test_media.py`
 - Test: `apps/worker/tests/application/test_preprocess_source.py`
 - Test: `apps/worker/tests/adapters/media/test_ffprobe_adapter.py`
@@ -28,6 +29,7 @@ Implement design §§9 and 12 plus privacy controls in §24: early source valida
 - Test: `apps/worker/tests/adapters/storage/test_minio_object_materializer.py`
 - Test: `apps/worker/tests/adapters/process/test_asyncio_process_runner.py`
 - Test: `apps/worker/tests/entrypoints/temporal/activities/test_media_activities.py`
+- Test: `apps/worker/tests/adapters/media/test_source_media_lease.py`
 - Create `tests/fixtures/media/generate-source.sh`; it generates fixtures and does not commit binary user media.
 
 ## Fixed interfaces
@@ -75,7 +77,7 @@ def test_source_limit_failures_are_actionable(probe: MediaProbe, code: str) -> N
     assert error.value.code == code
 ```
 
-- [ ] Run `uv run --directory apps/worker pytest tests/domain/test_media.py -q`; expect import FAIL.
+- [ ] Create compile-safe media dataclasses and a `validate_probe` shell returning `None`, verify collection passes, then run the test; expect the named oversized-duration assertion to FAIL because no typed error is raised.
 
 - [ ] **GREEN: add exact constants and validation.**
 
@@ -92,7 +94,7 @@ def validate_probe(probe: MediaProbe) -> None:
     if not probe.audio_codec: raise MediaValidationError("AUDIO_STREAM_REQUIRED")
 ```
 
-- [ ] Run domain tests; expect PASS.
+- [ ] Run `uv run --directory apps/worker pytest tests/domain/test_media.py -q`; expect PASS.
 
 - [ ] **RED: assert FFmpeg argv and no shell.**
 
@@ -105,17 +107,35 @@ async def test_extract_speech_uses_normalized_mono_pcm_argv() -> None:
     assert runner.shell_used is False
 ```
 
-- [ ] Run adapter tests; expect import FAIL.
+- [ ] Create argv-runner and media-adapter shells that return empty probes/results, verify adapter-test collection passes, then run the exact adapter targets; expect the named argv assertion to FAIL because the recorded command is empty.
 
-- [ ] **GREEN:** create `ProcessRunner.run(argv: Sequence[str], on_stdout_line, cancellation)` using `asyncio.create_subprocess_exec(*argv, stdout=PIPE, stderr=PIPE, start_new_session=True)`. Parse ffprobe JSON with Pydantic Client models, convert to domain explicitly, and use the exact extraction argv asserted above.
+- [ ] **GREEN:** in `adapters/process/asyncio_process_runner.py`, implement `ProcessRunner.run(argv: Sequence[str], on_stdout_line, cancellation)` with `asyncio.create_subprocess_exec(*argv, stdout=PIPE, stderr=PIPE, start_new_session=True)`; in `ffprobe_adapter.py` map adapter-only Pydantic Client models to `MediaProbe`; in `ffmpeg_adapter.py` construct the exact extraction argv asserted above. Run `uv run --directory apps/worker pytest tests/adapters/process/test_asyncio_process_runner.py tests/adapters/media/test_ffprobe_adapter.py tests/adapters/media/test_ffmpeg_adapter.py -q`; expect PASS.
 
-- [ ] Run adapter tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_media.py tests/adapters/media -q
+# Expected: PASS
+```
+
+- [ ] Run `uv run --directory apps/worker pytest tests/adapters/media/test_ffprobe_adapter.py tests/adapters/media/test_ffmpeg_adapter.py -q`; expect PASS.
 
 - [ ] **RED: prove locator materialization and activity payload privacy.** A local locator must be opened read-only without copying/deleting it; an uploaded object must download into a mode-`0600` file below a mode-`0700` per-activity temp directory, verify object version/SHA-256, and remove the directory on success, failure, and cancellation. Assert the activity input contains only source/project IDs and its result contains only the probe plus `projects/<projectId>/audio/<sourceAssetId>.wav` object reference. Serialize Temporal history and assert no `/Users/`, temp path, or source object capability URL occurs.
 
-- [ ] **GREEN:** implement `SourcePreprocessorAdapter` with Task 10's adapter-private `SourceLocatorClient`, a focused reusable `MinioObjectMaterializer`, ffprobe/FFmpeg helpers, and `MinioArtifactStore`. It keeps every `Path` inside the adapter context, uploads normalized audio before returning, posts `{sourceAssetId,probe}` to Task 8's authenticated media-validation action to transition `LOCATED -> HEALTHY`, and returns `PreparedSource`. Duplicate activity execution heads/verifies the deterministic audio object and idempotent validation receipt before reusing it; it never re-extracts a verified artifact.
+- [ ] **GREEN:** implement `SourcePreprocessorAdapter.prepare` in `source_preprocessor_adapter.py`, `MinioObjectMaterializer.materialize` in `minio_object_materializer.py`, and `SourceMediaLease.__aenter__/__aexit__` in `source_media_lease.py`; inject Task 10's adapter-private `SourceLocatorClient`, `FfprobeAdapter`, `FfmpegAdapter`, and `MinioArtifactStore`. The lease is the only API yielding a `Path`: local inputs are read-only after size/mtime/fingerprint validation and never deleted; uploads are exact-version/hash verified in a `0700` workspace as `0600` and deleted on every exit. `prepare` uploads normalized audio, posts `{sourceAssetId,probe}` to Task 8, and returns only `PreparedSource`; on duplicate execution it heads/verifies the deterministic audio object and validation receipt before reuse. Run `uv run --directory apps/worker pytest tests/application/test_preprocess_source.py tests/adapters/media/test_source_preprocessor_adapter.py tests/adapters/media/test_source_media_lease.py tests/adapters/storage/test_minio_object_materializer.py tests/entrypoints/temporal/activities/test_media_activities.py -q`; expect PASS.
 
-- [ ] **REFACTOR:** parse `out_time_ms` heartbeats into measured media milliseconds, redact path-bearing stderr, cap captured stderr at 64 KiB, and map exit/non-JSON/materialization/hash errors to typed failures. Add a port-contract test shared by the fake and real `SourcePreprocessorPort`, and assert application/domain modules contain no `Path`, MinIO client, source locator Client DTO, or subprocess type.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_media.py tests/adapters/media -q
+# Expected: PASS
+```
+
+- [ ] **REFACTOR:** in those same adapters parse `out_time_ms` into media-millisecond heartbeats, redact path-bearing stderr, cap it at 64 KiB, and map exit/non-JSON/materialization/hash errors to typed failures. Add `apps/worker/tests/ports/test_source_preprocessor_contract.py` for fake/real port parity and an import-boundary assertion rejecting `Path`, MinIO, locator Client DTO, or subprocess types in application/domain. Re-run `uv run --directory apps/worker pytest tests/domain/test_media.py tests/application/test_preprocess_source.py tests/adapters/media tests/adapters/storage tests/adapters/process tests/ports/test_source_preprocessor_contract.py -q && uv run --directory apps/worker lint-imports`; expect PASS.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/domain/test_media.py tests/adapters/media -q
+# Expected: PASS
+```
 
 ## Verification and commit
 

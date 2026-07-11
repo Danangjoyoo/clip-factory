@@ -21,7 +21,7 @@ Implement design §§21–22 and 28: activity heartbeats, measured work percenta
 - Create: `apps/web/src/modules/jobs/delivery/http/dto/api/progress-event-api.dto.ts`
 - Create: `apps/web/src/modules/jobs/delivery/http/progress-sse.controller.ts`
 - Create: `apps/web/src/modules/jobs/converters/api-entity/progress-event.converter.ts`
-- Create: `apps/web/src/modules/jobs/converters/entity-record/stage-timing-observation.converter.ts`
+- Create: `apps/web/src/modules/jobs/adapters/persistence/converters/stage-timing-observation.converter.ts`
 - Create: `apps/web/src/app/api/projects/[projectId]/events/route.ts`
 - Test: `apps/web/src/modules/jobs/domain/progress.test.ts`
 - Test: `apps/web/src/modules/jobs/application/services/record-progress.service.test.ts`
@@ -54,7 +54,7 @@ it.each([
 it.each(['AWAITING_BUDGET', 'PAID_CALL_UNCERTAIN', 'AWAITING_REVIEW'])('suppresses ETA for %s', (state) => expect(estimateEta({ state, completed: 10n, total: 100n, elapsedSeconds: 5, historicalThroughputs: [2] })).toEqual({ lowSeconds: null, highSeconds: null, confidence: 'NOT_APPLICABLE' }));
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/jobs/domain/progress.test.ts`; expect import FAIL.
+- [ ] Create the declared progress exports with `calculateProgress` returning zero progress and null ETA, verify typecheck passes, then run the test; expect the named weighted-progress assertion to FAIL with `0`.
 
 - [ ] **GREEN: create exact formulas.**
 
@@ -79,17 +79,29 @@ export function estimateEta(input: EtaInput): EtaRange {
 }
 ```
 
-- [ ] Run policy tests; expect PASS. Add exact tests for invalid work, first-run no progress, OpenAI-stage widened 0.7×–2× range, multi-item weighted progress, and queued range equal to active high range plus preceding queue medians.
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/jobs/domain/progress.test.ts apps/web/src/modules/jobs/domain/eta.test.ts`; expect PASS. Add exact tests for invalid work, first-run no progress, OpenAI-stage widened 0.7×–2× range, multi-item weighted progress, and queued range equal to active high range plus preceding queue medians.
 
 - [ ] **RED: test durable-before-live ordering and reconnect.** Harness records calls; assert `JobProjectionDataService.upsert` then `StageTimingDataService.create` on terminal then Redis `publish`. SSE with `Last-Event-ID: 41` receives events 42 onward and a 15-second keepalive comment.
 
 - [ ] **GREEN:** `RecordProgressService` validates contract→Entity, calculates basis points/ETA, persists projection, persists terminal timing, then calls `LiveProjectionPort.publish`. Redis stores `progress:<projectId>` JSON with 24-hour TTL and appends max 1000 events to `progress-events:<projectId>` stream. SSE uses `XREAD` from supplied ID and abort signal cleanup.
 
-- [ ] Run service/SSE tests; expect PASS.
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/jobs
+# Expected: PASS
+```
+
+- [ ] Run `pnpm exec vitest run apps/web/src/modules/jobs/application/services/record-progress.service.test.ts apps/web/src/modules/jobs/adapters/redis apps/web/src/modules/jobs/delivery/http/progress-sse.controller.test.ts`; expect PASS.
 
 - [ ] **RED/GREEN rebuild:** empty Redis plus durable active projections repopulates snapshots on web startup; terminal states never regress from an older heartbeat; worker heartbeat older than 30 seconds projects `WORKER_OFFLINE` without failing job.
 
 - [ ] **REFACTOR:** Python `ProgressReporter.report(completed,total,unit)` validates raw units and calls `activity.heartbeat(progress_contract)` only in Temporal adapter. Add path/transcript redaction assertion for serialized events.
+
+```bash
+# REFACTOR attachment: implement the exact files/functions named above.
+pnpm exec vitest run apps/web/src/modules/jobs
+# Expected: PASS
+```
 
 ## Verification and commit
 
