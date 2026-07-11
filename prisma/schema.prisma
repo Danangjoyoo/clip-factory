@@ -174,6 +174,7 @@ model SourceAsset {
   updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
   project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   transcript      Transcript?
+  uploadSessions   UploadSession[]
 
   @@index([health])
   @@map("source_assets")
@@ -407,6 +408,7 @@ model UploadSession {
   createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
   project             Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceAsset         SourceAsset        @relation(fields: [sourceAssetId], references: [id], onDelete: Cascade)
 
   @@index([projectId, status])
   @@map("upload_sessions")
