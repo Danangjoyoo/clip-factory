@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !env/.env.example
+env/.*.env
 .superpowers/
 node_modules/
 .next/

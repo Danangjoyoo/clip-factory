@@ -28,6 +28,21 @@ corepack pnpm worker:sync
 
 Edit `.env` with local service values. Keep `OPENAI_API_KEY` only in the worker environment; it is optional for manual clips and required for AI highlight analysis.
 
+Environment shortcuts are available:
+
+```bash
+corepack pnpm prisma:generate:dev
+corepack pnpm worker:sync:dev
+corepack pnpm dev:dev
+
+# or use the fake/OpenAI-free local profile
+corepack pnpm prisma:generate:local
+corepack pnpm worker:sync:local
+corepack pnpm dev:local
+```
+
+Each shortcut copies `env/.dev.env` or `env/.local.env` to the ignored root `.env` before running.
+
 ## Run the application
 
 The development launcher starts PostgreSQL, Redis, MinIO, and Temporal with Docker Compose, waits for health checks, then starts the Python worker and Next.js app:
