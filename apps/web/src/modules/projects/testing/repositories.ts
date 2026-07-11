@@ -58,6 +58,12 @@ export class InMemorySourceAssetRepository implements SourceAssetRepository {
   async deleteByProjectId(id: string) {
     this.items.delete(id);
   }
+  async attachUploadedObject(projectId: string, reference: import('../../storage/application/ports/artifact-store.port').ImmutableObjectReference) {
+    const value = this.items.get(projectId);
+    if (!value || value.kind !== 'BROWSER_UPLOAD') throw new Error('source is not browser upload');
+    const updated = { ...value, objectKey: reference.key, objectVersionId: reference.versionId, objectSha256: reference.sha256, sizeBytes: reference.sizeBytes, health: 'LOCATED' as const, updatedAt: new Date() };
+    this.items.set(projectId, updated); return updated;
+  }
 }
 export class InMemoryUnitOfWork {
   execute<T>(fn: (tx: unknown) => Promise<T>) {

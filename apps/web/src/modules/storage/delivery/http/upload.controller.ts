@@ -1,0 +1,2 @@
+import type { StartUploadService } from '../../application/services/start-upload.service';
+export class UploadController { constructor(private readonly start: StartUploadService) {} async startUpload(projectId: string, body: unknown) { const input = body as { sourceAssetId: string; fileName: string; contentType: string; sizeBytes: string; totalParts: number }; return this.start.execute({ ...input, projectId, sizeBytes: BigInt(input.sizeBytes) }); } }

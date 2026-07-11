@@ -81,4 +81,11 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
   async deleteByProjectId(projectId: string, tx: TransactionContext) {
     await this.db(tx).delete({ where: { projectId } });
   }
+  async attachUploadedObject(projectId: string, reference: import('../../../../storage/application/ports/artifact-store.port').ImmutableObjectReference, tx: TransactionContext) {
+    const db = this.db(tx);
+    const current = await db.findUnique({ where: { projectId } });
+    if (!current || current.kind !== 'BROWSER_UPLOAD') throw new Error('source is not browser upload');
+    const r = await db.update({ where: { projectId }, data: { objectKey: reference.key, objectVersionId: reference.versionId, objectSha256: reference.sha256, sizeBytes: reference.sizeBytes, health: 'LOCATED' } });
+    return sourceAssetRecordToEntity(r);
+  }
 }
