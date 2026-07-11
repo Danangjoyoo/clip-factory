@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 from pydantic import ValidationError
 from clip_factory.domain.render_spec import freeze
 from clip_factory.domain.render_spec import RenderSpec
 from clip_factory.entrypoints.contracts.generated.render_spec import RenderSpec as ContractRenderSpec
+
+
+_ABSOLUTE_PATH = re.compile(r"^(?:/|[A-Za-z]:[\\/]|\\\\)")
 
 
 def _reject_private_source_values(value: Any) -> None:
@@ -16,7 +20,10 @@ def _reject_private_source_values(value: Any) -> None:
     elif isinstance(value, list):
         for item in value:
             _reject_private_source_values(item)
-    elif isinstance(value, str) and (value.startswith(("file:", "http:", "https:"))):
+    elif isinstance(value, str) and (
+        value.startswith(("file:", "http:", "https:"))
+        or _ABSOLUTE_PATH.match(value) is not None
+    ):
         raise ValueError("PRIVATE_SOURCE_VALUE")
 
 

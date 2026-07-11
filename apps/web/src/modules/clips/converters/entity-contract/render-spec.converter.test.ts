@@ -137,4 +137,46 @@ describe('render spec converter', () => {
       }),
     ).toThrow('PRIVATE_SOURCE_VALUE');
   });
+
+  it('rejects malformed ranges before reading range properties', () => {
+    expect(() =>
+      renderSpecEntityToContract({
+        version: '1.0.0',
+        renderId: '00000000-0000-4000-8000-000000000001',
+        clipId: '00000000-0000-4000-8000-000000000002',
+        source: {
+          kind: 'LOCAL_FILE',
+          sourceAssetId: '00000000-0000-4000-8000-000000000003',
+          fingerprint: 'a'.repeat(64),
+          sizeBytes: 1,
+          modifiedAt: new Date().toISOString(),
+        },
+        canvas: { width: 1080, height: 1920 },
+        range: null as never,
+        cropTrack: [],
+        captions: [],
+        captionDocument: { version: 1, languageTag: 'en', cues: [] },
+        style: {
+          version: 1,
+          fontFamily: 'Inter',
+          fontSizePx: 24,
+          textColor: '#ffffffff',
+          outlineColor: '#000000ff',
+          backgroundColor: '#00000000',
+          activeWordColor: '#ffffffff',
+          verticalPositionMicros: 500000,
+          maxWordsPerLine: 1,
+          activeWordEmphasis: true,
+        },
+        title: null,
+        encoder: {
+          strategy: 'SOFTWARE',
+          videoCodec: 'h264',
+          audioCodec: 'aac',
+          pixelFormat: 'yuv420p',
+        },
+        platformPreset: 'TIKTOK',
+      }),
+    ).toThrow('INVALID_RANGE');
+  });
 });

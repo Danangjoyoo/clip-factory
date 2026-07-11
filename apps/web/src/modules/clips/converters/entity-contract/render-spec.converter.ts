@@ -129,10 +129,10 @@ export const renderSpecEntityToContract = (
     !Array.isArray(document.cues)
   )
     throw new Error('INVALID_CAPTION_DOCUMENT');
-  finiteInt(entity.range.startMs, 'RANGE');
-  finiteInt(entity.range.endMs, 'RANGE');
-  if (entity.range.endMs <= entity.range.startMs)
-    throw new Error('INVALID_RANGE');
+  const range = exact(entity.range, ['startMs', 'endMs'], 'RANGE');
+  finiteInt(range.startMs, 'RANGE');
+  finiteInt(range.endMs, 'RANGE');
+  if (range.endMs <= range.startMs) throw new Error('INVALID_RANGE');
   if (!Array.isArray(entity.cropTrack) || !Array.isArray(entity.captions))
     throw new Error('INVALID_RENDER_SPEC');
   entity.cropTrack.forEach((point) => {

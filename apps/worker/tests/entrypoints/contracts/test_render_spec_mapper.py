@@ -48,8 +48,13 @@ def test_maps_valid_payload():
         spec.encoder["strategy"] = "SOFTWARE"  # type: ignore[index]
 
 
-def test_rejects_private_source_path():
+@pytest.mark.parametrize("object_key", ["/Users/me/video.mp4", "C:\\Users\\me\\video.mp4", "\\\\server\\share\\video.mp4"])
+def test_rejects_absolute_browser_upload_object_path(object_key):
     value = payload()
-    value["source"]["resolvedPath"] = "/Users/me/video.mp4"
+    value["source"] = {
+        "kind": "BROWSER_UPLOAD",
+        "sourceAssetId": value["source"]["sourceAssetId"],
+        "object": {"bucket": "clip-factory", "key": object_key, "versionId": None, "sha256": "a" * 64},
+    }
     with pytest.raises(ValueError, match="PRIVATE_SOURCE_VALUE"):
         map_render_spec(value)
