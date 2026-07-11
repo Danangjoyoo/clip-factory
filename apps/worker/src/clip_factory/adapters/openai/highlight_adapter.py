@@ -6,6 +6,7 @@ from clip_factory.domain.highlight import HighlightCandidate, HighlightScores
 from clip_factory.ports.highlight_model import HighlightRequest, HighlightResponse
 from clip_factory.adapters.openai.client_models import ClientResponse
 from clip_factory.adapters.openai.model_access_adapter import MODEL_CATALOG
+from clip_factory.adapters.openai.model_access_adapter import OpenAIModelAccessAdapter
 
 PROMPT = (Path(__file__).parent / "prompts" / "highlights-v1.txt").read_text()
 
@@ -24,6 +25,9 @@ class OpenAIHighlightAdapter:
                 )
             )
         )
+
+    async def check(self, model_id: str) -> Any:
+        return await OpenAIModelAccessAdapter(self._client).check(model_id)
 
     async def extract(self, request: HighlightRequest) -> HighlightResponse:
         profile = MODEL_CATALOG.get(request.model)

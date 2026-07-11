@@ -9,9 +9,13 @@ from clip_factory.entrypoints.temporal.activities.project_activities import (
     prepare_editor,
     prepare_manual_clip,
     transcribe,
+    load_transcript_text,
     validate_source,
 )
-from clip_factory.entrypoints.temporal.child_workflows import AnalysisChildWorkflow, RenderBatchChildWorkflow
+from clip_factory.entrypoints.temporal.child_workflows import (
+    AnalysisChildWorkflow,
+    RenderBatchChildWorkflow,
+)
 from clip_factory.entrypoints.temporal.interim_retry import execute_activity_once
 from clip_factory.ports.analysis_child import AnalysisChildInput
 from clip_factory.ports.project_results import (
@@ -59,11 +63,15 @@ class ProjectWorkflow:
 
     @workflow.signal
     def prepare_manual_clip(self, command: PrepareManualClipCommand) -> None:
-        self._review_commands.append(ReviewCommand("PREPARE_MANUAL_CLIP", manual_clip=command))
+        self._review_commands.append(
+            ReviewCommand("PREPARE_MANUAL_CLIP", manual_clip=command)
+        )
 
     @workflow.signal
     def queue_render_batch(self, command: RenderBatchInput) -> None:
-        self._review_commands.append(ReviewCommand("RENDER_BATCH", render_batch=command))
+        self._review_commands.append(
+            ReviewCommand("RENDER_BATCH", render_batch=command)
+        )
 
     @workflow.run
     async def run(self, payload: WorkflowInput) -> WorkflowResult:
@@ -82,7 +90,9 @@ class ProjectWorkflow:
             except Exception as exc:
                 self._set_state(self._source_failure_event(exc))
                 self._source_relinked = False
-                await workflow.wait_condition(lambda: self._source_relinked or self._cancelled)
+                await workflow.wait_condition(
+                    lambda: self._source_relinked or self._cancelled
+                )
                 if self._cancelled:
                     return self._cancelled_result(payload)
                 self._set_state("relink")
@@ -98,10 +108,19 @@ class ProjectWorkflow:
         self._set_state("transcribe")
         transcript = await self._execute_activity(
             transcribe,
-            TranscribeInput(payload.project_id, prepared.audio_object, payload.language_tag),
+            TranscribeInput(
+                payload.project_id, prepared.audio_object, payload.language_tag
+            ),
             start_to_close_timeout=timedelta(hours=6),
             heartbeat_timeout=timedelta(seconds=30),
         )
+        transcript_text = ""
+        if payload.mode == "AI_HIGHLIGHTS":
+            transcript_text = await self._execute_activity(
+                load_transcript_text,
+                transcript,
+                start_to_close_timeout=timedelta(minutes=2),
+            )
         if self._cancelled:
             return self._cancelled_result(payload)
         if payload.mode == "MANUAL":
@@ -112,7 +131,7 @@ class ProjectWorkflow:
             self._set_state("analyze")
             analysis = await workflow.execute_child_workflow(
                 AnalysisChildWorkflow.run,
-                AnalysisChildInput.from_project(payload, transcript),
+                AnalysisChildInput.from_project(payload, transcript, transcript_text),
                 id=f"{payload.workflow_id}-analysis",
             )
             self._set_state("preview")
@@ -159,11 +178,16 @@ class ProjectWorkflow:
         self._active_activity = handle
 
     async def _prepare_editor(
-        self, payload: WorkflowInput, transcript: ObjectReference, candidates: tuple[str, ...]
+        self,
+        payload: WorkflowInput,
+        transcript: ObjectReference,
+        candidates: tuple[str, ...],
     ) -> None:
         await self._execute_activity(
             prepare_editor,
-            EditorInput(payload.workflow_id, payload.project_id, transcript, candidates),
+            EditorInput(
+                payload.workflow_id, payload.project_id, transcript, candidates
+            ),
             start_to_close_timeout=timedelta(minutes=30),
             heartbeat_timeout=timedelta(seconds=15),
         )
@@ -172,7 +196,11 @@ class ProjectWorkflow:
         while not self._complete_requested and not self._cancelled:
             self._set_state("review")
             await workflow.wait_condition(
-                lambda: bool(self._review_commands) or self._complete_requested or self._cancelled
+                lambda: (
+                    bool(self._review_commands)
+                    or self._complete_requested
+                    or self._cancelled
+                )
             )
             while self._review_commands and not self._cancelled:
                 command = self._review_commands.pop(0)

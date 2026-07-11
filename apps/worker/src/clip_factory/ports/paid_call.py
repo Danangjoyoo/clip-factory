@@ -1,5 +1,6 @@
 import hashlib
 import json
+from uuid import uuid4
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -9,6 +10,8 @@ from clip_factory.ports.highlight_model import (
     HighlightResponse,
 )
 from clip_factory.domain.highlight import HighlightCandidate, HighlightScores
+from clip_factory.application.analyze_highlights import rank_candidates
+from clip_factory.domain.highlight import TimeRange
 from clip_factory.ports.cost_reservation import CostReservationRequest
 
 OPENAI_PRE_SEND_FAILURE = "OPENAI_PRE_SEND_FAILURE"
@@ -28,10 +31,16 @@ class PaidCallInput:
     def request_hash(self) -> str:
         payload = {
             "callId": self.call_id,
+            "projectId": self.project_id,
+            "analysisRunId": self.analysis_run_id,
             "model": self.request.model,
             "reasoning": self.request.reasoning,
             "instruction": self.request.instruction,
             "text": self.request.text,
+            "maximumClips": self.request.maximum_clips,
+            "maximumDurationMs": self.request.maximum_duration_ms,
+            "window": _window_payload(self.request.window),
+            "worstCaseMicrousd": self.worst_case_microusd,
         }
         return hashlib.sha256(
             json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
@@ -90,7 +99,11 @@ def _restore_response(value: object) -> HighlightResponse | None:
                     str(item["title"]),
                     str(item["rationale"]),
                     int(item["overallScore"]),
-                    HighlightScores(0, 0, 0, 0, 0, 0, 0),
+                    HighlightScores(
+                        int(item["hook"]), int(item["coherence"]), int(item["payoff"]),
+                        int(item["novelty"]), int(item["energy"]),
+                        int(item["instructionFit"]), int(item["boundaryQuality"]),
+                    ),
                     int(item.get("rank", 0)),
                 )
             )
@@ -115,7 +128,7 @@ async def retry_uncertain_paid_call(
         call.project_id,
         call.analysis_run_id,
         call.request,
-        f"{call.call_id}-retry-1",
+        str(uuid4()),
         call.worst_case_microusd,
     )
     await reserve_paid_call(deps, fresh)
@@ -143,6 +156,11 @@ async def call_openai_once(
     reserved: bool = False,
 ) -> HighlightResponse:
     """One provider attempt; never retry an outcome that occurred after SENT."""
+    access_check = getattr(model, "check", None)
+    if access_check is not None:
+        access = await access_check(call.request.model)
+        if getattr(getattr(access, "status", None), "value", None) != "AVAILABLE":
+            raise PreSendFailureError("model is not available for this key")
     if not reserved:
         try:
             await reserve_paid_call(deps, call)
@@ -160,6 +178,15 @@ async def call_openai_once(
         raise PaidCallUncertainError("provider outcome is uncertain") from exc
     except Exception as exc:
         raise PaidCallUncertainError("provider outcome is uncertain") from exc
+    window = _as_time_range(call.request.window)
+    if window is None and response.candidates:
+        raise ValueError("highlight request window is required")
+    candidates = (
+        rank_candidates(response.candidates, window, call.request.maximum_clips, call.request.maximum_duration_ms)
+        if isinstance(window, TimeRange)
+        else ()
+    )
+    response = HighlightResponse(candidates, response.response_id, response.usage)
     artifact: dict[str, object] = {
         "callId": call.call_id,
         "requestHash": call.request_hash,
@@ -174,6 +201,13 @@ async def call_openai_once(
                     "rationale": c.rationale,
                     "rank": c.rank,
                     "overallScore": c.overall_score,
+                    "hook": c.scores.hook,
+                    "coherence": c.scores.coherence,
+                    "payoff": c.scores.payoff,
+                    "novelty": c.scores.novelty,
+                    "energy": c.scores.energy,
+                    "instructionFit": c.scores.instruction_fit,
+                    "boundaryQuality": c.scores.boundary_quality,
                 }
                 for c in response.candidates
             ]
@@ -183,3 +217,17 @@ async def call_openai_once(
     await deps.put_json(key, artifact)
     await deps.record_paid_call({**artifact, "artifactKey": key})
     return response
+
+
+def _window_payload(window: object | None) -> object:
+    if isinstance(window, TimeRange):
+        return {"startMs": window.start_ms, "endMs": window.end_ms}
+    return window
+
+
+def _as_time_range(window: object | None) -> TimeRange | None:
+    if isinstance(window, TimeRange):
+        return window
+    if isinstance(window, (tuple, list)) and len(window) == 2:
+        return TimeRange(int(window[0]), int(window[1]))
+    return None

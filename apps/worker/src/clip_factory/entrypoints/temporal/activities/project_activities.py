@@ -10,6 +10,14 @@ from clip_factory.ports.project_results import (
     ValidateSourceInput,
 )
 from clip_factory.ports.source_preprocessor import ObjectReference, PreparedSource
+from clip_factory.ports.transcript_artifact import TranscriptArtifactLoader
+
+_transcript_loader: TranscriptArtifactLoader | None = None
+
+
+def configure_transcript_loader(loader: TranscriptArtifactLoader) -> None:
+    global _transcript_loader
+    _transcript_loader = loader
 
 
 @activity.defn
@@ -31,6 +39,16 @@ async def preprocess_source(input: PreprocessSourceInput) -> PreparedSource:
 @activity.defn
 async def transcribe(input: TranscribeInput) -> ObjectReference:
     return input.audio_object
+
+
+@activity.defn
+async def load_transcript_text(input: ObjectReference) -> str:
+    if _transcript_loader is None:
+        raise RuntimeError("transcript artifact loader is not configured")
+    text = await _transcript_loader.load_text(input)
+    if not text.strip():
+        raise ValueError("transcript artifact is empty")
+    return text
 
 
 @activity.defn

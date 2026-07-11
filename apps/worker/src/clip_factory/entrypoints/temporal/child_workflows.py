@@ -1,5 +1,6 @@
 from datetime import timedelta
 from typing import Any
+from uuid import uuid4
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError, CancelledError
@@ -198,7 +199,7 @@ class PaidCallWorkflow:
                 self._state = "PRE_SEND_FAILURE"
                 retry = PaidCallInput(
                     input.project_id, input.analysis_run_id, input.request,
-                    f"{input.call_id}-retry-1", input.worst_case_microusd,
+                    str(uuid4()), input.worst_case_microusd,
                 )
                 await workflow.execute_activity(
                     reserve_paid_call_activity, retry,
@@ -227,7 +228,7 @@ class PaidCallWorkflow:
                 input.project_id,
                 input.analysis_run_id,
                 input.request,
-                f"{input.call_id}-retry-1",
+                str(uuid4()),
                 input.worst_case_microusd,
                 True,
             )

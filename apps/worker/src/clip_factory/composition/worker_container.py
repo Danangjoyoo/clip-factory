@@ -6,6 +6,7 @@ from clip_factory.entrypoints.temporal.activities.project_activities import (
     prepare_editor,
     prepare_manual_clip,
     transcribe,
+    load_transcript_text,
     validate_source,
 )
 from clip_factory.entrypoints.temporal.child_workflows import (
@@ -25,6 +26,7 @@ def project_activities() -> list[Callable[..., Any]]:
         validate_source,
         extract_audio,
         transcribe,
+        load_transcript_text,
         prepare_editor,
         prepare_manual_clip,
         verify_analysis_budget,
