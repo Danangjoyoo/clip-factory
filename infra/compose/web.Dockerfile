@@ -1,4 +1,4 @@
-FROM node:24.18.0-bookworm-slim
+FROM node:26.5.0-bookworm-slim
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json apps/web/package.json
