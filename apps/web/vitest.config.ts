@@ -5,6 +5,8 @@ export default defineConfig({
   oxc: { jsx: { runtime: 'automatic' } },
   test: {
     environment: 'jsdom',
-    setupFiles: [fileURLToPath(new URL('./src/test-setup.ts', import.meta.url))],
+    setupFiles: [
+      fileURLToPath(new URL('./src/test-setup.ts', import.meta.url)),
+    ],
   },
 });
