@@ -4,8 +4,11 @@
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {
-    "lint": "eslint src scripts",
+    "lint": "eslint scripts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
   }
 }
