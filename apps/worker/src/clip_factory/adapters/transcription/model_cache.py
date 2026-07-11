@@ -34,8 +34,8 @@ class ModelCache:
         from huggingface_hub import snapshot_download
 
         snapshot_download(
-                repo_id=self.manifest.repo,
-                revision=self.manifest.revision,
-                local_dir=str(self.root / self.manifest.revision),
+            repo_id=self.manifest.repo,
+            revision=self.manifest.revision,
+            local_dir=str(self.root / self.manifest.revision),
         )
         return self.require_verified()
