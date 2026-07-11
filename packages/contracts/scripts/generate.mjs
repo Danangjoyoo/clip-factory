@@ -18,7 +18,9 @@ for (const name of names) {
   const schemaPath = resolve(root, `schema/${name}.schema.json`);
   const schemaText = `${JSON.stringify(schemaBodies[name], null, 2)}\n`;
   await writeFile(schemaPath, schemaText);
-  manifest[name] = createHash('sha256').update(schemaText).digest('hex');
+  manifest[name] = createHash('sha256')
+    .update(JSON.stringify(schemaBodies[name]))
+    .digest('hex');
   if (name === 'common') continue;
   execFileSync(
     'pnpm',
@@ -58,6 +60,40 @@ for (const name of names) {
     ],
     { stdio: 'inherit' },
   );
+  if (name === 'workflow-input' || name === 'cost-data') {
+    const className = name === 'workflow-input' ? 'Analysis' : 'CostData';
+    const generatedPath = resolve(
+      worker,
+      `src/clip_factory/entrypoints/contracts/generated/${name.replaceAll('-', '_')}.py`,
+    );
+    const generated = await readFile(generatedPath, 'utf8');
+    const withValidatorImport = generated.replace(
+      'from pydantic import ',
+      'from pydantic import model_validator, ',
+    );
+    const validator = [
+      '',
+      "    @model_validator(mode='after')",
+      `    def validate_reasoning_compatibility(self) -> ${className}:`,
+      '        if self.modelId is ModelId.gpt_5_5 and self.reasoning is Reasoning.max:',
+      '            raise ValueError("reasoning \'max\' is not supported by gpt-5.5")',
+      '        return self',
+      '',
+    ].join('\n');
+    const output =
+      name === 'workflow-input'
+        ? withValidatorImport.replace(
+            '\n\nclass WorkflowInput',
+            `${validator}\nclass WorkflowInput`,
+          )
+        : `${withValidatorImport}${validator}`;
+    await writeFile(generatedPath, output, 'utf8');
+    execFileSync(
+      'uv',
+      ['run', '--directory', worker, 'ruff', 'format', generatedPath],
+      { stdio: 'inherit' },
+    );
+  }
 }
 execFileSync(
   'pnpm',
@@ -76,7 +112,9 @@ for (const name of names) {
     resolve(root, `schema/${name}.schema.json`),
     'utf8',
   );
-  manifest[name] = createHash('sha256').update(schemaText).digest('hex');
+  manifest[name] = createHash('sha256')
+    .update(JSON.stringify(JSON.parse(schemaText)))
+    .digest('hex');
 }
 await writeFile(
   resolve(root, 'src/generated/manifest.json'),

@@ -6,7 +6,7 @@
   "scripts": {
     "generate": "node scripts/generate.mjs",
     "check:compatibility": "node scripts/check-compatibility.mjs",
-    "lint": "eslint scripts",
+    "lint": "eslint scripts && tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run && node scripts/check-compatibility.mjs"
   },

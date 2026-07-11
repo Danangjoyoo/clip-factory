@@ -7,37 +7,44 @@ from enum import Enum
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, conint, constr
+from pydantic import (
+    model_validator,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    conint,
+    constr,
+)
 
 
 class Mode(Enum):
-    AI_HIGHLIGHTS = 'AI_HIGHLIGHTS'
-    MANUAL = 'MANUAL'
+    AI_HIGHLIGHTS = "AI_HIGHLIGHTS"
+    MANUAL = "MANUAL"
 
 
 class PlatformPreset(Enum):
-    YOUTUBE_SHORTS = 'YOUTUBE_SHORTS'
-    INSTAGRAM_REELS = 'INSTAGRAM_REELS'
-    TIKTOK = 'TIKTOK'
+    YOUTUBE_SHORTS = "YOUTUBE_SHORTS"
+    INSTAGRAM_REELS = "INSTAGRAM_REELS"
+    TIKTOK = "TIKTOK"
 
 
 class ModelId(Enum):
-    gpt_5_6_sol = 'gpt-5.6-sol'
-    gpt_5_5 = 'gpt-5.5'
+    gpt_5_6_sol = "gpt-5.6-sol"
+    gpt_5_5 = "gpt-5.5"
 
 
 class Reasoning(Enum):
-    none = 'none'
-    low = 'low'
-    medium = 'medium'
-    high = 'high'
-    xhigh = 'xhigh'
-    max = 'max'
+    none = "none"
+    low = "low"
+    medium = "medium"
+    high = "high"
+    xhigh = "xhigh"
+    max = "max"
 
 
 class Analysis(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     modelId: ModelId
     reasoning: Reasoning
@@ -47,17 +54,23 @@ class Analysis(BaseModel):
     coverageStartMs: conint(ge=0)
     coverageEndMs: conint(ge=0)
 
+    @model_validator(mode="after")
+    def validate_reasoning_compatibility(self) -> Analysis:
+        if self.modelId is ModelId.gpt_5_5 and self.reasoning is Reasoning.max:
+            raise ValueError("reasoning 'max' is not supported by gpt-5.5")
+        return self
+
 
 class WorkflowInput(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    schemaVersion: Literal['1.0.0']
+    schemaVersion: Literal["1.0.0"]
     workflowId: UUID
     projectId: UUID
     sourceAssetId: UUID
     mode: Mode
-    languageTag: constr(pattern=r'^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$')
+    languageTag: constr(pattern=r"^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$")
     maxClipSeconds: conint(ge=1, le=10800)
     platformPreset: PlatformPreset
     analysis: Optional[Analysis] = None

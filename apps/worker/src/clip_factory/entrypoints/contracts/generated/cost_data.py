@@ -7,31 +7,31 @@ from enum import Enum
 from typing import List, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, conint, constr
+from pydantic import model_validator, BaseModel, ConfigDict, conint, constr
 
 
 class ModelId(Enum):
-    gpt_5_6_sol = 'gpt-5.6-sol'
-    gpt_5_5 = 'gpt-5.5'
+    gpt_5_6_sol = "gpt-5.6-sol"
+    gpt_5_5 = "gpt-5.5"
 
 
 class Reasoning(Enum):
-    none = 'none'
-    low = 'low'
-    medium = 'medium'
-    high = 'high'
-    xhigh = 'xhigh'
-    max = 'max'
+    none = "none"
+    low = "low"
+    medium = "medium"
+    high = "high"
+    xhigh = "xhigh"
+    max = "max"
 
 
 class Purpose(Enum):
-    HIGHLIGHT_WINDOW = 'HIGHLIGHT_WINDOW'
-    GLOBAL_RANKING = 'GLOBAL_RANKING'
+    HIGHLIGHT_WINDOW = "HIGHLIGHT_WINDOW"
+    GLOBAL_RANKING = "GLOBAL_RANKING"
 
 
 class Call(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     purpose: Purpose
     responseId: constr(min_length=1)
@@ -45,14 +45,20 @@ class Call(BaseModel):
 
 class CostData(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    schemaVersion: Literal['1.0.0']
+    schemaVersion: Literal["1.0.0"]
     analysisRunId: UUID
     modelId: ModelId
     reasoning: Reasoning
-    pricingVersion: Literal['openai-2026-07-11.1']
+    pricingVersion: Literal["openai-2026-07-11.1"]
     budgetMicrousd: conint(ge=0)
     reservedMicrousd: conint(ge=0)
     spentMicrousd: conint(ge=0)
     calls: List[Call]
+
+    @model_validator(mode="after")
+    def validate_reasoning_compatibility(self) -> CostData:
+        if self.modelId is ModelId.gpt_5_5 and self.reasoning is Reasoning.max:
+            raise ValueError("reasoning 'max' is not supported by gpt-5.5")
+        return self
