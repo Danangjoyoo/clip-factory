@@ -15,31 +15,22 @@ export class ProjectController {
     private readonly deleteProject: DeleteProjectService,
   ) {}
   async create(request: Request) {
-    try {
-      const parsed = CreateProjectApiSchema.safeParse(await request.json());
-      if (!parsed.success)
-        return Response.json(
-          { code: 'INVALID_PROJECT', issues: parsed.error.issues },
-          { status: 400 },
-        );
-      const result = await this.createProject.execute(
-        createProjectApiToEntity(parsed.data),
-      );
-      return Response.json(projectEntityToApi(result), { status: 201 });
-    } catch {
+    const parsed = CreateProjectApiSchema.safeParse(await request.json());
+    if (!parsed.success)
       return Response.json({ code: 'INVALID_PROJECT' }, { status: 400 });
-    }
+    const result = await this.createProject.execute(
+      createProjectApiToEntity(parsed.data),
+    );
+    return Response.json(projectEntityToApi(result), { status: 201 });
   }
   async list() {
     const values = await this.listProjects.execute();
-    return Response.json(
-      values.map((project) => projectEntityToApi({ project })),
-    );
+    return Response.json(values.map((value) => projectEntityToApi(value)));
   }
   async get(id: string) {
-    const project = await this.getProject.execute(id);
-    return project
-      ? Response.json(projectEntityToApi({ project }))
+    const value = await this.getProject.execute(id);
+    return value
+      ? Response.json(projectEntityToApi(value))
       : Response.json({ code: 'NOT_FOUND' }, { status: 404 });
   }
   async remove(id: string) {

@@ -51,7 +51,7 @@ export const createProjectApiToEntity = (
 });
 export const projectEntityToApi = (value: {
   project: ProjectEntityDto;
-  source?: { kind: string; displayPath: string; health: string };
+  source?: { kind: string; displayPath: string; health: string } | null;
 }) => ({
   id: value.project.id,
   name: value.project.name,
@@ -63,10 +63,13 @@ export const projectEntityToApi = (value: {
   openaiSpendMicrousd: value.project.openaiSpendMicrousd.toString(),
   source: value.source && {
     kind: value.source.kind,
-    displayLabel:
-      value.source.kind === 'LOCAL_FILE'
-        ? value.source.displayPath.split(/[\\/]/).pop()
-        : value.source.displayPath,
+    displayLabel: (() => {
+      const label =
+        value.source.kind === 'LOCAL_FILE'
+          ? value.source.displayPath.split(/[\\/]/).filter(Boolean).pop()
+          : value.source.displayPath;
+      return label || 'source';
+    })(),
     health: value.source.health,
   },
   createdAt: value.project.createdAt.toISOString(),

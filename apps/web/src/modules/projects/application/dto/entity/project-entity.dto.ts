@@ -10,7 +10,7 @@ export interface ProjectEntityDto {
   languageTag: string;
   defaultMaxClipSeconds: number;
   defaultPlatformPreset: PlatformPreset;
-  status: ProjectStatus | string;
+  status: ProjectStatus;
   activeWorkflowId: string | null;
   openaiSpendMicrousd: bigint;
   createdAt: Date;

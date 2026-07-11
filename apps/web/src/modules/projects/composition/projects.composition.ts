@@ -24,8 +24,8 @@ export function projectsComposition() {
   return {
     controller: new ProjectController(
       new CreateProjectService(uow, projects, sources),
-      new ListProjectsService(projects),
-      new GetProjectService(projects),
+      new ListProjectsService(projects, sources),
+      new GetProjectService(projects, sources),
       new DeleteProjectService(uow, projects, sources, workflows, artifacts),
     ),
   };
