@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Any
 
 from clip_factory.adapters.filesystem.local_source import LocalSourceFilesystem
-from clip_factory.adapters.storage.minio_object_materializer import MinioObjectMaterializer
+from clip_factory.adapters.storage.minio_object_materializer import (
+    MinioObjectMaterializer,
+)
 
 
 class SourceMediaLease:
@@ -24,7 +26,9 @@ class SourceMediaLease:
 
     async def __aenter__(self) -> Path:
         if hasattr(self._locator, "candidate_path"):
-            validated = self._local_filesystem.validate(Path(self._locator.candidate_path))
+            validated = self._local_filesystem.validate(
+                Path(self._locator.candidate_path)
+            )
             self.path = validated.resolved_path
             self._workspace = Path(tempfile.mkdtemp(prefix="clip-factory-"))
             self._workspace.chmod(0o700)

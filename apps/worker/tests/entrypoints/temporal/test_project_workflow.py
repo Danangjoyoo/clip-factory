@@ -15,7 +15,12 @@ from clip_factory.entrypoints.temporal.activities.project_activities import (
 from clip_factory.entrypoints.temporal.project_workflow import ProjectWorkflow
 from clip_factory.entrypoints.temporal.child_workflows import RenderBatchChildWorkflow
 from clip_factory.ports.project_results import WorkflowInput
-from clip_factory.ports.project_results import EditorInput, PreprocessSourceInput, TranscribeInput, ValidateSourceInput
+from clip_factory.ports.project_results import (
+    EditorInput,
+    PreprocessSourceInput,
+    TranscribeInput,
+    ValidateSourceInput,
+)
 from clip_factory.ports.project_results import PrepareManualClipCommand
 from clip_factory.ports.project_results import RenderBatchInput
 
@@ -57,7 +62,13 @@ async def _test_manual_workflow_reaches_review_without_analysis() -> None:
         ):
             handle = await env.client.start_workflow(
                 ProjectWorkflow.run,
-                WorkflowInput("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "MANUAL", "en"),
+                WorkflowInput(
+                    "00000000-0000-0000-0000-000000000001",
+                    "00000000-0000-0000-0000-000000000002",
+                    "00000000-0000-0000-0000-000000000003",
+                    "MANUAL",
+                    "en",
+                ),
                 id="workflow-001",
                 task_queue="phase1-test",
             )
@@ -66,7 +77,12 @@ async def _test_manual_workflow_reaches_review_without_analysis() -> None:
                     break
                 await env.sleep(timedelta(milliseconds=10))
             assert await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW"
-            assert calls == ["validate_source", "extract_audio", "transcribe", "prepare_editor"]
+            assert calls == [
+                "validate_source",
+                "extract_audio",
+                "transcribe",
+                "prepare_editor",
+            ]
             await handle.signal(ProjectWorkflow.complete_project)
             assert (await handle.result()).status == "COMPLETED"
 
@@ -112,7 +128,13 @@ async def _test_review_signals_serialize_manual_and_render_batches() -> None:
         ):
             handle = await env.client.start_workflow(
                 ProjectWorkflow.run,
-                WorkflowInput("wf-review", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "MANUAL", "en"),
+                WorkflowInput(
+                    "wf-review",
+                    "00000000-0000-0000-0000-000000000002",
+                    "00000000-0000-0000-0000-000000000003",
+                    "MANUAL",
+                    "en",
+                ),
                 id="wf-review",
                 task_queue="review-test",
             )
@@ -120,7 +142,10 @@ async def _test_review_signals_serialize_manual_and_render_batches() -> None:
                 if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
                     break
                 await env.sleep(timedelta(milliseconds=10))
-            await handle.signal(ProjectWorkflow.prepare_manual_clip, PrepareManualClipCommand("clip-1", 0, 1000))
+            await handle.signal(
+                ProjectWorkflow.prepare_manual_clip,
+                PrepareManualClipCommand("clip-1", 0, 1000),
+            )
             await env.sleep(timedelta(milliseconds=10))
             assert await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW"
             await handle.signal(ProjectWorkflow.complete_project)
@@ -158,7 +183,13 @@ async def _test_two_render_batches_are_serialized_before_completion() -> None:
         ):
             handle = await env.client.start_workflow(
                 ProjectWorkflow.run,
-                WorkflowInput("wf-render", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "MANUAL", "en"),
+                WorkflowInput(
+                    "wf-render",
+                    "00000000-0000-0000-0000-000000000002",
+                    "00000000-0000-0000-0000-000000000003",
+                    "MANUAL",
+                    "en",
+                ),
                 id="wf-render",
                 task_queue="render-test",
             )
@@ -166,13 +197,19 @@ async def _test_two_render_batches_are_serialized_before_completion() -> None:
                 if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
                     break
                 await env.sleep(timedelta(milliseconds=10))
-            await handle.signal(ProjectWorkflow.queue_render_batch, RenderBatchInput("batch-1", ("clip-1",)))
+            await handle.signal(
+                ProjectWorkflow.queue_render_batch,
+                RenderBatchInput("batch-1", ("clip-1",)),
+            )
             for _ in range(100):
                 if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
                     break
                 await env.sleep(timedelta(milliseconds=10))
             assert await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW"
-            await handle.signal(ProjectWorkflow.queue_render_batch, RenderBatchInput("batch-2", ("clip-2",)))
+            await handle.signal(
+                ProjectWorkflow.queue_render_batch,
+                RenderBatchInput("batch-2", ("clip-2",)),
+            )
             for _ in range(100):
                 if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
                     break
@@ -221,7 +258,13 @@ async def _test_missing_source_waits_for_relink() -> None:
         ):
             handle = await env.client.start_workflow(
                 ProjectWorkflow.run,
-                WorkflowInput("wf-relink", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "MANUAL", "en"),
+                WorkflowInput(
+                    "wf-relink",
+                    "00000000-0000-0000-0000-000000000002",
+                    "00000000-0000-0000-0000-000000000003",
+                    "MANUAL",
+                    "en",
+                ),
                 id="wf-relink",
                 task_queue="relink-test",
             )
@@ -247,23 +290,39 @@ def test_source_failure_types_wait_in_distinct_states() -> None:
 
 
 def test_source_not_allowed_error_type_maps_to_not_allowed_event() -> None:
-    error = ApplicationError("source failure", type="SourceNotAllowedError", non_retryable=True)
+    error = ApplicationError(
+        "source failure", type="SourceNotAllowedError", non_retryable=True
+    )
 
     assert ProjectWorkflow._source_failure_event(error) == "source_not_allowed"
 
 
 async def _test_source_failure_types_wait_in_distinct_states() -> None:
-    for error_type, state in (("SOURCE_CHANGED", "SOURCE_CHANGED"), ("SOURCE_NOT_ALLOWED", "SOURCE_NOT_ALLOWED")):
+    for error_type, state in (
+        ("SOURCE_CHANGED", "SOURCE_CHANGED"),
+        ("SOURCE_NOT_ALLOWED", "SOURCE_NOT_ALLOWED"),
+    ):
+
         @activity.defn(name="validate_source")
         async def validate(_payload: ValidateSourceInput, error_type=error_type):
-            raise ApplicationError("source failure", type=error_type, non_retryable=True)
+            raise ApplicationError(
+                "source failure", type=error_type, non_retryable=True
+            )
 
         async with await WorkflowEnvironment.start_time_skipping() as env:
-            async with Worker(env.client, task_queue=f"source-{error_type}", workflows=[ProjectWorkflow], activities=[validate]):
+            async with Worker(
+                env.client,
+                task_queue=f"source-{error_type}",
+                workflows=[ProjectWorkflow],
+                activities=[validate],
+            ):
                 handle = await env.client.start_workflow(
                     ProjectWorkflow.run,
-                    WorkflowInput(f"wf-{error_type}", "project", "asset", "MANUAL", "en"),
-                    id=f"wf-{error_type}", task_queue=f"source-{error_type}",
+                    WorkflowInput(
+                        f"wf-{error_type}", "project", "asset", "MANUAL", "en"
+                    ),
+                    id=f"wf-{error_type}",
+                    task_queue=f"source-{error_type}",
                 )
                 for _ in range(100):
                     if await handle.query(ProjectWorkflow.state) == state:
@@ -296,7 +355,13 @@ async def _test_cancel_signal_cancels_running_activity() -> None:
         ):
             handle = await env.client.start_workflow(
                 ProjectWorkflow.run,
-                WorkflowInput("wf-cancel", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "MANUAL", "en"),
+                WorkflowInput(
+                    "wf-cancel",
+                    "00000000-0000-0000-0000-000000000002",
+                    "00000000-0000-0000-0000-000000000003",
+                    "MANUAL",
+                    "en",
+                ),
                 id="wf-cancel",
                 task_queue="cancel-test",
             )

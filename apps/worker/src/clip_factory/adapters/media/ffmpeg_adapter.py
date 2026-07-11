@@ -12,7 +12,9 @@ class FfmpegError(RuntimeError):
 
 
 class FfmpegAdapter:
-    def __init__(self, runner: ProcessRunner, executable: str | Path = "ffmpeg") -> None:
+    def __init__(
+        self, runner: ProcessRunner, executable: str | Path = "ffmpeg"
+    ) -> None:
         self._runner = runner
         self._executable = str(executable)
 
@@ -33,7 +35,26 @@ class FfmpegAdapter:
                     await result
 
         code, _, _ = await self._runner.run(
-            [self._executable, "-nostdin", "-hide_banner", "-i", source, "-map", "0:a:0", "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", "-progress", "pipe:1", "-y", destination],
+            [
+                self._executable,
+                "-nostdin",
+                "-hide_banner",
+                "-i",
+                source,
+                "-map",
+                "0:a:0",
+                "-vn",
+                "-ac",
+                "1",
+                "-ar",
+                "16000",
+                "-c:a",
+                "pcm_s16le",
+                "-progress",
+                "pipe:1",
+                "-y",
+                destination,
+            ],
             on_line,
         )
         if code != 0:

@@ -1,0 +1,2 @@
+import type { ClipOriginRecord, ClipStateRecord } from '../../../../../../generated/prisma/enums';
+export interface ClipRecordDto { id: string; projectId: string; analysisRunId: string | null; origin: ClipOriginRecord; startMs: number; endMs: number; title: string | null; rank: number | null; scoreJson: unknown | null; captionJson: unknown; state: ClipStateRecord; createdAt: Date; updatedAt: Date; }

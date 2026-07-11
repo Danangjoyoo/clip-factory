@@ -16,6 +16,13 @@ class MinioArtifactStore:
         path.write_bytes(raw)
         return ObjectReference(self.bucket, key, "v1", hashlib.sha256(raw).hexdigest())
 
+    def put_file(self, path: Path, key: str, content_type: str = "application/octet-stream") -> ObjectReference:
+        destination = self.root / self.bucket / key
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        raw = path.read_bytes()
+        destination.write_bytes(raw)
+        return ObjectReference(self.bucket, key, "v1", hashlib.sha256(raw).hexdigest())
+
     def download(self, reference: ObjectReference, destination: Path) -> str:
         destination.write_bytes(
             (self.root / reference.bucket / reference.key).read_bytes()

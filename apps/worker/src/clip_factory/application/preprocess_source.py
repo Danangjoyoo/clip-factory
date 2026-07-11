@@ -1,6 +1,10 @@
 from uuid import UUID
 
-from clip_factory.ports.source_preprocessor import PreparedSource, ProgressCallback, SourcePreprocessorPort
+from clip_factory.ports.source_preprocessor import (
+    PreparedSource,
+    ProgressCallback,
+    SourcePreprocessorPort,
+)
 
 
 class PreprocessSource:

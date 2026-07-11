@@ -53,8 +53,8 @@ _TRANSITIONS.update(
         (JobState.SOURCE_NOT_ALLOWED, "relink"): JobState.RELINKING_SOURCE,
         (JobState.RELINKING_SOURCE, "preprocess"): JobState.PREPROCESSING,
         (JobState.TRANSCRIBING, "review"): JobState.AWAITING_REVIEW,
-    (JobState.AWAITING_REVIEW, "manual_clip"): JobState.AWAITING_REVIEW,
-    (JobState.AWAITING_REVIEW, "review"): JobState.AWAITING_REVIEW,
+        (JobState.AWAITING_REVIEW, "manual_clip"): JobState.AWAITING_REVIEW,
+        (JobState.AWAITING_REVIEW, "review"): JobState.AWAITING_REVIEW,
     }
 )
 

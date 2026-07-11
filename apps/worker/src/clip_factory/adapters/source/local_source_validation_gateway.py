@@ -31,9 +31,7 @@ class LocalSourceValidationGateway:
 
     def validate_and_persist(self, source_asset_id: str) -> SourceValidationReceipt:
         locator = self._client.get(source_asset_id)
-        validated = self._filesystem.validate(
-            Path(locator.candidate_path)
-        )
+        validated = self._filesystem.validate(Path(locator.candidate_path))
         result = self._client.apply_locator_validation(
             SourceValidationUpdate(
                 source_asset_id,

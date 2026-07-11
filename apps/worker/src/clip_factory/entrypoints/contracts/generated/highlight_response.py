@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, conint, constr
 
 class Scores(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     hook: conint(ge=0, le=1000000)
     coherence: conint(ge=0, le=1000000)
@@ -24,7 +24,7 @@ class Scores(BaseModel):
 
 class Candidate(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     startMs: conint(ge=0)
     endMs: conint(ge=0)
@@ -37,8 +37,8 @@ class Candidate(BaseModel):
 
 class HighlightResponse(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    schemaVersion: Literal['1.0.0']
+    schemaVersion: Literal["1.0.0"]
     analysisRunId: UUID
     candidates: List[Candidate]

@@ -9,9 +9,13 @@ from clip_factory.adapters.filesystem.local_source import LocalSourceFilesystem
 from clip_factory.adapters.http.source_locator_client import HttpSourceLocatorClient
 from clip_factory.adapters.media.ffmpeg_adapter import FfmpegAdapter
 from clip_factory.adapters.media.ffprobe_adapter import FfprobeAdapter
-from clip_factory.adapters.media.source_preprocessor_adapter import SourcePreprocessorAdapter
+from clip_factory.adapters.media.source_preprocessor_adapter import (
+    SourcePreprocessorAdapter,
+)
 from clip_factory.adapters.process.asyncio_process_runner import AsyncioProcessRunner
-from clip_factory.adapters.storage.minio_object_materializer import MinioObjectMaterializer
+from clip_factory.adapters.storage.minio_object_materializer import (
+    MinioObjectMaterializer,
+)
 from clip_factory.application.preprocess_source import PreprocessSource
 from clip_factory.composition.settings import WorkerSettings
 from clip_factory.entrypoints.temporal.activities.media_activities import (

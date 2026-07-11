@@ -27,6 +27,7 @@ def test_completed_history_replays() -> None:
 
 async def _test_completed_history_replays() -> None:
     calls = 0
+
     @activity.defn(name="validate_source")
     async def validate(input: ValidateSourceInput):
         nonlocal calls
@@ -54,7 +55,13 @@ async def _test_completed_history_replays() -> None:
         ):
             handle = await env.client.start_workflow(
                 ProjectWorkflow.run,
-                WorkflowInput("wf-replay", "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003", "MANUAL", "en"),
+                WorkflowInput(
+                    "wf-replay",
+                    "00000000-0000-0000-0000-000000000002",
+                    "00000000-0000-0000-0000-000000000003",
+                    "MANUAL",
+                    "en",
+                ),
                 id="wf-replay",
                 task_queue="replay-test",
             )
@@ -65,7 +72,15 @@ async def _test_completed_history_replays() -> None:
             await handle.signal(ProjectWorkflow.complete_project)
             await handle.result()
             history = await handle.fetch_history()
-            assert all(secret not in str(history) for secret in ("/tmp/", "transcript text", "OPENAI_API_KEY", "media-bytes"))
+            assert all(
+                secret not in str(history)
+                for secret in (
+                    "/tmp/",
+                    "transcript text",
+                    "OPENAI_API_KEY",
+                    "media-bytes",
+                )
+            )
             assert calls == 1
         async with Worker(
             env.client,

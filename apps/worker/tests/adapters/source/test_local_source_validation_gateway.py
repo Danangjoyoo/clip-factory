@@ -17,7 +17,11 @@ class Client:
     def apply_locator_validation(self, update):
         self.update = update
         if self.nested_probe:
-            return {"probe": {"metadata": {"resolvedPath": "/Users/me/a.mov", "durationMs": 1}}}
+            return {
+                "probe": {
+                    "metadata": {"resolvedPath": "/Users/me/a.mov", "durationMs": 1}
+                }
+            }
         return {"probe": {"durationMs": 1, "resolvedPath": update.resolved_path}}
 
 

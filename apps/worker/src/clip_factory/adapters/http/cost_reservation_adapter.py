@@ -29,7 +29,9 @@ class HttpCostReservationAdapter:
             return response
         if isinstance(response, dict) and response.get("error"):
             raise ReservationConflictError(response["error"])
-        if not isinstance(response, dict) or not _valid_id(response.get("reservationId")):
+        if not isinstance(response, dict) or not _valid_id(
+            response.get("reservationId")
+        ):
             raise ReservationConflictError("INVALID_RESERVATION_RESPONSE")
         fields = {
             "projectId": request.project_id,
@@ -40,7 +42,9 @@ class HttpCostReservationAdapter:
         }
         if any(response.get(key) != value for key, value in fields.items()):
             raise ReservationConflictError("RESERVATION_OWNERSHIP_CONFLICT")
-        return CostReservation(response["reservationId"], request, str(response.get("status", "RESERVED")))
+        return CostReservation(
+            response["reservationId"], request, str(response.get("status", "RESERVED"))
+        )
 
 
 def _valid_id(value: object) -> bool:

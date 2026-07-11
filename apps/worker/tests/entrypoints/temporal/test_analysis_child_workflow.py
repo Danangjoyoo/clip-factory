@@ -44,7 +44,9 @@ async def _run() -> None:
             assert (await handle.result()).candidates == ()
 
 
-def test_analysis_child_rejects_invalid_action_then_executes_after_budget_gate() -> None:
+def test_analysis_child_rejects_invalid_action_then_executes_after_budget_gate() -> (
+    None
+):
     class FakeExecutor:
         async def execute(self, _input: AnalysisChildInput) -> AnalysisChildResult:
             return AnalysisChildResult(("candidate-1",))
