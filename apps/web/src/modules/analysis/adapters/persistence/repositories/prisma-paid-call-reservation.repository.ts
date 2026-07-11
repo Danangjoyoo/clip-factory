@@ -16,7 +16,7 @@ export class PrismaPaidCallReservationRepository implements PaidCallReservationR
           provider_response_id: string | null;
           usage_event_id: string | null;
           status: string;
-        }>>(Prisma.sql`SELECT id, project_id, analysis_run_id, call_id, request_hash, worst_case_microusd, provider_response_id, usage_event_id, status FROM paid_call_reservations WHERE call_id = ${callId} FOR UPDATE`))[0]
+        }>>(Prisma.sql`SELECT id, project_id, analysis_run_id, call_id, request_hash, worst_case_microusd, provider_response_id, usage_event_id, status FROM paid_call_reservations WHERE call_id = CAST(${callId} AS uuid) FOR UPDATE`))[0]
       : await prisma.paidCallReservation.findUnique({ where: { callId } });
     if (!row) return null;
     if ('project_id' in row)
