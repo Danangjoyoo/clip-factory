@@ -1,5 +1,5 @@
 import { prisma } from '../../../../../infrastructure/prisma/client';
-import type { $Enums } from '../../../../../generated/prisma/client';
+import { Prisma, type $Enums } from '../../../../../generated/prisma/client';
 import { aiUsageEventEntityToRecord, aiUsageEventRecordToEntity } from '../converters/ai-usage-event.converter';
 import type { AIUsageEventEntityDto } from '../../../application/dto/entity';
 import type { AIUsageEventRepository } from '../../../application/ports/ai-usage-event.repository';
@@ -18,6 +18,9 @@ export class PrismaAIUsageEventRepository implements AIUsageEventRepository {
         projectId: record.projectId,
         analysisRunId: record.analysisRunId,
         clipId: record.clipId,
+        reservationCallId: record.reservationCallId,
+        reservationProjectId: record.reservationProjectId,
+        reservationAnalysisRunId: record.reservationAnalysisRunId,
         providerResponseId: record.providerResponseId,
         requestHash: record.requestHash,
         purpose: record.purpose,
@@ -34,6 +37,7 @@ export class PrismaAIUsageEventRepository implements AIUsageEventRepository {
         pricingTier: record.pricingTier,
         costMicrousd: record.costMicrousd,
         occurredAt: record.occurredAt,
+        responseObjectReference: record.responseObjectReference ?? Prisma.JsonNull,
       },
     });
     return aiUsageEventRecordToEntity(row);

@@ -441,6 +441,11 @@ ALTER TABLE analysis_runs ADD CONSTRAINT analysis_runs_coverage_valid CHECK (cov
 ALTER TABLE analysis_runs ADD CONSTRAINT analysis_runs_safety_valid CHECK (safety_numerator > 0 AND safety_denominator > 0);
 ALTER TABLE ai_usage_events ADD CONSTRAINT ai_usage_events_usage_nonnegative CHECK (input_tokens >= 0 AND cached_input_tokens >= 0 AND cache_write_input_tokens >= 0 AND output_tokens >= 0 AND reasoning_tokens >= 0 AND cost_microusd >= 0);
 ALTER TABLE ai_usage_events ADD CONSTRAINT ai_usage_events_input_details_valid CHECK (cached_input_tokens + cache_write_input_tokens <= input_tokens);
+
+ALTER TABLE ai_usage_events ADD COLUMN reservation_call_id UUID;
+ALTER TABLE ai_usage_events ADD COLUMN reservation_project_id UUID;
+ALTER TABLE ai_usage_events ADD COLUMN reservation_analysis_run_id UUID;
+ALTER TABLE ai_usage_events ADD COLUMN response_object_reference JSONB;
 ALTER TABLE ai_usage_events ADD CONSTRAINT ai_usage_events_request_hash_valid CHECK (request_hash ~ '^[0-9a-f]{64}$');
 ALTER TABLE paid_call_reservations ADD CONSTRAINT paid_call_reservation_cost_nonnegative CHECK (worst_case_microusd >= 0);
 ALTER TABLE paid_call_reservations ADD CONSTRAINT paid_call_reservation_request_hash_valid CHECK (request_hash ~ '^[0-9a-f]{64}$');

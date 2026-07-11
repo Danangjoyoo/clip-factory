@@ -22,7 +22,7 @@ const same = (e: AIUsageEventEntityDto, i: UsageEntityInput, cost: bigint) =>
   e.projectId === i.projectId &&
   e.analysisRunId === i.analysisRunId &&
   (e.clipId ?? null) === (i.clipId ?? null) &&
-  (e.reservationCallId ?? i.callId) === (i.reservationCallId ?? i.callId) &&
+  e.reservationCallId === i.callId &&
   (e.reservationProjectId ?? i.projectId) ===
     (i.reservationProjectId ?? i.projectId) &&
   (e.reservationAnalysisRunId ?? i.analysisRunId) ===
@@ -65,6 +65,11 @@ export class RecordUsageService {
         reservation.requestHash !== input.requestHash
       )
         throw new AnalysisError('RESERVATION_OWNERSHIP_CONFLICT');
+      if (
+        reservation.status === 'COMPLETED' &&
+        reservation.providerResponseId !== input.providerResponseId
+      )
+        throw new AnalysisError('PAID_CALL_CONFLICT');
       const cost = priceTokens(
         normalizeProviderUsage(
           input.totalInputTokens,
@@ -84,7 +89,13 @@ export class RecordUsageService {
         return existing;
       }
       const event = await this.usage.insert(
-        { ...input, costMicrousd: cost },
+        {
+          ...input,
+          reservationCallId: reservation.callId,
+          reservationProjectId: reservation.projectId,
+          reservationAnalysisRunId: reservation.analysisRunId,
+          costMicrousd: cost,
+        },
         tx,
       );
       await this.reservations.complete(

@@ -10,9 +10,13 @@ describe('AI usage persistence converter', () => {
       pricingVersion: 'price', totalInputTokens: 10n, cachedInputTokens: 2n,
       cacheWriteInputTokens: 0n, outputTokens: 4n, reasoningTokens: 1n,
       pricingTier: 'standard', costMicrousd: 12n, occurredAt: new Date('2026-07-11T00:00:00Z'),
+      reservationCallId: 'call-1', reservationProjectId: 'project-1', reservationAnalysisRunId: 'run-1',
+      responseObjectReference: { bucket: 'responses', key: 'call-1.json', versionId: 'v1', sha256: 'a'.repeat(64) },
     } as const;
     const record = aiUsageEventEntityToRecord(entity);
     expect(record.inputTokens).toBe(10);
     expect(aiUsageEventRecordToEntity({ id: 'event-1', ...record }).totalInputTokens).toBe(10n);
+    expect(record.reservationCallId).toBe('call-1');
+    expect(aiUsageEventRecordToEntity({ id: 'event-1', ...record }).responseObjectReference).toEqual(entity.responseObjectReference);
   });
 });

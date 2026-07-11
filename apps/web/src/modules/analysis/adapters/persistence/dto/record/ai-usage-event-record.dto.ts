@@ -3,6 +3,9 @@ export type AIUsageEventRecordDto = {
   projectId: string;
   analysisRunId: string;
   clipId: string | null;
+  reservationCallId: string | null;
+  reservationProjectId: string | null;
+  reservationAnalysisRunId: string | null;
   providerResponseId: string;
   requestHash: string;
   purpose: string;
@@ -19,4 +22,5 @@ export type AIUsageEventRecordDto = {
   pricingTier: string;
   costMicrousd: bigint;
   occurredAt: Date;
+  responseObjectReference: unknown;
 };

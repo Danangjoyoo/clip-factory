@@ -49,6 +49,9 @@ export type AIUsageEventMinAggregateOutputType = {
   projectId: string | null
   analysisRunId: string | null
   clipId: string | null
+  reservationCallId: string | null
+  reservationProjectId: string | null
+  reservationAnalysisRunId: string | null
   providerResponseId: string | null
   requestHash: string | null
   purpose: string | null
@@ -73,6 +76,9 @@ export type AIUsageEventMaxAggregateOutputType = {
   projectId: string | null
   analysisRunId: string | null
   clipId: string | null
+  reservationCallId: string | null
+  reservationProjectId: string | null
+  reservationAnalysisRunId: string | null
   providerResponseId: string | null
   requestHash: string | null
   purpose: string | null
@@ -97,6 +103,9 @@ export type AIUsageEventCountAggregateOutputType = {
   projectId: number
   analysisRunId: number
   clipId: number
+  reservationCallId: number
+  reservationProjectId: number
+  reservationAnalysisRunId: number
   providerResponseId: number
   requestHash: number
   purpose: number
@@ -113,6 +122,7 @@ export type AIUsageEventCountAggregateOutputType = {
   pricingTier: number
   costMicrousd: number
   occurredAt: number
+  responseObjectReference: number
   createdAt: number
   _all: number
 }
@@ -141,6 +151,9 @@ export type AIUsageEventMinAggregateInputType = {
   projectId?: true
   analysisRunId?: true
   clipId?: true
+  reservationCallId?: true
+  reservationProjectId?: true
+  reservationAnalysisRunId?: true
   providerResponseId?: true
   requestHash?: true
   purpose?: true
@@ -165,6 +178,9 @@ export type AIUsageEventMaxAggregateInputType = {
   projectId?: true
   analysisRunId?: true
   clipId?: true
+  reservationCallId?: true
+  reservationProjectId?: true
+  reservationAnalysisRunId?: true
   providerResponseId?: true
   requestHash?: true
   purpose?: true
@@ -189,6 +205,9 @@ export type AIUsageEventCountAggregateInputType = {
   projectId?: true
   analysisRunId?: true
   clipId?: true
+  reservationCallId?: true
+  reservationProjectId?: true
+  reservationAnalysisRunId?: true
   providerResponseId?: true
   requestHash?: true
   purpose?: true
@@ -205,6 +224,7 @@ export type AIUsageEventCountAggregateInputType = {
   pricingTier?: true
   costMicrousd?: true
   occurredAt?: true
+  responseObjectReference?: true
   createdAt?: true
   _all?: true
 }
@@ -300,6 +320,9 @@ export type AIUsageEventGroupByOutputType = {
   projectId: string
   analysisRunId: string
   clipId: string | null
+  reservationCallId: string | null
+  reservationProjectId: string | null
+  reservationAnalysisRunId: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -316,6 +339,7 @@ export type AIUsageEventGroupByOutputType = {
   pricingTier: string
   costMicrousd: bigint
   occurredAt: Date
+  responseObjectReference: runtime.JsonValue | null
   createdAt: Date
   _count: AIUsageEventCountAggregateOutputType | null
   _avg: AIUsageEventAvgAggregateOutputType | null
@@ -347,6 +371,9 @@ export type AIUsageEventWhereInput = {
   projectId?: Prisma.UuidFilter<"AIUsageEvent"> | string
   analysisRunId?: Prisma.UuidFilter<"AIUsageEvent"> | string
   clipId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationCallId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationProjectId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationAnalysisRunId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
   providerResponseId?: Prisma.StringFilter<"AIUsageEvent"> | string
   requestHash?: Prisma.StringFilter<"AIUsageEvent"> | string
   purpose?: Prisma.StringFilter<"AIUsageEvent"> | string
@@ -363,6 +390,7 @@ export type AIUsageEventWhereInput = {
   pricingTier?: Prisma.StringFilter<"AIUsageEvent"> | string
   costMicrousd?: Prisma.BigIntFilter<"AIUsageEvent"> | bigint | number
   occurredAt?: Prisma.DateTimeFilter<"AIUsageEvent"> | Date | string
+  responseObjectReference?: Prisma.JsonNullableFilter<"AIUsageEvent">
   createdAt?: Prisma.DateTimeFilter<"AIUsageEvent"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   analysisRun?: Prisma.XOR<Prisma.AnalysisRunScalarRelationFilter, Prisma.AnalysisRunWhereInput>
@@ -375,6 +403,9 @@ export type AIUsageEventOrderByWithRelationInput = {
   projectId?: Prisma.SortOrder
   analysisRunId?: Prisma.SortOrder
   clipId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationCallId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationProjectId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationAnalysisRunId?: Prisma.SortOrderInput | Prisma.SortOrder
   providerResponseId?: Prisma.SortOrder
   requestHash?: Prisma.SortOrder
   purpose?: Prisma.SortOrder
@@ -391,6 +422,7 @@ export type AIUsageEventOrderByWithRelationInput = {
   pricingTier?: Prisma.SortOrder
   costMicrousd?: Prisma.SortOrder
   occurredAt?: Prisma.SortOrder
+  responseObjectReference?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   project?: Prisma.ProjectOrderByWithRelationInput
   analysisRun?: Prisma.AnalysisRunOrderByWithRelationInput
@@ -407,6 +439,9 @@ export type AIUsageEventWhereUniqueInput = Prisma.AtLeast<{
   projectId?: Prisma.UuidFilter<"AIUsageEvent"> | string
   analysisRunId?: Prisma.UuidFilter<"AIUsageEvent"> | string
   clipId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationCallId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationProjectId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationAnalysisRunId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
   requestHash?: Prisma.StringFilter<"AIUsageEvent"> | string
   purpose?: Prisma.StringFilter<"AIUsageEvent"> | string
   modelId?: Prisma.StringFilter<"AIUsageEvent"> | string
@@ -422,6 +457,7 @@ export type AIUsageEventWhereUniqueInput = Prisma.AtLeast<{
   pricingTier?: Prisma.StringFilter<"AIUsageEvent"> | string
   costMicrousd?: Prisma.BigIntFilter<"AIUsageEvent"> | bigint | number
   occurredAt?: Prisma.DateTimeFilter<"AIUsageEvent"> | Date | string
+  responseObjectReference?: Prisma.JsonNullableFilter<"AIUsageEvent">
   createdAt?: Prisma.DateTimeFilter<"AIUsageEvent"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   analysisRun?: Prisma.XOR<Prisma.AnalysisRunScalarRelationFilter, Prisma.AnalysisRunWhereInput>
@@ -434,6 +470,9 @@ export type AIUsageEventOrderByWithAggregationInput = {
   projectId?: Prisma.SortOrder
   analysisRunId?: Prisma.SortOrder
   clipId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationCallId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationProjectId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationAnalysisRunId?: Prisma.SortOrderInput | Prisma.SortOrder
   providerResponseId?: Prisma.SortOrder
   requestHash?: Prisma.SortOrder
   purpose?: Prisma.SortOrder
@@ -450,6 +489,7 @@ export type AIUsageEventOrderByWithAggregationInput = {
   pricingTier?: Prisma.SortOrder
   costMicrousd?: Prisma.SortOrder
   occurredAt?: Prisma.SortOrder
+  responseObjectReference?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.AIUsageEventCountOrderByAggregateInput
   _avg?: Prisma.AIUsageEventAvgOrderByAggregateInput
@@ -466,6 +506,9 @@ export type AIUsageEventScalarWhereWithAggregatesInput = {
   projectId?: Prisma.UuidWithAggregatesFilter<"AIUsageEvent"> | string
   analysisRunId?: Prisma.UuidWithAggregatesFilter<"AIUsageEvent"> | string
   clipId?: Prisma.UuidNullableWithAggregatesFilter<"AIUsageEvent"> | string | null
+  reservationCallId?: Prisma.UuidNullableWithAggregatesFilter<"AIUsageEvent"> | string | null
+  reservationProjectId?: Prisma.UuidNullableWithAggregatesFilter<"AIUsageEvent"> | string | null
+  reservationAnalysisRunId?: Prisma.UuidNullableWithAggregatesFilter<"AIUsageEvent"> | string | null
   providerResponseId?: Prisma.StringWithAggregatesFilter<"AIUsageEvent"> | string
   requestHash?: Prisma.StringWithAggregatesFilter<"AIUsageEvent"> | string
   purpose?: Prisma.StringWithAggregatesFilter<"AIUsageEvent"> | string
@@ -482,11 +525,15 @@ export type AIUsageEventScalarWhereWithAggregatesInput = {
   pricingTier?: Prisma.StringWithAggregatesFilter<"AIUsageEvent"> | string
   costMicrousd?: Prisma.BigIntWithAggregatesFilter<"AIUsageEvent"> | bigint | number
   occurredAt?: Prisma.DateTimeWithAggregatesFilter<"AIUsageEvent"> | Date | string
+  responseObjectReference?: Prisma.JsonNullableWithAggregatesFilter<"AIUsageEvent">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AIUsageEvent"> | Date | string
 }
 
 export type AIUsageEventCreateInput = {
   id?: string
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -503,6 +550,7 @@ export type AIUsageEventCreateInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput
@@ -515,6 +563,9 @@ export type AIUsageEventUncheckedCreateInput = {
   projectId: string
   analysisRunId: string
   clipId?: string | null
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -531,12 +582,16 @@ export type AIUsageEventUncheckedCreateInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput
 }
 
 export type AIUsageEventUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -553,6 +608,7 @@ export type AIUsageEventUpdateInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput
@@ -565,6 +621,9 @@ export type AIUsageEventUncheckedUpdateInput = {
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -581,6 +640,7 @@ export type AIUsageEventUncheckedUpdateInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput
 }
@@ -590,6 +650,9 @@ export type AIUsageEventCreateManyInput = {
   projectId: string
   analysisRunId: string
   clipId?: string | null
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -606,11 +669,15 @@ export type AIUsageEventCreateManyInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
 export type AIUsageEventUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -627,6 +694,7 @@ export type AIUsageEventUpdateManyMutationInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -635,6 +703,9 @@ export type AIUsageEventUncheckedUpdateManyInput = {
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -651,6 +722,7 @@ export type AIUsageEventUncheckedUpdateManyInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -669,6 +741,9 @@ export type AIUsageEventCountOrderByAggregateInput = {
   projectId?: Prisma.SortOrder
   analysisRunId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  reservationCallId?: Prisma.SortOrder
+  reservationProjectId?: Prisma.SortOrder
+  reservationAnalysisRunId?: Prisma.SortOrder
   providerResponseId?: Prisma.SortOrder
   requestHash?: Prisma.SortOrder
   purpose?: Prisma.SortOrder
@@ -685,6 +760,7 @@ export type AIUsageEventCountOrderByAggregateInput = {
   pricingTier?: Prisma.SortOrder
   costMicrousd?: Prisma.SortOrder
   occurredAt?: Prisma.SortOrder
+  responseObjectReference?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -702,6 +778,9 @@ export type AIUsageEventMaxOrderByAggregateInput = {
   projectId?: Prisma.SortOrder
   analysisRunId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  reservationCallId?: Prisma.SortOrder
+  reservationProjectId?: Prisma.SortOrder
+  reservationAnalysisRunId?: Prisma.SortOrder
   providerResponseId?: Prisma.SortOrder
   requestHash?: Prisma.SortOrder
   purpose?: Prisma.SortOrder
@@ -726,6 +805,9 @@ export type AIUsageEventMinOrderByAggregateInput = {
   projectId?: Prisma.SortOrder
   analysisRunId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  reservationCallId?: Prisma.SortOrder
+  reservationProjectId?: Prisma.SortOrder
+  reservationAnalysisRunId?: Prisma.SortOrder
   providerResponseId?: Prisma.SortOrder
   requestHash?: Prisma.SortOrder
   purpose?: Prisma.SortOrder
@@ -903,6 +985,9 @@ export type AIUsageEventUncheckedUpdateManyWithoutClipNestedInput = {
 
 export type AIUsageEventCreateWithoutProjectInput = {
   id?: string
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -919,6 +1004,7 @@ export type AIUsageEventCreateWithoutProjectInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput
   clip?: Prisma.ClipCreateNestedOneWithoutUsageEventsInput
@@ -929,6 +1015,9 @@ export type AIUsageEventUncheckedCreateWithoutProjectInput = {
   id?: string
   analysisRunId: string
   clipId?: string | null
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -945,6 +1034,7 @@ export type AIUsageEventUncheckedCreateWithoutProjectInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput
 }
@@ -983,6 +1073,9 @@ export type AIUsageEventScalarWhereInput = {
   projectId?: Prisma.UuidFilter<"AIUsageEvent"> | string
   analysisRunId?: Prisma.UuidFilter<"AIUsageEvent"> | string
   clipId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationCallId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationProjectId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
+  reservationAnalysisRunId?: Prisma.UuidNullableFilter<"AIUsageEvent"> | string | null
   providerResponseId?: Prisma.StringFilter<"AIUsageEvent"> | string
   requestHash?: Prisma.StringFilter<"AIUsageEvent"> | string
   purpose?: Prisma.StringFilter<"AIUsageEvent"> | string
@@ -999,11 +1092,15 @@ export type AIUsageEventScalarWhereInput = {
   pricingTier?: Prisma.StringFilter<"AIUsageEvent"> | string
   costMicrousd?: Prisma.BigIntFilter<"AIUsageEvent"> | bigint | number
   occurredAt?: Prisma.DateTimeFilter<"AIUsageEvent"> | Date | string
+  responseObjectReference?: Prisma.JsonNullableFilter<"AIUsageEvent">
   createdAt?: Prisma.DateTimeFilter<"AIUsageEvent"> | Date | string
 }
 
 export type AIUsageEventCreateWithoutAnalysisRunInput = {
   id?: string
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1020,6 +1117,7 @@ export type AIUsageEventCreateWithoutAnalysisRunInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput
   clip?: Prisma.ClipCreateNestedOneWithoutUsageEventsInput
@@ -1030,6 +1128,9 @@ export type AIUsageEventUncheckedCreateWithoutAnalysisRunInput = {
   id?: string
   projectId: string
   clipId?: string | null
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1046,6 +1147,7 @@ export type AIUsageEventUncheckedCreateWithoutAnalysisRunInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput
 }
@@ -1078,6 +1180,9 @@ export type AIUsageEventUpdateManyWithWhereWithoutAnalysisRunInput = {
 
 export type AIUsageEventCreateWithoutPaidCallReservationInput = {
   id?: string
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1094,6 +1199,7 @@ export type AIUsageEventCreateWithoutPaidCallReservationInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput
@@ -1105,6 +1211,9 @@ export type AIUsageEventUncheckedCreateWithoutPaidCallReservationInput = {
   projectId: string
   analysisRunId: string
   clipId?: string | null
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1121,6 +1230,7 @@ export type AIUsageEventUncheckedCreateWithoutPaidCallReservationInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
@@ -1142,6 +1252,9 @@ export type AIUsageEventUpdateToOneWithWhereWithoutPaidCallReservationInput = {
 
 export type AIUsageEventUpdateWithoutPaidCallReservationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1158,6 +1271,7 @@ export type AIUsageEventUpdateWithoutPaidCallReservationInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput
@@ -1169,6 +1283,9 @@ export type AIUsageEventUncheckedUpdateWithoutPaidCallReservationInput = {
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1185,11 +1302,15 @@ export type AIUsageEventUncheckedUpdateWithoutPaidCallReservationInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type AIUsageEventCreateWithoutClipInput = {
   id?: string
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1206,6 +1327,7 @@ export type AIUsageEventCreateWithoutClipInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput
@@ -1216,6 +1338,9 @@ export type AIUsageEventUncheckedCreateWithoutClipInput = {
   id?: string
   projectId: string
   analysisRunId: string
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1232,6 +1357,7 @@ export type AIUsageEventUncheckedCreateWithoutClipInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput
 }
@@ -1266,6 +1392,9 @@ export type AIUsageEventCreateManyProjectInput = {
   id?: string
   analysisRunId: string
   clipId?: string | null
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1282,11 +1411,15 @@ export type AIUsageEventCreateManyProjectInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
 export type AIUsageEventUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1303,6 +1436,7 @@ export type AIUsageEventUpdateWithoutProjectInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput
   clip?: Prisma.ClipUpdateOneWithoutUsageEventsNestedInput
@@ -1313,6 +1447,9 @@ export type AIUsageEventUncheckedUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1329,6 +1466,7 @@ export type AIUsageEventUncheckedUpdateWithoutProjectInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput
 }
@@ -1337,6 +1475,9 @@ export type AIUsageEventUncheckedUpdateManyWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1353,6 +1494,7 @@ export type AIUsageEventUncheckedUpdateManyWithoutProjectInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1360,6 +1502,9 @@ export type AIUsageEventCreateManyAnalysisRunInput = {
   id?: string
   projectId: string
   clipId?: string | null
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1376,11 +1521,15 @@ export type AIUsageEventCreateManyAnalysisRunInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
 export type AIUsageEventUpdateWithoutAnalysisRunInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1397,6 +1546,7 @@ export type AIUsageEventUpdateWithoutAnalysisRunInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput
   clip?: Prisma.ClipUpdateOneWithoutUsageEventsNestedInput
@@ -1407,6 +1557,9 @@ export type AIUsageEventUncheckedUpdateWithoutAnalysisRunInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1423,6 +1576,7 @@ export type AIUsageEventUncheckedUpdateWithoutAnalysisRunInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput
 }
@@ -1431,6 +1585,9 @@ export type AIUsageEventUncheckedUpdateManyWithoutAnalysisRunInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1447,6 +1604,7 @@ export type AIUsageEventUncheckedUpdateManyWithoutAnalysisRunInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1454,6 +1612,9 @@ export type AIUsageEventCreateManyClipInput = {
   id?: string
   projectId: string
   analysisRunId: string
+  reservationCallId?: string | null
+  reservationProjectId?: string | null
+  reservationAnalysisRunId?: string | null
   providerResponseId: string
   requestHash: string
   purpose: string
@@ -1470,11 +1631,15 @@ export type AIUsageEventCreateManyClipInput = {
   pricingTier: string
   costMicrousd: bigint | number
   occurredAt: Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
 }
 
 export type AIUsageEventUpdateWithoutClipInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1491,6 +1656,7 @@ export type AIUsageEventUpdateWithoutClipInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput
@@ -1501,6 +1667,9 @@ export type AIUsageEventUncheckedUpdateWithoutClipInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1517,6 +1686,7 @@ export type AIUsageEventUncheckedUpdateWithoutClipInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput
 }
@@ -1525,6 +1695,9 @@ export type AIUsageEventUncheckedUpdateManyWithoutClipInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string
+  reservationCallId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationProjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reservationAnalysisRunId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string
   requestHash?: Prisma.StringFieldUpdateOperationsInput | string
   purpose?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1541,6 +1714,7 @@ export type AIUsageEventUncheckedUpdateManyWithoutClipInput = {
   pricingTier?: Prisma.StringFieldUpdateOperationsInput | string
   costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  responseObjectReference?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1551,6 +1725,9 @@ export type AIUsageEventSelect<ExtArgs extends runtime.Types.Extensions.Internal
   projectId?: boolean
   analysisRunId?: boolean
   clipId?: boolean
+  reservationCallId?: boolean
+  reservationProjectId?: boolean
+  reservationAnalysisRunId?: boolean
   providerResponseId?: boolean
   requestHash?: boolean
   purpose?: boolean
@@ -1567,6 +1744,7 @@ export type AIUsageEventSelect<ExtArgs extends runtime.Types.Extensions.Internal
   pricingTier?: boolean
   costMicrousd?: boolean
   occurredAt?: boolean
+  responseObjectReference?: boolean
   createdAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   analysisRun?: boolean | Prisma.AnalysisRunDefaultArgs<ExtArgs>
@@ -1579,6 +1757,9 @@ export type AIUsageEventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   projectId?: boolean
   analysisRunId?: boolean
   clipId?: boolean
+  reservationCallId?: boolean
+  reservationProjectId?: boolean
+  reservationAnalysisRunId?: boolean
   providerResponseId?: boolean
   requestHash?: boolean
   purpose?: boolean
@@ -1595,6 +1776,7 @@ export type AIUsageEventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   pricingTier?: boolean
   costMicrousd?: boolean
   occurredAt?: boolean
+  responseObjectReference?: boolean
   createdAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   analysisRun?: boolean | Prisma.AnalysisRunDefaultArgs<ExtArgs>
@@ -1606,6 +1788,9 @@ export type AIUsageEventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   projectId?: boolean
   analysisRunId?: boolean
   clipId?: boolean
+  reservationCallId?: boolean
+  reservationProjectId?: boolean
+  reservationAnalysisRunId?: boolean
   providerResponseId?: boolean
   requestHash?: boolean
   purpose?: boolean
@@ -1622,6 +1807,7 @@ export type AIUsageEventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   pricingTier?: boolean
   costMicrousd?: boolean
   occurredAt?: boolean
+  responseObjectReference?: boolean
   createdAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   analysisRun?: boolean | Prisma.AnalysisRunDefaultArgs<ExtArgs>
@@ -1633,6 +1819,9 @@ export type AIUsageEventSelectScalar = {
   projectId?: boolean
   analysisRunId?: boolean
   clipId?: boolean
+  reservationCallId?: boolean
+  reservationProjectId?: boolean
+  reservationAnalysisRunId?: boolean
   providerResponseId?: boolean
   requestHash?: boolean
   purpose?: boolean
@@ -1649,10 +1838,11 @@ export type AIUsageEventSelectScalar = {
   pricingTier?: boolean
   costMicrousd?: boolean
   occurredAt?: boolean
+  responseObjectReference?: boolean
   createdAt?: boolean
 }
 
-export type AIUsageEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "analysisRunId" | "clipId" | "providerResponseId" | "requestHash" | "purpose" | "modelId" | "reasoning" | "promptVersion" | "schemaVersion" | "pricingVersion" | "inputTokens" | "cachedInputTokens" | "cacheWriteInputTokens" | "outputTokens" | "reasoningTokens" | "pricingTier" | "costMicrousd" | "occurredAt" | "createdAt", ExtArgs["result"]["aIUsageEvent"]>
+export type AIUsageEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "analysisRunId" | "clipId" | "reservationCallId" | "reservationProjectId" | "reservationAnalysisRunId" | "providerResponseId" | "requestHash" | "purpose" | "modelId" | "reasoning" | "promptVersion" | "schemaVersion" | "pricingVersion" | "inputTokens" | "cachedInputTokens" | "cacheWriteInputTokens" | "outputTokens" | "reasoningTokens" | "pricingTier" | "costMicrousd" | "occurredAt" | "responseObjectReference" | "createdAt", ExtArgs["result"]["aIUsageEvent"]>
 export type AIUsageEventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   analysisRun?: boolean | Prisma.AnalysisRunDefaultArgs<ExtArgs>
@@ -1683,6 +1873,9 @@ export type $AIUsageEventPayload<ExtArgs extends runtime.Types.Extensions.Intern
     projectId: string
     analysisRunId: string
     clipId: string | null
+    reservationCallId: string | null
+    reservationProjectId: string | null
+    reservationAnalysisRunId: string | null
     providerResponseId: string
     requestHash: string
     purpose: string
@@ -1699,6 +1892,7 @@ export type $AIUsageEventPayload<ExtArgs extends runtime.Types.Extensions.Intern
     pricingTier: string
     costMicrousd: bigint
     occurredAt: Date
+    responseObjectReference: runtime.JsonValue | null
     createdAt: Date
   }, ExtArgs["result"]["aIUsageEvent"]>
   composites: {}
@@ -2131,6 +2325,9 @@ export interface AIUsageEventFieldRefs {
   readonly projectId: Prisma.FieldRef<"AIUsageEvent", 'String'>
   readonly analysisRunId: Prisma.FieldRef<"AIUsageEvent", 'String'>
   readonly clipId: Prisma.FieldRef<"AIUsageEvent", 'String'>
+  readonly reservationCallId: Prisma.FieldRef<"AIUsageEvent", 'String'>
+  readonly reservationProjectId: Prisma.FieldRef<"AIUsageEvent", 'String'>
+  readonly reservationAnalysisRunId: Prisma.FieldRef<"AIUsageEvent", 'String'>
   readonly providerResponseId: Prisma.FieldRef<"AIUsageEvent", 'String'>
   readonly requestHash: Prisma.FieldRef<"AIUsageEvent", 'String'>
   readonly purpose: Prisma.FieldRef<"AIUsageEvent", 'String'>
@@ -2147,6 +2344,7 @@ export interface AIUsageEventFieldRefs {
   readonly pricingTier: Prisma.FieldRef<"AIUsageEvent", 'String'>
   readonly costMicrousd: Prisma.FieldRef<"AIUsageEvent", 'BigInt'>
   readonly occurredAt: Prisma.FieldRef<"AIUsageEvent", 'DateTime'>
+  readonly responseObjectReference: Prisma.FieldRef<"AIUsageEvent", 'Json'>
   readonly createdAt: Prisma.FieldRef<"AIUsageEvent", 'DateTime'>
 }
     

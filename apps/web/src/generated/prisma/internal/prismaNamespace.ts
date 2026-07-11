@@ -1507,6 +1507,9 @@ export const AIUsageEventScalarFieldEnum = {
   projectId: 'projectId',
   analysisRunId: 'analysisRunId',
   clipId: 'clipId',
+  reservationCallId: 'reservationCallId',
+  reservationProjectId: 'reservationProjectId',
+  reservationAnalysisRunId: 'reservationAnalysisRunId',
   providerResponseId: 'providerResponseId',
   requestHash: 'requestHash',
   purpose: 'purpose',
@@ -1523,6 +1526,7 @@ export const AIUsageEventScalarFieldEnum = {
   pricingTier: 'pricingTier',
   costMicrousd: 'costMicrousd',
   occurredAt: 'occurredAt',
+  responseObjectReference: 'responseObjectReference',
   createdAt: 'createdAt'
 } as const
 

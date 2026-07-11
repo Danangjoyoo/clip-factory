@@ -1,5 +1,13 @@
 import type { AIUsageEventEntityDto } from '../../../application/dto/entity';
 import type { AIUsageEventRecordDto } from '../dto/record/ai-usage-event-record.dto';
+type ResponseReference = Exclude<AIUsageEventEntityDto['responseObjectReference'], undefined>;
+const responseReference = (value: unknown): ResponseReference => {
+  if (!value || typeof value !== 'object') return null;
+  const r = value as Record<string, unknown>;
+  return typeof r.bucket === 'string' && typeof r.key === 'string' && typeof r.sha256 === 'string'
+    ? { bucket: r.bucket, key: r.key, sha256: r.sha256, versionId: typeof r.versionId === 'string' ? r.versionId : null }
+    : null;
+};
 export const aiUsageEventRecordToEntity = (
   r: AIUsageEventRecordDto,
 ): AIUsageEventEntityDto => ({
@@ -7,6 +15,9 @@ export const aiUsageEventRecordToEntity = (
   projectId: r.projectId,
   analysisRunId: r.analysisRunId,
   clipId: r.clipId,
+  reservationCallId: r.reservationCallId,
+  reservationProjectId: r.reservationProjectId,
+  reservationAnalysisRunId: r.reservationAnalysisRunId,
   providerResponseId: r.providerResponseId,
   requestHash: r.requestHash,
   purpose: r.purpose,
@@ -23,10 +34,7 @@ export const aiUsageEventRecordToEntity = (
   costMicrousd: r.costMicrousd,
   occurredAt: r.occurredAt,
   totalInputTokens: BigInt(r.inputTokens),
-  responseObjectReference: null,
-  reservationCallId: null,
-  reservationProjectId: null,
-  reservationAnalysisRunId: null,
+  responseObjectReference: responseReference(r.responseObjectReference),
 });
 export const aiUsageEventEntityToRecord = (
   e: Omit<AIUsageEventEntityDto, 'id'>,
@@ -34,6 +42,9 @@ export const aiUsageEventEntityToRecord = (
   projectId: e.projectId,
   analysisRunId: e.analysisRunId,
   clipId: e.clipId ?? null,
+  reservationCallId: e.reservationCallId ?? null,
+  reservationProjectId: e.reservationProjectId ?? null,
+  reservationAnalysisRunId: e.reservationAnalysisRunId ?? null,
   providerResponseId: e.providerResponseId,
   requestHash: e.requestHash,
   purpose: e.purpose,
@@ -50,4 +61,5 @@ export const aiUsageEventEntityToRecord = (
   pricingTier: e.pricingTier,
   costMicrousd: e.costMicrousd,
   occurredAt: e.occurredAt,
+  responseObjectReference: e.responseObjectReference ?? null,
 });

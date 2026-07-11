@@ -239,6 +239,9 @@ model AIUsageEvent {
   projectId             String               @map("project_id") @db.Uuid
   analysisRunId         String               @map("analysis_run_id") @db.Uuid
   clipId                String?              @map("clip_id") @db.Uuid
+  reservationCallId     String?              @map("reservation_call_id") @db.Uuid
+  reservationProjectId  String?              @map("reservation_project_id") @db.Uuid
+  reservationAnalysisRunId String?          @map("reservation_analysis_run_id") @db.Uuid
   providerResponseId    String               @unique @map("provider_response_id") @db.VarChar(200)
   requestHash           String               @map("request_hash") @db.Char(64)
   purpose               String               @db.VarChar(100)
@@ -255,6 +258,7 @@ model AIUsageEvent {
   pricingTier           String               @map("pricing_tier") @db.VarChar(50)
   costMicrousd          BigInt               @map("cost_microusd")
   occurredAt            DateTime             @map("occurred_at") @db.Timestamptz(3)
+  responseObjectReference Json?              @map("response_object_reference")
   createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
   project               Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
   analysisRun           AnalysisRun          @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
