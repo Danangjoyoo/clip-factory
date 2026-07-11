@@ -29,12 +29,23 @@ def test_rejects_unknown_version():
 def test_maps_valid_payload():
     spec = map_render_spec(payload())
     assert spec.canvas == (1080, 1920)
-    try:
+    with pytest.raises(TypeError):
         spec.source["kind"] = "BROWSER_UPLOAD"  # type: ignore[index]
-    except TypeError:
-        pass
-    else:
-        raise AssertionError("nested RenderSpec values must be immutable")
+    value = payload()
+    value["source"] = {"kind": "BROWSER_UPLOAD", "sourceAssetId": value["source"]["sourceAssetId"], "object": {"bucket": "clip-factory", "key": "clips/out.mp4", "versionId": None, "sha256": "a" * 64}}
+    value["cropTrack"] = [{"timeMs": 0, "centerXMicros": 500000, "centerYMicros": 500000, "confidenceMicros": 500000, "source": "CENTER_FALLBACK"}]
+    value["captions"] = [{"id": "00000000-0000-4000-8000-000000000004", "startMs": 0, "endMs": 1000, "words": [{"text": "hello", "startMs": 0, "endMs": 1000}]}]
+    spec = map_render_spec(value)
+    with pytest.raises(TypeError):
+        spec.source["object"]["key"] = "changed"  # type: ignore[index]
+    with pytest.raises(TypeError):
+        spec.crop_track[0]["timeMs"] = 1  # type: ignore[index]
+    with pytest.raises(TypeError):
+        spec.captions[0]["words"][0]["text"] = "changed"  # type: ignore[index]
+    with pytest.raises(TypeError):
+        spec.style["fontFamily"] = "Arial"  # type: ignore[index]
+    with pytest.raises(TypeError):
+        spec.encoder["strategy"] = "SOFTWARE"  # type: ignore[index]
 
 
 def test_rejects_private_source_path():
