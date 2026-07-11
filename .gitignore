@@ -23,3 +23,6 @@ __pycache__/
 samples/
 .artifacts/media-fixtures/
 .artifacts/acceptance/
+envs/.local.env
+envs/.dev.env
+envs/.prod.env
