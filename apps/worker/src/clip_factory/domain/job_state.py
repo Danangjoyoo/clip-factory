@@ -46,7 +46,11 @@ for _state in JobState:
 _TRANSITIONS.update(
     {
         (JobState.VALIDATING_SOURCE, "source_missing"): JobState.SOURCE_MISSING,
+        (JobState.VALIDATING_SOURCE, "source_changed"): JobState.SOURCE_CHANGED,
+        (JobState.VALIDATING_SOURCE, "source_not_allowed"): JobState.SOURCE_NOT_ALLOWED,
         (JobState.SOURCE_MISSING, "relink"): JobState.RELINKING_SOURCE,
+        (JobState.SOURCE_CHANGED, "relink"): JobState.RELINKING_SOURCE,
+        (JobState.SOURCE_NOT_ALLOWED, "relink"): JobState.RELINKING_SOURCE,
         (JobState.RELINKING_SOURCE, "preprocess"): JobState.PREPROCESSING,
         (JobState.TRANSCRIBING, "review"): JobState.AWAITING_REVIEW,
     (JobState.AWAITING_REVIEW, "manual_clip"): JobState.AWAITING_REVIEW,

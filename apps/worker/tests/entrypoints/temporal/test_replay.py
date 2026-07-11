@@ -26,8 +26,11 @@ def test_completed_history_replays() -> None:
 
 
 async def _test_completed_history_replays() -> None:
+    calls = 0
     @activity.defn(name="validate_source")
     async def validate(input: ValidateSourceInput):
+        nonlocal calls
+        calls += 1
         return await validate_source(input)
 
     @activity.defn(name="extract_audio")
@@ -62,4 +65,13 @@ async def _test_completed_history_replays() -> None:
             await handle.signal(ProjectWorkflow.complete_project)
             await handle.result()
             history = await handle.fetch_history()
-        await Replayer(workflows=[ProjectWorkflow]).replay_workflow(history)
+            assert all(secret not in str(history) for secret in ("/tmp/", "transcript text", "OPENAI_API_KEY", "media-bytes"))
+            assert calls == 1
+        async with Worker(
+            env.client,
+            task_queue="replay-test",
+            workflows=[ProjectWorkflow],
+            activities=[validate, extract, speech, editor],
+        ):
+            await Replayer(workflows=[ProjectWorkflow]).replay_workflow(history)
+            assert calls == 1

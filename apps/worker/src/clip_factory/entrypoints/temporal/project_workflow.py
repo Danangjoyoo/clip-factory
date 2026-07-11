@@ -68,29 +68,24 @@ class ProjectWorkflow:
     @workflow.run
     async def run(self, payload: WorkflowInput) -> WorkflowResult:
         self._set_state("validate")
-        try:
-            await self._execute_activity(
-                validate_source,
-                ValidateSourceInput(payload.project_id, payload.source_asset_id),
-                start_to_close_timeout=timedelta(minutes=5),
-                heartbeat_timeout=timedelta(seconds=15),
-            )
-            if self._cancelled:
-                return self._cancelled_result(payload)
-        except Exception:
-            self._set_state("source_missing")
-            await workflow.wait_condition(lambda: self._source_relinked or self._cancelled)
-            if self._cancelled:
-                return self._cancelled_result(payload)
-            self._set_state("relink")
-            await self._execute_activity(
-                validate_source,
-                ValidateSourceInput(payload.project_id, payload.source_asset_id),
-                start_to_close_timeout=timedelta(minutes=5),
-                heartbeat_timeout=timedelta(seconds=15),
-            )
-            if self._cancelled:
-                return self._cancelled_result(payload)
+        while True:
+            try:
+                await self._execute_activity(
+                    validate_source,
+                    ValidateSourceInput(payload.project_id, payload.source_asset_id),
+                    start_to_close_timeout=timedelta(minutes=5),
+                    heartbeat_timeout=timedelta(seconds=15),
+                )
+                if self._cancelled:
+                    return self._cancelled_result(payload)
+                break
+            except Exception as exc:
+                self._set_state(self._source_failure_event(exc))
+                self._source_relinked = False
+                await workflow.wait_condition(lambda: self._source_relinked or self._cancelled)
+                if self._cancelled:
+                    return self._cancelled_result(payload)
+                self._set_state("relink")
         self._set_state("preprocess")
         prepared = await self._execute_activity(
             extract_audio,
@@ -123,6 +118,22 @@ class ProjectWorkflow:
             self._set_state("preview")
             await self._prepare_editor(payload, transcript, analysis.candidates)
         return await self._review_loop(payload)
+
+    @staticmethod
+    def _source_failure_event(error: Exception) -> str:
+        current: BaseException | None = error
+        while current is not None:
+            kind = str(getattr(current, "type", "")).upper()
+            if kind:
+                break
+            current = getattr(current, "cause", None)
+        else:
+            kind = ""
+        if "NOT_ALLOWED" in kind:
+            return "source_not_allowed"
+        if "CHANGED" in kind:
+            return "source_changed"
+        return "source_missing"
 
     def _set_state(self, event: str) -> None:
         self._state = transition(self._state, event)

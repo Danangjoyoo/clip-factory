@@ -167,12 +167,20 @@ async def _test_two_render_batches_are_serialized_before_completion() -> None:
                     break
                 await env.sleep(timedelta(milliseconds=10))
             await handle.signal(ProjectWorkflow.queue_render_batch, RenderBatchInput("batch-1", ("clip-1",)))
+            for _ in range(100):
+                if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
+                    break
+                await env.sleep(timedelta(milliseconds=10))
+            assert await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW"
             await handle.signal(ProjectWorkflow.queue_render_batch, RenderBatchInput("batch-2", ("clip-2",)))
             for _ in range(100):
                 if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
                     break
                 await env.sleep(timedelta(milliseconds=10))
             assert await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW"
+            history = await handle.fetch_history()
+            assert "batch-1" in str(history) and "batch-2" in str(history)
+            assert str(history).count("CHILD_WORKFLOW_EXECUTION_COMPLETED") >= 2
             await handle.signal(ProjectWorkflow.complete_project)
             assert (await handle.result()).status == "COMPLETED"
 
@@ -189,7 +197,7 @@ async def _test_missing_source_waits_for_relink() -> None:
         nonlocal attempts
         attempts += 1
         if attempts == 1:
-            raise ApplicationError("missing", non_retryable=True)
+            raise ApplicationError("missing", type="SOURCE_MISSING", non_retryable=True)
         return payload.source_asset_id
 
     @activity.defn(name="extract_audio")
@@ -222,8 +230,42 @@ async def _test_missing_source_waits_for_relink() -> None:
                     break
                 await env.sleep(timedelta(milliseconds=10))
             assert await handle.query(ProjectWorkflow.state) == "SOURCE_MISSING"
-            await handle.signal(ProjectWorkflow.cancel)
-            assert (await handle.result()).status == "CANCELLED"
+            assert attempts == 1
+            await handle.signal(ProjectWorkflow.relink_source)
+            for _ in range(100):
+                if await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW":
+                    break
+                await env.sleep(timedelta(milliseconds=10))
+            assert attempts == 2
+            assert await handle.query(ProjectWorkflow.state) == "AWAITING_REVIEW"
+            await handle.signal(ProjectWorkflow.complete_project)
+            assert (await handle.result()).status == "COMPLETED"
+
+
+def test_source_failure_types_wait_in_distinct_states() -> None:
+    asyncio.run(_test_source_failure_types_wait_in_distinct_states())
+
+
+async def _test_source_failure_types_wait_in_distinct_states() -> None:
+    for error_type, state in (("SOURCE_CHANGED", "SOURCE_CHANGED"), ("SOURCE_NOT_ALLOWED", "SOURCE_NOT_ALLOWED")):
+        @activity.defn(name="validate_source")
+        async def validate(_payload: ValidateSourceInput, error_type=error_type):
+            raise ApplicationError("source failure", type=error_type, non_retryable=True)
+
+        async with await WorkflowEnvironment.start_time_skipping() as env:
+            async with Worker(env.client, task_queue=f"source-{error_type}", workflows=[ProjectWorkflow], activities=[validate]):
+                handle = await env.client.start_workflow(
+                    ProjectWorkflow.run,
+                    WorkflowInput(f"wf-{error_type}", "project", "asset", "MANUAL", "en"),
+                    id=f"wf-{error_type}", task_queue=f"source-{error_type}",
+                )
+                for _ in range(100):
+                    if await handle.query(ProjectWorkflow.state) == state:
+                        break
+                    await env.sleep(timedelta(milliseconds=10))
+                assert await handle.query(ProjectWorkflow.state) == state
+                await handle.signal(ProjectWorkflow.cancel)
+                assert (await handle.result()).status == "CANCELLED"
 
 
 def test_cancel_signal_cancels_running_activity() -> None:

@@ -16,6 +16,14 @@ class SourceNotAllowedError(SourceValidationError):
     pass
 
 
+class SourceMissingError(SourceValidationError):
+    pass
+
+
+class SourceChangedError(SourceValidationError):
+    pass
+
+
 class SourceUnreadableError(SourceValidationError):
     pass
 
