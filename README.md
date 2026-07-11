@@ -41,7 +41,7 @@ corepack pnpm worker:sync:local
 corepack pnpm dev:local
 ```
 
-Each shortcut copies `env/.dev.env` or `env/.local.env` to the ignored root `.env` before running.
+Each shortcut loads `env/.dev.env` or `env/.local.env` into the child process before running.
 
 ## Run the application
 

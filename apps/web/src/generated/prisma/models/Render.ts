@@ -38,6 +38,7 @@ export type RenderMinAggregateOutputType = {
   id: string | null
   projectId: string | null
   clipId: string | null
+  retryOfRenderId: string | null
   status: $Enums.RenderStatusRecord | null
   outputObjectKey: string | null
   srtObjectKey: string | null
@@ -54,6 +55,7 @@ export type RenderMaxAggregateOutputType = {
   id: string | null
   projectId: string | null
   clipId: string | null
+  retryOfRenderId: string | null
   status: $Enums.RenderStatusRecord | null
   outputObjectKey: string | null
   srtObjectKey: string | null
@@ -70,6 +72,7 @@ export type RenderCountAggregateOutputType = {
   id: number
   projectId: number
   clipId: number
+  retryOfRenderId: number
   status: number
   inputSnapshotJson: number
   outputObjectKey: number
@@ -98,6 +101,7 @@ export type RenderMinAggregateInputType = {
   id?: true
   projectId?: true
   clipId?: true
+  retryOfRenderId?: true
   status?: true
   outputObjectKey?: true
   srtObjectKey?: true
@@ -114,6 +118,7 @@ export type RenderMaxAggregateInputType = {
   id?: true
   projectId?: true
   clipId?: true
+  retryOfRenderId?: true
   status?: true
   outputObjectKey?: true
   srtObjectKey?: true
@@ -130,6 +135,7 @@ export type RenderCountAggregateInputType = {
   id?: true
   projectId?: true
   clipId?: true
+  retryOfRenderId?: true
   status?: true
   inputSnapshotJson?: true
   outputObjectKey?: true
@@ -235,6 +241,7 @@ export type RenderGroupByOutputType = {
   id: string
   projectId: string
   clipId: string
+  retryOfRenderId: string | null
   status: $Enums.RenderStatusRecord
   inputSnapshotJson: runtime.JsonValue
   outputObjectKey: string | null
@@ -276,6 +283,7 @@ export type RenderWhereInput = {
   id?: Prisma.UuidFilter<"Render"> | string
   projectId?: Prisma.UuidFilter<"Render"> | string
   clipId?: Prisma.UuidFilter<"Render"> | string
+  retryOfRenderId?: Prisma.UuidNullableFilter<"Render"> | string | null
   status?: Prisma.EnumRenderStatusRecordFilter<"Render"> | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonFilter<"Render">
   outputObjectKey?: Prisma.StringNullableFilter<"Render"> | string | null
@@ -290,12 +298,15 @@ export type RenderWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Render"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   clip?: Prisma.XOR<Prisma.ClipScalarRelationFilter, Prisma.ClipWhereInput>
+  retryOfRender?: Prisma.XOR<Prisma.RenderNullableScalarRelationFilter, Prisma.RenderWhereInput> | null
+  retriedRenders?: Prisma.RenderListRelationFilter
 }
 
 export type RenderOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  retryOfRenderId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   inputSnapshotJson?: Prisma.SortOrder
   outputObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -310,6 +321,8 @@ export type RenderOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   project?: Prisma.ProjectOrderByWithRelationInput
   clip?: Prisma.ClipOrderByWithRelationInput
+  retryOfRender?: Prisma.RenderOrderByWithRelationInput
+  retriedRenders?: Prisma.RenderOrderByRelationAggregateInput
 }
 
 export type RenderWhereUniqueInput = Prisma.AtLeast<{
@@ -319,6 +332,7 @@ export type RenderWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.RenderWhereInput | Prisma.RenderWhereInput[]
   projectId?: Prisma.UuidFilter<"Render"> | string
   clipId?: Prisma.UuidFilter<"Render"> | string
+  retryOfRenderId?: Prisma.UuidNullableFilter<"Render"> | string | null
   status?: Prisma.EnumRenderStatusRecordFilter<"Render"> | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonFilter<"Render">
   outputObjectKey?: Prisma.StringNullableFilter<"Render"> | string | null
@@ -333,12 +347,15 @@ export type RenderWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Render"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   clip?: Prisma.XOR<Prisma.ClipScalarRelationFilter, Prisma.ClipWhereInput>
+  retryOfRender?: Prisma.XOR<Prisma.RenderNullableScalarRelationFilter, Prisma.RenderWhereInput> | null
+  retriedRenders?: Prisma.RenderListRelationFilter
 }, "id">
 
 export type RenderOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  retryOfRenderId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   inputSnapshotJson?: Prisma.SortOrder
   outputObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -365,6 +382,7 @@ export type RenderScalarWhereWithAggregatesInput = {
   id?: Prisma.UuidWithAggregatesFilter<"Render"> | string
   projectId?: Prisma.UuidWithAggregatesFilter<"Render"> | string
   clipId?: Prisma.UuidWithAggregatesFilter<"Render"> | string
+  retryOfRenderId?: Prisma.UuidNullableWithAggregatesFilter<"Render"> | string | null
   status?: Prisma.EnumRenderStatusRecordWithAggregatesFilter<"Render"> | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonWithAggregatesFilter<"Render">
   outputObjectKey?: Prisma.StringNullableWithAggregatesFilter<"Render"> | string | null
@@ -395,12 +413,15 @@ export type RenderCreateInput = {
   createdAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutRendersInput
   clip: Prisma.ClipCreateNestedOneWithoutRendersInput
+  retryOfRender?: Prisma.RenderCreateNestedOneWithoutRetriedRendersInput
+  retriedRenders?: Prisma.RenderCreateNestedManyWithoutRetryOfRenderInput
 }
 
 export type RenderUncheckedCreateInput = {
   id?: string
   projectId: string
   clipId: string
+  retryOfRenderId?: string | null
   status?: $Enums.RenderStatusRecord
   inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: string | null
@@ -413,6 +434,7 @@ export type RenderUncheckedCreateInput = {
   errorCode?: string | null
   errorMessage?: string | null
   createdAt?: Date | string
+  retriedRenders?: Prisma.RenderUncheckedCreateNestedManyWithoutRetryOfRenderInput
 }
 
 export type RenderUpdateInput = {
@@ -431,12 +453,15 @@ export type RenderUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutRendersNestedInput
   clip?: Prisma.ClipUpdateOneRequiredWithoutRendersNestedInput
+  retryOfRender?: Prisma.RenderUpdateOneWithoutRetriedRendersNestedInput
+  retriedRenders?: Prisma.RenderUpdateManyWithoutRetryOfRenderNestedInput
 }
 
 export type RenderUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.StringFieldUpdateOperationsInput | string
+  retryOfRenderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -449,12 +474,14 @@ export type RenderUncheckedUpdateInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  retriedRenders?: Prisma.RenderUncheckedUpdateManyWithoutRetryOfRenderNestedInput
 }
 
 export type RenderCreateManyInput = {
   id?: string
   projectId: string
   clipId: string
+  retryOfRenderId?: string | null
   status?: $Enums.RenderStatusRecord
   inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: string | null
@@ -489,6 +516,7 @@ export type RenderUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.StringFieldUpdateOperationsInput | string
+  retryOfRenderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -513,10 +541,16 @@ export type RenderOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type RenderNullableScalarRelationFilter = {
+  is?: Prisma.RenderWhereInput | null
+  isNot?: Prisma.RenderWhereInput | null
+}
+
 export type RenderCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  retryOfRenderId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   inputSnapshotJson?: Prisma.SortOrder
   outputObjectKey?: Prisma.SortOrder
@@ -539,6 +573,7 @@ export type RenderMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  retryOfRenderId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   outputObjectKey?: Prisma.SortOrder
   srtObjectKey?: Prisma.SortOrder
@@ -555,6 +590,7 @@ export type RenderMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   clipId?: Prisma.SortOrder
+  retryOfRenderId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   outputObjectKey?: Prisma.SortOrder
   srtObjectKey?: Prisma.SortOrder
@@ -655,8 +691,66 @@ export type RenderUncheckedUpdateManyWithoutClipNestedInput = {
   deleteMany?: Prisma.RenderScalarWhereInput | Prisma.RenderScalarWhereInput[]
 }
 
+export type RenderCreateNestedOneWithoutRetriedRendersInput = {
+  create?: Prisma.XOR<Prisma.RenderCreateWithoutRetriedRendersInput, Prisma.RenderUncheckedCreateWithoutRetriedRendersInput>
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutRetriedRendersInput
+  connect?: Prisma.RenderWhereUniqueInput
+}
+
+export type RenderCreateNestedManyWithoutRetryOfRenderInput = {
+  create?: Prisma.XOR<Prisma.RenderCreateWithoutRetryOfRenderInput, Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput> | Prisma.RenderCreateWithoutRetryOfRenderInput[] | Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput[]
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput | Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput[]
+  createMany?: Prisma.RenderCreateManyRetryOfRenderInputEnvelope
+  connect?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+}
+
+export type RenderUncheckedCreateNestedManyWithoutRetryOfRenderInput = {
+  create?: Prisma.XOR<Prisma.RenderCreateWithoutRetryOfRenderInput, Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput> | Prisma.RenderCreateWithoutRetryOfRenderInput[] | Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput[]
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput | Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput[]
+  createMany?: Prisma.RenderCreateManyRetryOfRenderInputEnvelope
+  connect?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+}
+
 export type EnumRenderStatusRecordFieldUpdateOperationsInput = {
   set?: $Enums.RenderStatusRecord
+}
+
+export type RenderUpdateOneWithoutRetriedRendersNestedInput = {
+  create?: Prisma.XOR<Prisma.RenderCreateWithoutRetriedRendersInput, Prisma.RenderUncheckedCreateWithoutRetriedRendersInput>
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutRetriedRendersInput
+  upsert?: Prisma.RenderUpsertWithoutRetriedRendersInput
+  disconnect?: Prisma.RenderWhereInput | boolean
+  delete?: Prisma.RenderWhereInput | boolean
+  connect?: Prisma.RenderWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.RenderUpdateToOneWithWhereWithoutRetriedRendersInput, Prisma.RenderUpdateWithoutRetriedRendersInput>, Prisma.RenderUncheckedUpdateWithoutRetriedRendersInput>
+}
+
+export type RenderUpdateManyWithoutRetryOfRenderNestedInput = {
+  create?: Prisma.XOR<Prisma.RenderCreateWithoutRetryOfRenderInput, Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput> | Prisma.RenderCreateWithoutRetryOfRenderInput[] | Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput[]
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput | Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput[]
+  upsert?: Prisma.RenderUpsertWithWhereUniqueWithoutRetryOfRenderInput | Prisma.RenderUpsertWithWhereUniqueWithoutRetryOfRenderInput[]
+  createMany?: Prisma.RenderCreateManyRetryOfRenderInputEnvelope
+  set?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  disconnect?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  delete?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  connect?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  update?: Prisma.RenderUpdateWithWhereUniqueWithoutRetryOfRenderInput | Prisma.RenderUpdateWithWhereUniqueWithoutRetryOfRenderInput[]
+  updateMany?: Prisma.RenderUpdateManyWithWhereWithoutRetryOfRenderInput | Prisma.RenderUpdateManyWithWhereWithoutRetryOfRenderInput[]
+  deleteMany?: Prisma.RenderScalarWhereInput | Prisma.RenderScalarWhereInput[]
+}
+
+export type RenderUncheckedUpdateManyWithoutRetryOfRenderNestedInput = {
+  create?: Prisma.XOR<Prisma.RenderCreateWithoutRetryOfRenderInput, Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput> | Prisma.RenderCreateWithoutRetryOfRenderInput[] | Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput[]
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput | Prisma.RenderCreateOrConnectWithoutRetryOfRenderInput[]
+  upsert?: Prisma.RenderUpsertWithWhereUniqueWithoutRetryOfRenderInput | Prisma.RenderUpsertWithWhereUniqueWithoutRetryOfRenderInput[]
+  createMany?: Prisma.RenderCreateManyRetryOfRenderInputEnvelope
+  set?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  disconnect?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  delete?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  connect?: Prisma.RenderWhereUniqueInput | Prisma.RenderWhereUniqueInput[]
+  update?: Prisma.RenderUpdateWithWhereUniqueWithoutRetryOfRenderInput | Prisma.RenderUpdateWithWhereUniqueWithoutRetryOfRenderInput[]
+  updateMany?: Prisma.RenderUpdateManyWithWhereWithoutRetryOfRenderInput | Prisma.RenderUpdateManyWithWhereWithoutRetryOfRenderInput[]
+  deleteMany?: Prisma.RenderScalarWhereInput | Prisma.RenderScalarWhereInput[]
 }
 
 export type RenderCreateWithoutProjectInput = {
@@ -674,11 +768,14 @@ export type RenderCreateWithoutProjectInput = {
   errorMessage?: string | null
   createdAt?: Date | string
   clip: Prisma.ClipCreateNestedOneWithoutRendersInput
+  retryOfRender?: Prisma.RenderCreateNestedOneWithoutRetriedRendersInput
+  retriedRenders?: Prisma.RenderCreateNestedManyWithoutRetryOfRenderInput
 }
 
 export type RenderUncheckedCreateWithoutProjectInput = {
   id?: string
   clipId: string
+  retryOfRenderId?: string | null
   status?: $Enums.RenderStatusRecord
   inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: string | null
@@ -691,6 +788,7 @@ export type RenderUncheckedCreateWithoutProjectInput = {
   errorCode?: string | null
   errorMessage?: string | null
   createdAt?: Date | string
+  retriedRenders?: Prisma.RenderUncheckedCreateNestedManyWithoutRetryOfRenderInput
 }
 
 export type RenderCreateOrConnectWithoutProjectInput = {
@@ -726,6 +824,7 @@ export type RenderScalarWhereInput = {
   id?: Prisma.UuidFilter<"Render"> | string
   projectId?: Prisma.UuidFilter<"Render"> | string
   clipId?: Prisma.UuidFilter<"Render"> | string
+  retryOfRenderId?: Prisma.UuidNullableFilter<"Render"> | string | null
   status?: Prisma.EnumRenderStatusRecordFilter<"Render"> | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonFilter<"Render">
   outputObjectKey?: Prisma.StringNullableFilter<"Render"> | string | null
@@ -755,11 +854,14 @@ export type RenderCreateWithoutClipInput = {
   errorMessage?: string | null
   createdAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutRendersInput
+  retryOfRender?: Prisma.RenderCreateNestedOneWithoutRetriedRendersInput
+  retriedRenders?: Prisma.RenderCreateNestedManyWithoutRetryOfRenderInput
 }
 
 export type RenderUncheckedCreateWithoutClipInput = {
   id?: string
   projectId: string
+  retryOfRenderId?: string | null
   status?: $Enums.RenderStatusRecord
   inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: string | null
@@ -772,6 +874,7 @@ export type RenderUncheckedCreateWithoutClipInput = {
   errorCode?: string | null
   errorMessage?: string | null
   createdAt?: Date | string
+  retriedRenders?: Prisma.RenderUncheckedCreateNestedManyWithoutRetryOfRenderInput
 }
 
 export type RenderCreateOrConnectWithoutClipInput = {
@@ -800,9 +903,166 @@ export type RenderUpdateManyWithWhereWithoutClipInput = {
   data: Prisma.XOR<Prisma.RenderUpdateManyMutationInput, Prisma.RenderUncheckedUpdateManyWithoutClipInput>
 }
 
+export type RenderCreateWithoutRetriedRendersInput = {
+  id?: string
+  status?: $Enums.RenderStatusRecord
+  inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: string | null
+  srtObjectKey?: string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder: string
+  startedAt?: Date | string | null
+  finishedAt?: Date | string | null
+  durationMs?: number | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  createdAt?: Date | string
+  project: Prisma.ProjectCreateNestedOneWithoutRendersInput
+  clip: Prisma.ClipCreateNestedOneWithoutRendersInput
+  retryOfRender?: Prisma.RenderCreateNestedOneWithoutRetriedRendersInput
+}
+
+export type RenderUncheckedCreateWithoutRetriedRendersInput = {
+  id?: string
+  projectId: string
+  clipId: string
+  retryOfRenderId?: string | null
+  status?: $Enums.RenderStatusRecord
+  inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: string | null
+  srtObjectKey?: string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder: string
+  startedAt?: Date | string | null
+  finishedAt?: Date | string | null
+  durationMs?: number | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  createdAt?: Date | string
+}
+
+export type RenderCreateOrConnectWithoutRetriedRendersInput = {
+  where: Prisma.RenderWhereUniqueInput
+  create: Prisma.XOR<Prisma.RenderCreateWithoutRetriedRendersInput, Prisma.RenderUncheckedCreateWithoutRetriedRendersInput>
+}
+
+export type RenderCreateWithoutRetryOfRenderInput = {
+  id?: string
+  status?: $Enums.RenderStatusRecord
+  inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: string | null
+  srtObjectKey?: string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder: string
+  startedAt?: Date | string | null
+  finishedAt?: Date | string | null
+  durationMs?: number | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  createdAt?: Date | string
+  project: Prisma.ProjectCreateNestedOneWithoutRendersInput
+  clip: Prisma.ClipCreateNestedOneWithoutRendersInput
+  retriedRenders?: Prisma.RenderCreateNestedManyWithoutRetryOfRenderInput
+}
+
+export type RenderUncheckedCreateWithoutRetryOfRenderInput = {
+  id?: string
+  projectId: string
+  clipId: string
+  status?: $Enums.RenderStatusRecord
+  inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: string | null
+  srtObjectKey?: string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder: string
+  startedAt?: Date | string | null
+  finishedAt?: Date | string | null
+  durationMs?: number | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  createdAt?: Date | string
+  retriedRenders?: Prisma.RenderUncheckedCreateNestedManyWithoutRetryOfRenderInput
+}
+
+export type RenderCreateOrConnectWithoutRetryOfRenderInput = {
+  where: Prisma.RenderWhereUniqueInput
+  create: Prisma.XOR<Prisma.RenderCreateWithoutRetryOfRenderInput, Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput>
+}
+
+export type RenderCreateManyRetryOfRenderInputEnvelope = {
+  data: Prisma.RenderCreateManyRetryOfRenderInput | Prisma.RenderCreateManyRetryOfRenderInput[]
+  skipDuplicates?: boolean
+}
+
+export type RenderUpsertWithoutRetriedRendersInput = {
+  update: Prisma.XOR<Prisma.RenderUpdateWithoutRetriedRendersInput, Prisma.RenderUncheckedUpdateWithoutRetriedRendersInput>
+  create: Prisma.XOR<Prisma.RenderCreateWithoutRetriedRendersInput, Prisma.RenderUncheckedCreateWithoutRetriedRendersInput>
+  where?: Prisma.RenderWhereInput
+}
+
+export type RenderUpdateToOneWithWhereWithoutRetriedRendersInput = {
+  where?: Prisma.RenderWhereInput
+  data: Prisma.XOR<Prisma.RenderUpdateWithoutRetriedRendersInput, Prisma.RenderUncheckedUpdateWithoutRetriedRendersInput>
+}
+
+export type RenderUpdateWithoutRetriedRendersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
+  inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  srtObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRendersNestedInput
+  clip?: Prisma.ClipUpdateOneRequiredWithoutRendersNestedInput
+  retryOfRender?: Prisma.RenderUpdateOneWithoutRetriedRendersNestedInput
+}
+
+export type RenderUncheckedUpdateWithoutRetriedRendersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  clipId?: Prisma.StringFieldUpdateOperationsInput | string
+  retryOfRenderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
+  inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  srtObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type RenderUpsertWithWhereUniqueWithoutRetryOfRenderInput = {
+  where: Prisma.RenderWhereUniqueInput
+  update: Prisma.XOR<Prisma.RenderUpdateWithoutRetryOfRenderInput, Prisma.RenderUncheckedUpdateWithoutRetryOfRenderInput>
+  create: Prisma.XOR<Prisma.RenderCreateWithoutRetryOfRenderInput, Prisma.RenderUncheckedCreateWithoutRetryOfRenderInput>
+}
+
+export type RenderUpdateWithWhereUniqueWithoutRetryOfRenderInput = {
+  where: Prisma.RenderWhereUniqueInput
+  data: Prisma.XOR<Prisma.RenderUpdateWithoutRetryOfRenderInput, Prisma.RenderUncheckedUpdateWithoutRetryOfRenderInput>
+}
+
+export type RenderUpdateManyWithWhereWithoutRetryOfRenderInput = {
+  where: Prisma.RenderScalarWhereInput
+  data: Prisma.XOR<Prisma.RenderUpdateManyMutationInput, Prisma.RenderUncheckedUpdateManyWithoutRetryOfRenderInput>
+}
+
 export type RenderCreateManyProjectInput = {
   id?: string
   clipId: string
+  retryOfRenderId?: string | null
   status?: $Enums.RenderStatusRecord
   inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: string | null
@@ -832,11 +1092,14 @@ export type RenderUpdateWithoutProjectInput = {
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   clip?: Prisma.ClipUpdateOneRequiredWithoutRendersNestedInput
+  retryOfRender?: Prisma.RenderUpdateOneWithoutRetriedRendersNestedInput
+  retriedRenders?: Prisma.RenderUpdateManyWithoutRetryOfRenderNestedInput
 }
 
 export type RenderUncheckedUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.StringFieldUpdateOperationsInput | string
+  retryOfRenderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -849,11 +1112,13 @@ export type RenderUncheckedUpdateWithoutProjectInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  retriedRenders?: Prisma.RenderUncheckedUpdateManyWithoutRetryOfRenderNestedInput
 }
 
 export type RenderUncheckedUpdateManyWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clipId?: Prisma.StringFieldUpdateOperationsInput | string
+  retryOfRenderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -871,6 +1136,7 @@ export type RenderUncheckedUpdateManyWithoutProjectInput = {
 export type RenderCreateManyClipInput = {
   id?: string
   projectId: string
+  retryOfRenderId?: string | null
   status?: $Enums.RenderStatusRecord
   inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: string | null
@@ -900,11 +1166,14 @@ export type RenderUpdateWithoutClipInput = {
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutRendersNestedInput
+  retryOfRender?: Prisma.RenderUpdateOneWithoutRetriedRendersNestedInput
+  retriedRenders?: Prisma.RenderUpdateManyWithoutRetryOfRenderNestedInput
 }
 
 export type RenderUncheckedUpdateWithoutClipInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  retryOfRenderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -917,11 +1186,13 @@ export type RenderUncheckedUpdateWithoutClipInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  retriedRenders?: Prisma.RenderUncheckedUpdateManyWithoutRetryOfRenderNestedInput
 }
 
 export type RenderUncheckedUpdateManyWithoutClipInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  retryOfRenderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
   inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -936,12 +1207,116 @@ export type RenderUncheckedUpdateManyWithoutClipInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type RenderCreateManyRetryOfRenderInput = {
+  id?: string
+  projectId: string
+  clipId: string
+  status?: $Enums.RenderStatusRecord
+  inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: string | null
+  srtObjectKey?: string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder: string
+  startedAt?: Date | string | null
+  finishedAt?: Date | string | null
+  durationMs?: number | null
+  errorCode?: string | null
+  errorMessage?: string | null
+  createdAt?: Date | string
+}
+
+export type RenderUpdateWithoutRetryOfRenderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
+  inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  srtObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRendersNestedInput
+  clip?: Prisma.ClipUpdateOneRequiredWithoutRendersNestedInput
+  retriedRenders?: Prisma.RenderUpdateManyWithoutRetryOfRenderNestedInput
+}
+
+export type RenderUncheckedUpdateWithoutRetryOfRenderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  clipId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
+  inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  srtObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  retriedRenders?: Prisma.RenderUncheckedUpdateManyWithoutRetryOfRenderNestedInput
+}
+
+export type RenderUncheckedUpdateManyWithoutRetryOfRenderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  clipId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput | $Enums.RenderStatusRecord
+  inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  outputObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  srtObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  encoder?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type RenderCountOutputType
+ */
+
+export type RenderCountOutputType = {
+  retriedRenders: number
+}
+
+export type RenderCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  retriedRenders?: boolean | RenderCountOutputTypeCountRetriedRendersArgs
+}
+
+/**
+ * RenderCountOutputType without action
+ */
+export type RenderCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RenderCountOutputType
+   */
+  select?: Prisma.RenderCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * RenderCountOutputType without action
+ */
+export type RenderCountOutputTypeCountRetriedRendersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RenderWhereInput
+}
 
 
 export type RenderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   projectId?: boolean
   clipId?: boolean
+  retryOfRenderId?: boolean
   status?: boolean
   inputSnapshotJson?: boolean
   outputObjectKey?: boolean
@@ -956,12 +1331,16 @@ export type RenderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   createdAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>
+  retryOfRender?: boolean | Prisma.Render$retryOfRenderArgs<ExtArgs>
+  retriedRenders?: boolean | Prisma.Render$retriedRendersArgs<ExtArgs>
+  _count?: boolean | Prisma.RenderCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["render"]>
 
 export type RenderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   projectId?: boolean
   clipId?: boolean
+  retryOfRenderId?: boolean
   status?: boolean
   inputSnapshotJson?: boolean
   outputObjectKey?: boolean
@@ -976,12 +1355,14 @@ export type RenderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   createdAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>
+  retryOfRender?: boolean | Prisma.Render$retryOfRenderArgs<ExtArgs>
 }, ExtArgs["result"]["render"]>
 
 export type RenderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   projectId?: boolean
   clipId?: boolean
+  retryOfRenderId?: boolean
   status?: boolean
   inputSnapshotJson?: boolean
   outputObjectKey?: boolean
@@ -996,12 +1377,14 @@ export type RenderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   createdAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>
+  retryOfRender?: boolean | Prisma.Render$retryOfRenderArgs<ExtArgs>
 }, ExtArgs["result"]["render"]>
 
 export type RenderSelectScalar = {
   id?: boolean
   projectId?: boolean
   clipId?: boolean
+  retryOfRenderId?: boolean
   status?: boolean
   inputSnapshotJson?: boolean
   outputObjectKey?: boolean
@@ -1016,18 +1399,23 @@ export type RenderSelectScalar = {
   createdAt?: boolean
 }
 
-export type RenderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "clipId" | "status" | "inputSnapshotJson" | "outputObjectKey" | "srtObjectKey" | "probeJson" | "encoder" | "startedAt" | "finishedAt" | "durationMs" | "errorCode" | "errorMessage" | "createdAt", ExtArgs["result"]["render"]>
+export type RenderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "clipId" | "retryOfRenderId" | "status" | "inputSnapshotJson" | "outputObjectKey" | "srtObjectKey" | "probeJson" | "encoder" | "startedAt" | "finishedAt" | "durationMs" | "errorCode" | "errorMessage" | "createdAt", ExtArgs["result"]["render"]>
 export type RenderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>
+  retryOfRender?: boolean | Prisma.Render$retryOfRenderArgs<ExtArgs>
+  retriedRenders?: boolean | Prisma.Render$retriedRendersArgs<ExtArgs>
+  _count?: boolean | Prisma.RenderCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type RenderIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>
+  retryOfRender?: boolean | Prisma.Render$retryOfRenderArgs<ExtArgs>
 }
 export type RenderIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>
+  retryOfRender?: boolean | Prisma.Render$retryOfRenderArgs<ExtArgs>
 }
 
 export type $RenderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1035,11 +1423,14 @@ export type $RenderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   objects: {
     project: Prisma.$ProjectPayload<ExtArgs>
     clip: Prisma.$ClipPayload<ExtArgs>
+    retryOfRender: Prisma.$RenderPayload<ExtArgs> | null
+    retriedRenders: Prisma.$RenderPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     projectId: string
     clipId: string
+    retryOfRenderId: string | null
     status: $Enums.RenderStatusRecord
     inputSnapshotJson: runtime.JsonValue
     outputObjectKey: string | null
@@ -1448,6 +1839,8 @@ export interface Prisma__RenderClient<T, Null = never, ExtArgs extends runtime.T
   readonly [Symbol.toStringTag]: "PrismaPromise"
   project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   clip<T extends Prisma.ClipDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClipDefaultArgs<ExtArgs>>): Prisma.Prisma__ClipClient<runtime.Types.Result.GetResult<Prisma.$ClipPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  retryOfRender<T extends Prisma.Render$retryOfRenderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Render$retryOfRenderArgs<ExtArgs>>): Prisma.Prisma__RenderClient<runtime.Types.Result.GetResult<Prisma.$RenderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  retriedRenders<T extends Prisma.Render$retriedRendersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Render$retriedRendersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RenderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1480,6 +1873,7 @@ export interface RenderFieldRefs {
   readonly id: Prisma.FieldRef<"Render", 'String'>
   readonly projectId: Prisma.FieldRef<"Render", 'String'>
   readonly clipId: Prisma.FieldRef<"Render", 'String'>
+  readonly retryOfRenderId: Prisma.FieldRef<"Render", 'String'>
   readonly status: Prisma.FieldRef<"Render", 'RenderStatusRecord'>
   readonly inputSnapshotJson: Prisma.FieldRef<"Render", 'Json'>
   readonly outputObjectKey: Prisma.FieldRef<"Render", 'String'>
@@ -1885,6 +2279,49 @@ export type RenderDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Limit how many Renders to delete.
    */
   limit?: number
+}
+
+/**
+ * Render.retryOfRender
+ */
+export type Render$retryOfRenderArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Render
+   */
+  select?: Prisma.RenderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Render
+   */
+  omit?: Prisma.RenderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RenderInclude<ExtArgs> | null
+  where?: Prisma.RenderWhereInput
+}
+
+/**
+ * Render.retriedRenders
+ */
+export type Render$retriedRendersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Render
+   */
+  select?: Prisma.RenderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Render
+   */
+  omit?: Prisma.RenderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RenderInclude<ExtArgs> | null
+  where?: Prisma.RenderWhereInput
+  orderBy?: Prisma.RenderOrderByWithRelationInput | Prisma.RenderOrderByWithRelationInput[]
+  cursor?: Prisma.RenderWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RenderScalarFieldEnum | Prisma.RenderScalarFieldEnum[]
 }
 
 /**

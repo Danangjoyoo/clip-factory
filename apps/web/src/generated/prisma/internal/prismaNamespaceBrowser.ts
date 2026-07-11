@@ -254,6 +254,7 @@ export const RenderScalarFieldEnum = {
   id: 'id',
   projectId: 'projectId',
   clipId: 'clipId',
+  retryOfRenderId: 'retryOfRenderId',
   status: 'status',
   inputSnapshotJson: 'inputSnapshotJson',
   outputObjectKey: 'outputObjectKey',
