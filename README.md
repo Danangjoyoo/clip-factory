@@ -16,39 +16,47 @@ Install native media dependencies:
 brew bundle
 ```
 
-## First-time setup
+## Fresh start
+
+From a new checkout, run:
 
 ```bash
+brew bundle
 corepack enable
-corepack pnpm install
-cp env/.env.example .env
-corepack pnpm prisma:generate
-corepack pnpm worker:sync
+PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 corepack pnpm install
+PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 corepack pnpm prisma:generate:local
+PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 corepack pnpm worker:sync:local
 ```
 
-Edit `.env` with local service values. Keep `OPENAI_API_KEY` only in the worker environment; it is optional for manual clips and required for AI highlight analysis.
+The local profile uses the fake OpenAI adapter, so it needs no API key. For real OpenAI analysis, edit `env/.dev.env` and set `OPENAI_ADAPTER=live` plus `OPENAI_API_KEY`; never commit that file.
+
+Before starting, ensure ports `3000`, `5432`, `6379`, `7233`, `8233`, `9000`, and `9001` are free. If another Compose project owns them, stop that project first. To reset only Clip Factory services:
+
+```bash
+PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 corepack pnpm compose:down
+```
 
 Environment shortcuts are available:
 
 ```bash
 corepack pnpm prisma:generate:dev
 corepack pnpm worker:sync:dev
-corepack pnpm dev:dev
+PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 corepack pnpm dev:dev
 
 # or use the fake/OpenAI-free local profile
 corepack pnpm prisma:generate:local
 corepack pnpm worker:sync:local
-corepack pnpm dev:local
+PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 corepack pnpm dev:local
 ```
 
-Each shortcut loads `env/.dev.env` or `env/.local.env` into the child process before running.
+Each shortcut loads `env/.dev.env` or `env/.local.env` into the child process before running. The launcher starts PostgreSQL, Redis, MinIO, Temporal, the worker, and the web app.
 
 ## Run the application
 
 The development launcher starts PostgreSQL, Redis, MinIO, and Temporal with Docker Compose, waits for health checks, then starts the Python worker and Next.js app:
 
 ```bash
-corepack pnpm dev
+PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 corepack pnpm dev:local
 ```
 
 Open <http://localhost:3000>.
