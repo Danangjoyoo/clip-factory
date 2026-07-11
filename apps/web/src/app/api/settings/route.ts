@@ -1,2 +1,7 @@
-import { NextResponse } from 'next/server';
-export async function GET() { return NextResponse.json({ allowedRoots: [], defaultPlatform: 'youtube', captionProfile: 'default', catalogVersion: 'local' }); }
+import { settingsComposition } from '../../../modules/settings/composition/settings.composition';
+export async function GET() {
+  return settingsComposition().controller.get();
+}
+export async function PUT(request: Request) {
+  return settingsComposition().controller.save(request);
+}

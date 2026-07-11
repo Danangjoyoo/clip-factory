@@ -22,9 +22,15 @@ import { HttpSourceValidationClient } from '../adapters/worker/http-source-valid
 const uow: UnitOfWork = {
   execute: (fn) => prisma.$transaction((tx) => fn(tx)),
 };
-const workflows: WorkflowControlPort = { cancel: async () => undefined };
+const workflows: WorkflowControlPort = {
+  cancel: async () => {
+    throw new Error('WORKFLOW_CONTROL_NOT_CONFIGURED');
+  },
+};
 const artifacts: ArtifactCleanupPort = {
-  cleanupProject: async () => undefined,
+  cleanupProject: async () => {
+    throw new Error('ARTIFACT_CLEANUP_NOT_CONFIGURED');
+  },
 };
 export function projectsComposition() {
   const projects = new ProjectDataService(new PrismaProjectRepository());
