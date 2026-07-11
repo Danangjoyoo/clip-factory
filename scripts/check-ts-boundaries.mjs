@@ -2,17 +2,27 @@ import { readFile, readdir } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 
 const root = resolve(process.argv[2] ?? 'apps/web/src');
-const forbidden = [
-  [
-    'application',
-    /from ['"]((?:@prisma\/client|next|react|redis|@aws-sdk(?:\/[^'"]+)?|@temporalio(?:\/[^'"]+)?|openai(?:\/[^'"]+)?))['"]/,
+const forbiddenProviders = {
+  application: [
+    '@prisma/client',
+    'next',
+    'react',
+    'redis',
+    '@aws-sdk',
+    '@temporalio',
+    'openai',
   ],
-  [
-    'domain',
-    /from ['"]((?:@prisma\/client|next|react|redis|@aws-sdk(?:\/[^'"]+)?|@temporalio(?:\/[^'"]+)?|openai(?:\/[^'"]+)?|node:fs))['"]/,
+  domain: [
+    '@prisma/client',
+    'next',
+    'react',
+    'redis',
+    '@aws-sdk',
+    '@temporalio',
+    'openai',
+    'node:fs',
   ],
-];
-const boundaryDto = /from ['"][^'"]*\/dto\/(?:api|record|client)\//;
+};
 
 const files = [];
 async function visit(path) {
@@ -27,45 +37,154 @@ await visit(root);
 let failed = false;
 const sourceFiles = new Set(files);
 const edges = new Map(files.map((file) => [file, []]));
-const importPattern = /(?:from\s*|import\s*\()\s*['"](\.[^'"]+)['"]/gu;
+
+function parseJsonc(source) {
+  return JSON.parse(
+    source
+      .replace(/\/\*[\s\S]*?\*\//gu, '')
+      .replace(/(^|\s)\/\/.*$/gmu, '$1')
+      .replace(/,\s*([}\]])/gu, '$1'),
+  );
+}
+
+async function findConfig(start) {
+  let current = start;
+  while (true) {
+    const candidate = join(current, 'tsconfig.json');
+    try {
+      await readFile(candidate, 'utf8');
+      return candidate;
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) return null;
+      current = parent;
+    }
+  }
+}
+
+async function compilerOptions(configPath, seen = new Set()) {
+  if (!configPath || seen.has(configPath)) return {};
+  seen.add(configPath);
+  const config = parseJsonc(await readFile(configPath, 'utf8'));
+  const extendsPath = config.extends
+    ? resolve(dirname(configPath), config.extends)
+    : null;
+  const basePath = extendsPath?.endsWith('.json')
+    ? extendsPath
+    : extendsPath
+      ? `${extendsPath}.json`
+      : null;
+  const base = basePath
+    ? await compilerOptions(basePath, seen).catch(() => ({}))
+    : {};
+  const current = config.compilerOptions ?? {};
+  const baseUrl = current.baseUrl
+    ? resolve(dirname(configPath), current.baseUrl)
+    : base.baseUrl;
+  return {
+    ...base,
+    ...current,
+    paths: { ...(base.paths ?? {}), ...(current.paths ?? {}) },
+    baseUrl,
+    configDir: dirname(configPath),
+  };
+}
+
+const configPath = await findConfig(root);
+const options = configPath ? await compilerOptions(configPath) : {};
+const baseUrl = options.baseUrl ?? resolve(options.configDir ?? root, '.');
+const aliases = Object.entries(options.paths ?? {});
+
+function resolveFile(candidate) {
+  for (const path of [
+    candidate,
+    `${candidate}.ts`,
+    `${candidate}.tsx`,
+    `${candidate}.d.ts`,
+    join(candidate, 'index.ts'),
+    join(candidate, 'index.tsx'),
+  ]) {
+    if (sourceFiles.has(path)) return path;
+  }
+  return null;
+}
+
+function resolveAlias(specifier) {
+  for (const [pattern, targets] of aliases) {
+    const wildcard = pattern.indexOf('*');
+    const prefix = wildcard === -1 ? pattern : pattern.slice(0, wildcard);
+    const suffix = wildcard === -1 ? '' : pattern.slice(wildcard + 1);
+    if (
+      !specifier.startsWith(prefix) ||
+      (suffix && !specifier.endsWith(suffix))
+    ) {
+      continue;
+    }
+    const end = suffix ? specifier.length - suffix.length : specifier.length;
+    const matched = specifier.slice(prefix.length, end);
+    for (const target of Array.isArray(targets) ? targets : [targets]) {
+      const candidate = resolve(baseUrl, target.replace('*', matched));
+      const resolved = resolveFile(candidate);
+      if (resolved) return resolved;
+    }
+  }
+  return null;
+}
+
 const layerOf = (file) =>
   file.match(
     /(?:^|\/)(domain|application|adapters|delivery|converters|composition)(?:\/|$)/u,
   )?.[1] ?? null;
-const resolveRelative = (file, specifier) => {
-  const base = resolve(dirname(file), specifier);
-  for (const candidate of [
-    base,
-    `${base}.ts`,
-    `${base}.tsx`,
-    join(base, 'index.ts'),
-    join(base, 'index.tsx'),
-  ]) {
-    if (sourceFiles.has(candidate)) return candidate;
+const resolveImport = (file, specifier) => {
+  if (specifier.startsWith('.')) {
+    return resolveFile(resolve(dirname(file), specifier));
   }
-  return null;
+  return resolveAlias(specifier);
 };
+
+const importPatterns = [
+  /\b(?:import|export)\s+(?:(?:type\s+)?[^'"]*?\sfrom\s*)?['"]([^'"]+)['"]/gu,
+  /\b(?:import|require)\s*\(\s*['"]([^'"]+)['"]\s*\)/gu,
+];
+
+function importsOf(source) {
+  return importPatterns.flatMap((pattern) =>
+    [...source.matchAll(pattern)].map((match) => match[1]),
+  );
+}
+
+function isProviderImport(layer, specifier) {
+  return (forbiddenProviders[layer] ?? []).some(
+    (provider) =>
+      specifier === provider || specifier.startsWith(`${provider}/`),
+  );
+}
 
 for (const file of files) {
   const source = await readFile(file, 'utf8');
-  for (const [layer, pattern] of forbidden) {
+  const specifiers = importsOf(source);
+  for (const layer of Object.keys(forbiddenProviders)) {
     if (!file.includes(`/${layer}/`)) continue;
-    const match = source.match(pattern);
-    if (match) {
-      process.stderr.write(`${layer} in ${file} must not import ${match[1]}\n`);
+    for (const specifier of specifiers) {
+      if (!isProviderImport(layer, specifier)) continue;
+      process.stderr.write(
+        `${layer} in ${file} must not import ${specifier}\n`,
+      );
       failed = true;
     }
   }
   for (const layer of ['application', 'domain']) {
-    if (file.includes(`/${layer}/`) && boundaryDto.test(source)) {
+    if (!file.includes(`/${layer}/`)) continue;
+    for (const specifier of specifiers) {
+      if (!/\/dto\/(?:api|record|client)\//u.test(specifier)) continue;
       process.stderr.write(
         `${layer} in ${file} must not import boundary DTO\n`,
       );
       failed = true;
     }
   }
-  for (const match of source.matchAll(importPattern)) {
-    const imported = resolveRelative(file, match[1]);
+  for (const specifier of specifiers) {
+    const imported = resolveImport(file, specifier);
     if (imported) edges.get(file).push(imported);
   }
 }

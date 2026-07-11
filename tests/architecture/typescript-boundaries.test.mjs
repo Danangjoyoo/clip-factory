@@ -72,6 +72,91 @@ test('rejects inner-to-outer imports and dependency cycles', async () => {
   assert.match(result.stderr, /cycle detected/);
 });
 
+test('rejects outer peer imports', async () => {
+  const result = await runScanner({
+    'modules/projects/delivery/route.ts':
+      "import type { Store } from '../adapters/store';\nexport type Route = Store;\n",
+    'modules/projects/adapters/store.ts': 'export type Store = unknown;\n',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /delivery.*must not import outer peer adapters/);
+});
+
+test('rejects concrete adapter imports outside composition', async () => {
+  const result = await runScanner({
+    'modules/projects/application/services/service.ts':
+      "import type { Store } from '../../adapters/store';\nexport type Service = Store;\n",
+    'modules/projects/adapters/store.ts': 'export type Store = unknown;\n',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /application.*must not import concrete adapter/);
+});
+
+test('rejects domain-to-application imports', async () => {
+  const result = await runScanner({
+    'modules/projects/domain/model.ts':
+      "import type { Service } from '../application/services/service';\nexport type Model = Service;\n",
+    'modules/projects/application/services/service.ts':
+      'export type Service = unknown;\n',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /domain.*must not import application/);
+});
+
+test('allows composition to import concrete adapters', async () => {
+  const result = await runScanner({
+    'modules/projects/composition/root.ts':
+      "import type { Store } from '../adapters/store';\nexport type Root = Store;\n",
+    'modules/projects/adapters/store.ts': 'export type Store = unknown;\n',
+  });
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('rejects alias re-exports and side-effect imports across inner boundaries', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'clip-factory-boundary-'));
+  try {
+    await mkdir(join(root, 'modules/projects/domain'), { recursive: true });
+    await mkdir(join(root, 'modules/projects/adapters'), { recursive: true });
+    await writeFile(
+      join(root, 'tsconfig.json'),
+      JSON.stringify({
+        compilerOptions: { baseUrl: '.', paths: { '@/*': ['*'] } },
+      }),
+    );
+    await writeFile(
+      join(root, 'modules/projects/domain/model.ts'),
+      "export { Store } from '@/modules/projects/adapters/store';\nimport '@/modules/projects/adapters/register';\n",
+    );
+    await writeFile(
+      join(root, 'modules/projects/adapters/store.ts'),
+      'export type Store = unknown;\n',
+    );
+    await writeFile(
+      join(root, 'modules/projects/adapters/register.ts'),
+      'export const registered = true;\n',
+    );
+    const result = spawnSync(
+      process.execPath,
+      ['scripts/check-ts-boundaries.mjs', root],
+      { encoding: 'utf8' },
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /domain.*must not import outer layer adapters/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects require and dynamic imports across inner boundaries', async () => {
+  const result = await runScanner({
+    'modules/projects/domain/model.ts':
+      "const store = require('../adapters/store');\nconst dynamic = import('../adapters/store');\nexport { store, dynamic };\n",
+    'modules/projects/adapters/store.ts': 'export const store = true;\n',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /domain.*must not import outer layer adapters/);
+});
+
 test('rejects provider SDK subpaths through the web ESLint policy', () => {
   const result = spawnSync(
     '../../node_modules/.bin/eslint',
