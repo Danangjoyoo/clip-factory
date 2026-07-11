@@ -21,7 +21,7 @@ export class AnalysisError extends Error {
 const same = (e: AIUsageEventEntityDto, i: UsageEntityInput, cost: bigint) =>
   e.projectId === i.projectId &&
   e.analysisRunId === i.analysisRunId &&
-  e.clipId === i.clipId &&
+  (e.clipId ?? null) === (i.clipId ?? null) &&
   (e.reservationCallId ?? i.callId) === (i.reservationCallId ?? i.callId) &&
   (e.reservationProjectId ?? i.projectId) ===
     (i.reservationProjectId ?? i.projectId) &&
