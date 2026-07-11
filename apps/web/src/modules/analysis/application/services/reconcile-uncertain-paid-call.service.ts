@@ -5,7 +5,7 @@ export class ReconcileUncertainPaidCallService {
     private readonly usage: RecordUsageService,
   ) {}
 
-  execute(input: UsageEntityInput, reservedMicrousd: bigint) {
-    return this.usage.execute({ ...input, uncertainReservedMicrousd: reservedMicrousd });
+  execute(input: UsageEntityInput, _reservedMicrousd?: bigint) {
+    return this.usage.execute(input);
   }
 }

@@ -7,8 +7,11 @@ import type { RecordUsageService } from '../../application/services/record-usage
 import { z } from 'zod';
 import type { UsageCallbackApiDto } from './dto/api/usage-callback-api.dto';
 import { usageEventEntityToApi } from '../../converters/entity-api/usage-event.converter';
+const integerInput = z
+  .union([z.string().regex(/^\d+$/), z.number().int().nonnegative().safe()])
+  .transform(String);
 const callbackSchema = z.object({
-  callId: z.string().min(1), projectId: z.string().min(1), providerResponseId: z.string().min(1), requestHash: z.string().min(1), modelId: z.string().min(1), reasoning: z.string().min(1), promptVersion: z.string().min(1), schemaVersion: z.string().min(1), pricingVersion: z.string().min(1), purpose: z.string().min(1), pricingTier: z.string().min(1), inputTokens: z.number().int().nonnegative(), cachedInputTokens: z.number().int().nonnegative().optional(), cacheWriteInputTokens: z.number().int().nonnegative().optional(), outputTokens: z.number().int().nonnegative(), reasoningTokens: z.number().int().nonnegative().optional(), occurredAt: z.string().datetime(), clipId: z.string().min(1).nullable().optional(), responseObjectReference: z.object({ bucket: z.string().min(1), key: z.string().min(1), versionId: z.string().nullable().optional(), sha256: z.string().min(1) }).nullable().optional(),
+  callId: z.string().min(1), projectId: z.string().min(1), providerResponseId: z.string().min(1), requestHash: z.string().min(1), modelId: z.string().min(1), reasoning: z.string().min(1), promptVersion: z.string().min(1), schemaVersion: z.string().min(1), pricingVersion: z.string().min(1), purpose: z.string().min(1), pricingTier: z.string().min(1), inputTokens: integerInput, cachedInputTokens: integerInput.optional(), cacheWriteInputTokens: integerInput.optional(), outputTokens: integerInput, reasoningTokens: integerInput.optional(), occurredAt: z.string().datetime(), clipId: z.string().min(1).nullable().optional(), responseObjectReference: z.object({ bucket: z.string().min(1), key: z.string().min(1), versionId: z.string().nullable().optional(), sha256: z.string().min(1) }).nullable().optional(),
 }).strict();
 export class UsageCallbackController {
   constructor(

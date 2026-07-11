@@ -9,11 +9,11 @@ export interface UsageCallbackApiDto {
   schemaVersion: string;
   pricingVersion: string;
   purpose: string;
-  inputTokens: number;
-  cachedInputTokens?: number;
-  cacheWriteInputTokens?: number;
-  outputTokens: number;
-  reasoningTokens?: number;
+  inputTokens: string;
+  cachedInputTokens?: string;
+  cacheWriteInputTokens?: string;
+  outputTokens: string;
+  reasoningTokens?: string;
   pricingTier: string;
   occurredAt: string;
   clipId?: string | null;

@@ -23,4 +23,16 @@ describe('RecordUsageService', () => {
     );
     await expect(service.execute(input)).rejects.toMatchObject({ code: 'PAID_CALL_CONFLICT' });
   });
+
+  it('reconciles an uncertain reservation using its locked worst-case amount', async () => {
+    let reconciled: bigint | undefined;
+    const service = new RecordUsageService(
+      { execute: (fn) => fn(undefined as never) },
+      new AIUsageEventDataService({ findByProviderResponseId: async () => null, insert: async (value) => ({ id: 'event', ...value }) as never }),
+      new AnalysisRunDataService({ findById: async () => null, addActualCost: async () => undefined, addUncertain: async () => undefined, reconcileUncertain: async (_id, amount) => { reconciled = amount; } }),
+      new PaidCallReservationDataService({ lockByCallId: async () => ({ id: 'r', ...input, worstCaseMicrousd: 99n, status: 'UNCERTAIN', providerResponseId: null, usageEventId: null }), complete: async () => undefined }),
+    );
+    await service.execute(input);
+    expect(reconciled).toBe(99n);
+  });
 });

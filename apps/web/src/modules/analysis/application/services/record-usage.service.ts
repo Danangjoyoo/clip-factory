@@ -12,7 +12,7 @@ import type { AnalysisUnitOfWork } from '../ports/unit-of-work.port';
 export type UsageEntityInput = Omit<
   AIUsageEventEntityDto,
   'id' | 'costMicrousd'
-> & { callId: string; uncertainReservedMicrousd?: bigint };
+> & { callId: string };
 export class AnalysisError extends Error {
   constructor(public readonly code: string) {
     super(code);
@@ -110,10 +110,10 @@ export class RecordUsageService {
         tx,
       );
       await this.runs.addActualCost(input.analysisRunId, cost, tx);
-      if (input.uncertainReservedMicrousd !== undefined)
+      if (reservation.status === 'UNCERTAIN')
         await this.runs.reconcileUncertain(
           input.analysisRunId,
-          input.uncertainReservedMicrousd,
+          reservation.worstCaseMicrousd,
           tx,
         );
       return event;
