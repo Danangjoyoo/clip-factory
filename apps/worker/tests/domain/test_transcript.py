@@ -1,4 +1,5 @@
 import pytest
+from typing import Any
 from clip_factory.domain.transcript import (
     TranscriptDocument,
     TranscriptWord,
@@ -8,7 +9,7 @@ from clip_factory.domain.transcript import (
 )
 
 
-def valid():
+def valid() -> TranscriptDocument:
     return TranscriptDocument(
         "es",
         "hola",
@@ -17,7 +18,7 @@ def valid():
     )
 
 
-def test_validates_language_timestamps_and_nullable_confidence():
+def test_validates_language_timestamps_and_nullable_confidence() -> None:
     validate_document(valid())
 
 
@@ -28,6 +29,6 @@ def test_validates_language_timestamps_and_nullable_confidence():
         TranscriptDocument("en", "x", (TranscriptWord("x", 2, 1),), ()),
     ],
 )
-def test_rejects_invalid_transcripts(doc):
+def test_rejects_invalid_transcripts(doc: Any) -> None:
     with pytest.raises(TranscriptValidationError):
         validate_document(doc)

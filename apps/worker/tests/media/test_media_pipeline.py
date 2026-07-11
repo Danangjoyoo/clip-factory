@@ -4,6 +4,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+from typing import Any
 from pathlib import Path
 
 import pytest
@@ -17,7 +18,7 @@ def run(command: list[str | Path]) -> None:
     subprocess.run([str(item) for item in command], check=True, capture_output=True)
 
 
-def probe(path: Path) -> dict:
+def probe(path: Path) -> dict[str, Any]:
     result = subprocess.run(
         ["ffprobe", "-v", "error", "-show_format", "-show_streams", "-of", "json", str(path)],
         check=True, capture_output=True, text=True,
@@ -32,8 +33,9 @@ def test_synthetic_source_renders_vertical_captioned_clip(tmp_path: Path) -> Non
     plain = tmp_path / "plain.png"
     captioned = tmp_path / "captioned.png"
     run([GENERATOR, source])
+    ass_filter = f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,ass=filename='{CAPTIONS}'"
     run(["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-ss", "1", "-i", source,
-         "-t", "5", "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,ass=" + str(CAPTIONS),
+         "-t", "5", "-vf", ass_filter,
          "-c:v", "libx264", "-c:a", "aac", "-y", output])
     details = probe(output)
     video = next(item for item in details["streams"] if item["codec_type"] == "video")
