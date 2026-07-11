@@ -41,6 +41,19 @@ it('returns 400 only for transport validation and lets persistence errors reject
     ),
   ).rejects.toThrow('db down');
 });
+it('returns 400 for malformed JSON bodies', async () => {
+  const controller = new ProjectController(
+    { execute: vi.fn() } as never,
+    {} as never,
+    {} as never,
+    {} as never,
+  );
+  const response = await controller.create(
+    new Request('http://localhost', { method: 'POST', body: '{' }),
+  );
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({ code: 'INVALID_PROJECT' });
+});
 it('serializes a created project with string micro-USD', async () => {
   const controller = new ProjectController(
     { execute: vi.fn().mockResolvedValue({ project, source: null }) } as never,

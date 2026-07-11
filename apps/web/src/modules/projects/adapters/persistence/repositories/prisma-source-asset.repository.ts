@@ -6,10 +6,8 @@ import {
   sourceAssetRecordToEntity,
 } from '../converters/source-asset.converter';
 import { prisma } from '../../../../../infrastructure/prisma/client';
-import {
-  JsonNull,
-  type InputJsonValue,
-} from '../../../../../generated/prisma/internal/prismaNamespace';
+import { JsonNull } from '../../../../../generated/prisma/internal/prismaNamespace';
+import { toPrismaJsonInput } from '../converters/prisma-json.converter';
 export class PrismaSourceAssetRepository implements SourceAssetRepository {
   private db(tx: TransactionContext) {
     return (
@@ -20,7 +18,18 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
   async insert(input: CreateSourceAssetEntityDto, tx: TransactionContext) {
     const now = new Date();
     const record = sourceAssetEntityToRecord({
-      ...input,
+      projectId: input.projectId,
+      kind: input.kind,
+      displayPath: input.displayPath,
+      resolvedPath: input.resolvedPath,
+      objectKey: input.objectKey,
+      objectVersionId: input.objectVersionId,
+      objectSha256: input.objectSha256,
+      sizeBytes: input.sizeBytes,
+      modifiedAt: input.modifiedAt,
+      fingerprint: input.fingerprint,
+      probe: input.probe,
+      health: input.health,
       id: '',
       createdAt: now,
       updatedAt: now,
@@ -40,7 +49,7 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
         probeJson:
           record.probeJson === null
             ? JsonNull
-            : (record.probeJson as InputJsonValue),
+            : toPrismaJsonInput(record.probeJson),
         health: record.health,
       },
     });

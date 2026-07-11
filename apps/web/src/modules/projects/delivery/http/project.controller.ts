@@ -15,7 +15,13 @@ export class ProjectController {
     private readonly deleteProject: DeleteProjectService,
   ) {}
   async create(request: Request) {
-    const parsed = CreateProjectApiSchema.safeParse(await request.json());
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ code: 'INVALID_PROJECT' }, { status: 400 });
+    }
+    const parsed = CreateProjectApiSchema.safeParse(body);
     if (!parsed.success)
       return Response.json({ code: 'INVALID_PROJECT' }, { status: 400 });
     const result = await this.createProject.execute(
