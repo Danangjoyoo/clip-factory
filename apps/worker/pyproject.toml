@@ -10,6 +10,7 @@ dependencies = [
     "temporalio==1.30.0",
     "tiktoken==0.13.0",
     "openai==2.45.0",
+    "mediapipe==0.10.35; sys_platform == 'darwin'",
 ]
 
 [dependency-groups]
