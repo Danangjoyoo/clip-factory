@@ -27,16 +27,22 @@ export type AggregateUploadSession = {
 }
 
 export type UploadSessionAvgAggregateOutputType = {
+  totalParts: number | null
   sizeBytes: number | null
 }
 
 export type UploadSessionSumAggregateOutputType = {
+  totalParts: number | null
   sizeBytes: bigint | null
 }
 
 export type UploadSessionMinAggregateOutputType = {
   id: string | null
   projectId: string | null
+  sourceAssetId: string | null
+  fileName: string | null
+  contentType: string | null
+  totalParts: number | null
   objectKey: string | null
   uploadId: string | null
   sizeBytes: bigint | null
@@ -52,6 +58,10 @@ export type UploadSessionMinAggregateOutputType = {
 export type UploadSessionMaxAggregateOutputType = {
   id: string | null
   projectId: string | null
+  sourceAssetId: string | null
+  fileName: string | null
+  contentType: string | null
+  totalParts: number | null
   objectKey: string | null
   uploadId: string | null
   sizeBytes: bigint | null
@@ -67,6 +77,10 @@ export type UploadSessionMaxAggregateOutputType = {
 export type UploadSessionCountAggregateOutputType = {
   id: number
   projectId: number
+  sourceAssetId: number
+  fileName: number
+  contentType: number
+  totalParts: number
   objectKey: number
   uploadId: number
   sizeBytes: number
@@ -83,16 +97,22 @@ export type UploadSessionCountAggregateOutputType = {
 
 
 export type UploadSessionAvgAggregateInputType = {
+  totalParts?: true
   sizeBytes?: true
 }
 
 export type UploadSessionSumAggregateInputType = {
+  totalParts?: true
   sizeBytes?: true
 }
 
 export type UploadSessionMinAggregateInputType = {
   id?: true
   projectId?: true
+  sourceAssetId?: true
+  fileName?: true
+  contentType?: true
+  totalParts?: true
   objectKey?: true
   uploadId?: true
   sizeBytes?: true
@@ -108,6 +128,10 @@ export type UploadSessionMinAggregateInputType = {
 export type UploadSessionMaxAggregateInputType = {
   id?: true
   projectId?: true
+  sourceAssetId?: true
+  fileName?: true
+  contentType?: true
+  totalParts?: true
   objectKey?: true
   uploadId?: true
   sizeBytes?: true
@@ -123,6 +147,10 @@ export type UploadSessionMaxAggregateInputType = {
 export type UploadSessionCountAggregateInputType = {
   id?: true
   projectId?: true
+  sourceAssetId?: true
+  fileName?: true
+  contentType?: true
+  totalParts?: true
   objectKey?: true
   uploadId?: true
   sizeBytes?: true
@@ -226,6 +254,10 @@ export type UploadSessionGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
 export type UploadSessionGroupByOutputType = {
   id: string
   projectId: string
+  sourceAssetId: string
+  fileName: string
+  contentType: string
+  totalParts: number
   objectKey: string
   uploadId: string
   sizeBytes: bigint
@@ -265,6 +297,10 @@ export type UploadSessionWhereInput = {
   NOT?: Prisma.UploadSessionWhereInput | Prisma.UploadSessionWhereInput[]
   id?: Prisma.UuidFilter<"UploadSession"> | string
   projectId?: Prisma.UuidFilter<"UploadSession"> | string
+  sourceAssetId?: Prisma.UuidFilter<"UploadSession"> | string
+  fileName?: Prisma.StringFilter<"UploadSession"> | string
+  contentType?: Prisma.StringFilter<"UploadSession"> | string
+  totalParts?: Prisma.IntFilter<"UploadSession"> | number
   objectKey?: Prisma.StringFilter<"UploadSession"> | string
   uploadId?: Prisma.StringFilter<"UploadSession"> | string
   sizeBytes?: Prisma.BigIntFilter<"UploadSession"> | bigint | number
@@ -282,6 +318,10 @@ export type UploadSessionWhereInput = {
 export type UploadSessionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
+  sourceAssetId?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  contentType?: Prisma.SortOrder
+  totalParts?: Prisma.SortOrder
   objectKey?: Prisma.SortOrder
   uploadId?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -303,6 +343,10 @@ export type UploadSessionWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.UploadSessionWhereInput[]
   NOT?: Prisma.UploadSessionWhereInput | Prisma.UploadSessionWhereInput[]
   projectId?: Prisma.UuidFilter<"UploadSession"> | string
+  sourceAssetId?: Prisma.UuidFilter<"UploadSession"> | string
+  fileName?: Prisma.StringFilter<"UploadSession"> | string
+  contentType?: Prisma.StringFilter<"UploadSession"> | string
+  totalParts?: Prisma.IntFilter<"UploadSession"> | number
   objectKey?: Prisma.StringFilter<"UploadSession"> | string
   sizeBytes?: Prisma.BigIntFilter<"UploadSession"> | bigint | number
   completedPartsJson?: Prisma.JsonFilter<"UploadSession">
@@ -319,6 +363,10 @@ export type UploadSessionWhereUniqueInput = Prisma.AtLeast<{
 export type UploadSessionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
+  sourceAssetId?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  contentType?: Prisma.SortOrder
+  totalParts?: Prisma.SortOrder
   objectKey?: Prisma.SortOrder
   uploadId?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -343,6 +391,10 @@ export type UploadSessionScalarWhereWithAggregatesInput = {
   NOT?: Prisma.UploadSessionScalarWhereWithAggregatesInput | Prisma.UploadSessionScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"UploadSession"> | string
   projectId?: Prisma.UuidWithAggregatesFilter<"UploadSession"> | string
+  sourceAssetId?: Prisma.UuidWithAggregatesFilter<"UploadSession"> | string
+  fileName?: Prisma.StringWithAggregatesFilter<"UploadSession"> | string
+  contentType?: Prisma.StringWithAggregatesFilter<"UploadSession"> | string
+  totalParts?: Prisma.IntWithAggregatesFilter<"UploadSession"> | number
   objectKey?: Prisma.StringWithAggregatesFilter<"UploadSession"> | string
   uploadId?: Prisma.StringWithAggregatesFilter<"UploadSession"> | string
   sizeBytes?: Prisma.BigIntWithAggregatesFilter<"UploadSession"> | bigint | number
@@ -358,6 +410,10 @@ export type UploadSessionScalarWhereWithAggregatesInput = {
 
 export type UploadSessionCreateInput = {
   id?: string
+  sourceAssetId: string
+  fileName: string
+  contentType: string
+  totalParts: number
   objectKey: string
   uploadId: string
   sizeBytes: bigint | number
@@ -375,6 +431,10 @@ export type UploadSessionCreateInput = {
 export type UploadSessionUncheckedCreateInput = {
   id?: string
   projectId: string
+  sourceAssetId: string
+  fileName: string
+  contentType: string
+  totalParts: number
   objectKey: string
   uploadId: string
   sizeBytes: bigint | number
@@ -390,6 +450,10 @@ export type UploadSessionUncheckedCreateInput = {
 
 export type UploadSessionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
   objectKey?: Prisma.StringFieldUpdateOperationsInput | string
   uploadId?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -407,6 +471,10 @@ export type UploadSessionUpdateInput = {
 export type UploadSessionUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
   objectKey?: Prisma.StringFieldUpdateOperationsInput | string
   uploadId?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -423,6 +491,10 @@ export type UploadSessionUncheckedUpdateInput = {
 export type UploadSessionCreateManyInput = {
   id?: string
   projectId: string
+  sourceAssetId: string
+  fileName: string
+  contentType: string
+  totalParts: number
   objectKey: string
   uploadId: string
   sizeBytes: bigint | number
@@ -438,6 +510,10 @@ export type UploadSessionCreateManyInput = {
 
 export type UploadSessionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
   objectKey?: Prisma.StringFieldUpdateOperationsInput | string
   uploadId?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -454,6 +530,10 @@ export type UploadSessionUpdateManyMutationInput = {
 export type UploadSessionUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
   objectKey?: Prisma.StringFieldUpdateOperationsInput | string
   uploadId?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -480,6 +560,10 @@ export type UploadSessionOrderByRelationAggregateInput = {
 export type UploadSessionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
+  sourceAssetId?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  contentType?: Prisma.SortOrder
+  totalParts?: Prisma.SortOrder
   objectKey?: Prisma.SortOrder
   uploadId?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -494,12 +578,17 @@ export type UploadSessionCountOrderByAggregateInput = {
 }
 
 export type UploadSessionAvgOrderByAggregateInput = {
+  totalParts?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
 }
 
 export type UploadSessionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
+  sourceAssetId?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  contentType?: Prisma.SortOrder
+  totalParts?: Prisma.SortOrder
   objectKey?: Prisma.SortOrder
   uploadId?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -515,6 +604,10 @@ export type UploadSessionMaxOrderByAggregateInput = {
 export type UploadSessionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
+  sourceAssetId?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  contentType?: Prisma.SortOrder
+  totalParts?: Prisma.SortOrder
   objectKey?: Prisma.SortOrder
   uploadId?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -528,6 +621,7 @@ export type UploadSessionMinOrderByAggregateInput = {
 }
 
 export type UploadSessionSumOrderByAggregateInput = {
+  totalParts?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
 }
 
@@ -579,6 +673,10 @@ export type EnumUploadStatusRecordFieldUpdateOperationsInput = {
 
 export type UploadSessionCreateWithoutProjectInput = {
   id?: string
+  sourceAssetId: string
+  fileName: string
+  contentType: string
+  totalParts: number
   objectKey: string
   uploadId: string
   sizeBytes: bigint | number
@@ -594,6 +692,10 @@ export type UploadSessionCreateWithoutProjectInput = {
 
 export type UploadSessionUncheckedCreateWithoutProjectInput = {
   id?: string
+  sourceAssetId: string
+  fileName: string
+  contentType: string
+  totalParts: number
   objectKey: string
   uploadId: string
   sizeBytes: bigint | number
@@ -639,6 +741,10 @@ export type UploadSessionScalarWhereInput = {
   NOT?: Prisma.UploadSessionScalarWhereInput | Prisma.UploadSessionScalarWhereInput[]
   id?: Prisma.UuidFilter<"UploadSession"> | string
   projectId?: Prisma.UuidFilter<"UploadSession"> | string
+  sourceAssetId?: Prisma.UuidFilter<"UploadSession"> | string
+  fileName?: Prisma.StringFilter<"UploadSession"> | string
+  contentType?: Prisma.StringFilter<"UploadSession"> | string
+  totalParts?: Prisma.IntFilter<"UploadSession"> | number
   objectKey?: Prisma.StringFilter<"UploadSession"> | string
   uploadId?: Prisma.StringFilter<"UploadSession"> | string
   sizeBytes?: Prisma.BigIntFilter<"UploadSession"> | bigint | number
@@ -654,6 +760,10 @@ export type UploadSessionScalarWhereInput = {
 
 export type UploadSessionCreateManyProjectInput = {
   id?: string
+  sourceAssetId: string
+  fileName: string
+  contentType: string
+  totalParts: number
   objectKey: string
   uploadId: string
   sizeBytes: bigint | number
@@ -669,6 +779,10 @@ export type UploadSessionCreateManyProjectInput = {
 
 export type UploadSessionUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
   objectKey?: Prisma.StringFieldUpdateOperationsInput | string
   uploadId?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -684,6 +798,10 @@ export type UploadSessionUpdateWithoutProjectInput = {
 
 export type UploadSessionUncheckedUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
   objectKey?: Prisma.StringFieldUpdateOperationsInput | string
   uploadId?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -699,6 +817,10 @@ export type UploadSessionUncheckedUpdateWithoutProjectInput = {
 
 export type UploadSessionUncheckedUpdateManyWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
   objectKey?: Prisma.StringFieldUpdateOperationsInput | string
   uploadId?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -717,6 +839,10 @@ export type UploadSessionUncheckedUpdateManyWithoutProjectInput = {
 export type UploadSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   projectId?: boolean
+  sourceAssetId?: boolean
+  fileName?: boolean
+  contentType?: boolean
+  totalParts?: boolean
   objectKey?: boolean
   uploadId?: boolean
   sizeBytes?: boolean
@@ -734,6 +860,10 @@ export type UploadSessionSelect<ExtArgs extends runtime.Types.Extensions.Interna
 export type UploadSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   projectId?: boolean
+  sourceAssetId?: boolean
+  fileName?: boolean
+  contentType?: boolean
+  totalParts?: boolean
   objectKey?: boolean
   uploadId?: boolean
   sizeBytes?: boolean
@@ -751,6 +881,10 @@ export type UploadSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types
 export type UploadSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   projectId?: boolean
+  sourceAssetId?: boolean
+  fileName?: boolean
+  contentType?: boolean
+  totalParts?: boolean
   objectKey?: boolean
   uploadId?: boolean
   sizeBytes?: boolean
@@ -768,6 +902,10 @@ export type UploadSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
 export type UploadSessionSelectScalar = {
   id?: boolean
   projectId?: boolean
+  sourceAssetId?: boolean
+  fileName?: boolean
+  contentType?: boolean
+  totalParts?: boolean
   objectKey?: boolean
   uploadId?: boolean
   sizeBytes?: boolean
@@ -781,7 +919,7 @@ export type UploadSessionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UploadSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "objectKey" | "uploadId" | "sizeBytes" | "completedPartsJson" | "completionPartsHash" | "objectVersionId" | "objectSha256" | "status" | "expiresAt" | "createdAt" | "updatedAt", ExtArgs["result"]["uploadSession"]>
+export type UploadSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "sourceAssetId" | "fileName" | "contentType" | "totalParts" | "objectKey" | "uploadId" | "sizeBytes" | "completedPartsJson" | "completionPartsHash" | "objectVersionId" | "objectSha256" | "status" | "expiresAt" | "createdAt" | "updatedAt", ExtArgs["result"]["uploadSession"]>
 export type UploadSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
 }
@@ -800,6 +938,10 @@ export type $UploadSessionPayload<ExtArgs extends runtime.Types.Extensions.Inter
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     projectId: string
+    sourceAssetId: string
+    fileName: string
+    contentType: string
+    totalParts: number
     objectKey: string
     uploadId: string
     sizeBytes: bigint
@@ -1237,6 +1379,10 @@ export interface Prisma__UploadSessionClient<T, Null = never, ExtArgs extends ru
 export interface UploadSessionFieldRefs {
   readonly id: Prisma.FieldRef<"UploadSession", 'String'>
   readonly projectId: Prisma.FieldRef<"UploadSession", 'String'>
+  readonly sourceAssetId: Prisma.FieldRef<"UploadSession", 'String'>
+  readonly fileName: Prisma.FieldRef<"UploadSession", 'String'>
+  readonly contentType: Prisma.FieldRef<"UploadSession", 'String'>
+  readonly totalParts: Prisma.FieldRef<"UploadSession", 'Int'>
   readonly objectKey: Prisma.FieldRef<"UploadSession", 'String'>
   readonly uploadId: Prisma.FieldRef<"UploadSession", 'String'>
   readonly sizeBytes: Prisma.FieldRef<"UploadSession", 'BigInt'>

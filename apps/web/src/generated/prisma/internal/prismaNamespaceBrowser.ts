@@ -304,6 +304,10 @@ export type StageTimingObservationScalarFieldEnum = (typeof StageTimingObservati
 export const UploadSessionScalarFieldEnum = {
   id: 'id',
   projectId: 'projectId',
+  sourceAssetId: 'sourceAssetId',
+  fileName: 'fileName',
+  contentType: 'contentType',
+  totalParts: 'totalParts',
   objectKey: 'objectKey',
   uploadId: 'uploadId',
   sizeBytes: 'sizeBytes',

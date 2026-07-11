@@ -391,6 +391,10 @@ model StageTimingObservation {
 model UploadSession {
   id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   projectId           String             @map("project_id") @db.Uuid
+  sourceAssetId       String             @map("source_asset_id") @db.Uuid
+  fileName            String             @map("file_name") @db.Text
+  contentType         String             @map("content_type") @db.VarChar(255)
+  totalParts          Int                @map("total_parts")
   objectKey           String             @map("object_key") @db.Text
   uploadId            String             @unique @map("upload_id") @db.VarChar(300)
   sizeBytes           BigInt             @map("size_bytes")

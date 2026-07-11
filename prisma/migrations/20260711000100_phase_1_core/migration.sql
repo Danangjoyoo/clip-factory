@@ -263,6 +263,10 @@ CREATE TABLE "stage_timing_observations" (
 CREATE TABLE "upload_sessions" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "project_id" UUID NOT NULL,
+    "source_asset_id" UUID NOT NULL,
+    "file_name" TEXT NOT NULL,
+    "content_type" VARCHAR(255) NOT NULL,
+    "total_parts" INTEGER NOT NULL,
     "object_key" TEXT NOT NULL,
     "upload_id" VARCHAR(300) NOT NULL,
     "size_bytes" BIGINT NOT NULL,
@@ -421,6 +425,7 @@ ALTER TABLE "stage_timing_observations" ADD CONSTRAINT "stage_timing_observation
 
 -- AddForeignKey
 ALTER TABLE "upload_sessions" ADD CONSTRAINT "upload_sessions_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "upload_sessions" ADD CONSTRAINT "upload_sessions_source_asset_id_fkey" FOREIGN KEY ("source_asset_id") REFERENCES "source_assets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE projects ADD CONSTRAINT projects_spend_nonnegative CHECK (openai_spend_microusd >= 0);
 ALTER TABLE source_assets ADD CONSTRAINT source_assets_display_path_nonempty CHECK (length(btrim(display_path)) > 0);

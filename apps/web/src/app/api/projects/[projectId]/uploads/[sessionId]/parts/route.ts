@@ -1,1 +1,2 @@
-export async function GET() { return Response.json({ error: 'not implemented' }, { status: 501 }); }
+import { storageComposition } from '../../../../../../../modules/storage/composition/storage.composition';
+export async function GET(request: Request, context: { params: Promise<{ projectId: string; sessionId: string }> }) { try { const { projectId, sessionId } = await context.params; const totalParts = Number(new URL(request.url).searchParams.get('totalParts')); return Response.json(await storageComposition().controller.resumeUpload(projectId, sessionId, totalParts)); } catch (error) { return Response.json({ error: 'UPLOAD_FAILED' }, { status: 400 }); } }

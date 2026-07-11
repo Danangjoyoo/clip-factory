@@ -1,2 +1,12 @@
 import type { StartUploadService } from '../../application/services/start-upload.service';
-export class UploadController { constructor(private readonly start: StartUploadService) {} async startUpload(projectId: string, body: unknown) { const input = body as { sourceAssetId: string; fileName: string; contentType: string; sizeBytes: string; totalParts: number }; return this.start.execute({ ...input, projectId, sizeBytes: BigInt(input.sizeBytes) }); } }
+import type { ResumeUploadService } from '../../application/services/resume-upload.service';
+import type { CompleteUploadService } from '../../application/services/complete-upload.service';
+import { CompleteUploadApiSchema, StartUploadApiSchema } from './dto/api/upload-api.dto';
+import { UploadError } from '../../application/services/upload-policy';
+export class UploadController {
+  constructor(private readonly start: StartUploadService, private readonly resume?: ResumeUploadService, private readonly complete?: CompleteUploadService) {}
+  async startUpload(projectId: string, body: unknown) { const input = StartUploadApiSchema.parse(body); return this.start.execute({ ...input, projectId, sizeBytes: BigInt(input.sizeBytes) }); }
+  async resumeUpload(projectId: string, sessionId: string, totalParts: number) { if (!this.resume) throw new Error('UPLOAD_RESUME_UNAVAILABLE'); return this.resume.execute({ projectId, sessionId, totalParts }); }
+  async completeUpload(projectId: string, sessionId: string, body: unknown) { if (!this.complete) throw new Error('UPLOAD_COMPLETE_UNAVAILABLE'); const input = CompleteUploadApiSchema.parse(body); return this.complete.execute({ projectId, sessionId, parts: input.parts.map((part) => ({ ...part, sizeBytes: BigInt(part.sizeBytes) })) }); }
+  static error(error: unknown) { if (error instanceof UploadError) return Response.json({ error: error.code }, { status: 400 }); if (error instanceof Error && error.name === 'ZodError') return Response.json({ error: 'INVALID_REQUEST' }, { status: 400 }); return Response.json({ error: 'UPLOAD_FAILED' }, { status: 500 }); }
+}
