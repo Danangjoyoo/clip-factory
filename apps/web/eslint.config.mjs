@@ -21,7 +21,9 @@ export default [
   // `tsc --noEmit` remains the authoritative TypeScript syntax/type gate.
   { ignores: ['src/**/*.{ts,tsx}', '**/*.ts', '**/*.tsx'] },
   {
-    files: ['src/**/domain/**/*.{ts,tsx}', 'src/**/application/**/*.{ts,tsx}'],
+    // Espree covers JavaScript/config fixtures; the custom scanner owns TS/TSX
+    // boundary policy until a TypeScript 7-compatible parser is available.
+    files: ['src/**/domain/**/*.{js,mjs}', 'src/**/application/**/*.{js,mjs}'],
     languageOptions: {
       parserOptions: {
         ecmaVersion: 'latest',

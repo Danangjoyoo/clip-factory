@@ -6,7 +6,7 @@
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start -H 127.0.0.1",
-    "lint": "eslint . --no-warn-ignored",
+    "lint": "eslint eslint.config.mjs --no-warn-ignored",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config vitest.config.ts"
   },

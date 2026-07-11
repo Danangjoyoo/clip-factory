@@ -176,5 +176,8 @@ test('rejects provider SDK subpaths through the TypeScript boundary policy', asy
       "import client from '@aws-sdk/client-s3';\nexport default client;\n",
   });
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /application.*must not import @aws-sdk\/client-s3/);
+  assert.match(
+    result.stderr,
+    /application.*must not import @aws-sdk\/client-s3/,
+  );
 });
