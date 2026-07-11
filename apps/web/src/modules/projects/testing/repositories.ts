@@ -64,6 +64,13 @@ export class InMemorySourceAssetRepository implements SourceAssetRepository {
     const updated = { ...value, objectKey: reference.key, objectVersionId: reference.versionId, objectSha256: reference.sha256, sizeBytes: reference.sizeBytes, health: 'LOCATED' as const, updatedAt: new Date() };
     this.items.set(projectId, updated); return updated;
   }
+  async relink(id: string, candidate: Pick<SourceAssetEntityDto, 'displayPath' | 'resolvedPath' | 'sizeBytes' | 'modifiedAt' | 'fingerprint' | 'probe' | 'health'>) {
+    const value = [...this.items.values()].find((item) => item.id === id);
+    if (!value) throw new Error('source not found');
+    const updated = { ...value, ...candidate, updatedAt: new Date() };
+    this.items.set(value.projectId, updated);
+    return updated;
+  }
 }
 export class InMemoryUnitOfWork {
   execute<T>(fn: (tx: unknown) => Promise<T>) {

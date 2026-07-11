@@ -21,6 +21,11 @@ export class SourceAssetDataService {
     return this.repository.deleteByProjectId(id, tx);
   }
   attachUploadedObject(projectId: string, reference: ImmutableObjectReference, tx: TransactionContext) {
+    if (!this.repository.attachUploadedObject) throw new Error('upload attachment unsupported');
     return this.repository.attachUploadedObject(projectId, reference, tx);
+  }
+  relink(id: string, candidate: Pick<import('../dto/entity/source-asset-entity.dto').SourceAssetEntityDto, 'displayPath' | 'resolvedPath' | 'sizeBytes' | 'modifiedAt' | 'fingerprint' | 'probe' | 'health'>, tx: TransactionContext) {
+    if (!this.repository.relink) throw new Error('relink unsupported');
+    return this.repository.relink(id, candidate, tx);
   }
 }

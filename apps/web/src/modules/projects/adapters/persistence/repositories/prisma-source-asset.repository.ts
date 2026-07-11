@@ -88,4 +88,8 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
     const r = await db.update({ where: { projectId }, data: { objectKey: reference.key, objectVersionId: reference.versionId, objectSha256: reference.sha256, sizeBytes: reference.sizeBytes, health: 'LOCATED' } });
     return sourceAssetRecordToEntity(r);
   }
+  async relink(id: string, candidate: Pick<import('../../../application/dto/entity/source-asset-entity.dto').SourceAssetEntityDto, 'displayPath' | 'resolvedPath' | 'sizeBytes' | 'modifiedAt' | 'fingerprint' | 'probe' | 'health'>, tx: TransactionContext) {
+    const r = await this.db(tx).update({ where: { id }, data: { displayPath: candidate.displayPath, resolvedPath: candidate.resolvedPath, sizeBytes: candidate.sizeBytes, modifiedAt: candidate.modifiedAt, fingerprint: candidate.fingerprint, probeJson: toPrismaJsonInput(candidate.probe), health: candidate.health } });
+    return sourceAssetRecordToEntity(r);
+  }
 }

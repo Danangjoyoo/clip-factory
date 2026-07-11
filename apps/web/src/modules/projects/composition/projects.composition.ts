@@ -14,6 +14,8 @@ import { ProjectController } from '../delivery/http/project.controller';
 import { GetWorkerSourceLocatorService } from '../application/services/get-worker-source-locator.service';
 import { ApplySourceValidationService } from '../application/services/apply-source-validation.service';
 import { WorkerSourceLocatorController } from '../delivery/http/worker-source-locator.controller';
+import { RelinkSourceController } from '../delivery/http/relink-source.controller';
+import { RelinkSourceService } from '../application/services/relink-source.service';
 import { loadServerEnv } from '../../../config/server-env';
 import { PrismaSourceValidationReceiptRepository } from '../adapters/persistence/repositories/prisma-source-validation-receipt.repository';
 const uow: UnitOfWork = {
@@ -42,5 +44,6 @@ export function projectsComposition() {
       ),
       loadServerEnv().INTERNAL_SERVICE_TOKEN,
     ),
+    relinkSourceController: new RelinkSourceController(new RelinkSourceService(uow, sources, workflows)),
   };
 }
