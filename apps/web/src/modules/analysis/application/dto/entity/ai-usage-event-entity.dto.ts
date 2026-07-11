@@ -3,9 +3,9 @@ export interface AIUsageEventEntityDto {
   projectId: string;
   analysisRunId: string;
   clipId?: string | null;
-  reservationCallId?: string;
-  reservationProjectId?: string;
-  reservationAnalysisRunId?: string;
+  reservationCallId?: string | null;
+  reservationProjectId?: string | null;
+  reservationAnalysisRunId?: string | null;
   providerResponseId: string;
   requestHash: string;
   purpose: string;

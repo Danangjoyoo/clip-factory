@@ -11,7 +11,7 @@ export type AnalysisRunRecordDto = {
   actualMicrousd: bigint;
   uncertainCallCount: number;
   uncertainReservedMicrousd: bigint;
-  status: string;
+  status: 'PLANNED' | 'VERIFYING_BUDGET' | 'AWAITING_BUDGET' | 'RUNNING' | 'PAID_CALL_UNCERTAIN' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   createdAt: Date;
   updatedAt: Date;
 };

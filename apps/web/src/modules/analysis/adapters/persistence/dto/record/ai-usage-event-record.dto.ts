@@ -11,11 +11,11 @@ export type AIUsageEventRecordDto = {
   promptVersion: string;
   schemaVersion: string;
   pricingVersion: string;
-  inputTokens: bigint;
-  cachedInputTokens: bigint;
-  cacheWriteInputTokens: bigint;
-  outputTokens: bigint;
-  reasoningTokens: bigint;
+  inputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteInputTokens: number;
+  outputTokens: number;
+  reasoningTokens: number;
   pricingTier: string;
   costMicrousd: bigint;
   occurredAt: Date;

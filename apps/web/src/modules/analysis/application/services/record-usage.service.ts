@@ -12,7 +12,7 @@ import type { AnalysisUnitOfWork } from '../ports/unit-of-work.port';
 export type UsageEntityInput = Omit<
   AIUsageEventEntityDto,
   'id' | 'costMicrousd'
-> & { callId: string };
+> & { callId: string; uncertainReservedMicrousd?: bigint };
 export class AnalysisError extends Error {
   constructor(public readonly code: string) {
     super(code);
@@ -21,6 +21,12 @@ export class AnalysisError extends Error {
 const same = (e: AIUsageEventEntityDto, i: UsageEntityInput, cost: bigint) =>
   e.projectId === i.projectId &&
   e.analysisRunId === i.analysisRunId &&
+  e.clipId === i.clipId &&
+  (e.reservationCallId ?? i.callId) === (i.reservationCallId ?? i.callId) &&
+  (e.reservationProjectId ?? i.projectId) ===
+    (i.reservationProjectId ?? i.projectId) &&
+  (e.reservationAnalysisRunId ?? i.analysisRunId) ===
+    (i.reservationAnalysisRunId ?? i.analysisRunId) &&
   e.providerResponseId === i.providerResponseId &&
   e.requestHash === i.requestHash &&
   e.purpose === i.purpose &&
@@ -36,7 +42,9 @@ const same = (e: AIUsageEventEntityDto, i: UsageEntityInput, cost: bigint) =>
   e.reasoningTokens === i.reasoningTokens &&
   e.pricingTier === i.pricingTier &&
   e.costMicrousd === cost &&
-  e.occurredAt.toISOString() === i.occurredAt.toISOString();
+  e.occurredAt.toISOString() === i.occurredAt.toISOString() &&
+  JSON.stringify(e.responseObjectReference ?? null) ===
+    JSON.stringify(i.responseObjectReference ?? null);
 export class RecordUsageService {
   constructor(
     private readonly unitOfWork: AnalysisUnitOfWork,
@@ -91,6 +99,12 @@ export class RecordUsageService {
         tx,
       );
       await this.runs.addActualCost(input.analysisRunId, cost, tx);
+      if (input.uncertainReservedMicrousd !== undefined)
+        await this.runs.reconcileUncertain(
+          input.analysisRunId,
+          input.uncertainReservedMicrousd,
+          tx,
+        );
       return event;
     });
   }

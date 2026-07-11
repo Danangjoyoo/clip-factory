@@ -8,10 +8,11 @@ import { PrismaAIUsageEventRepository } from '../adapters/persistence/repositori
 import { PrismaAnalysisRunRepository } from '../adapters/persistence/repositories/prisma-analysis-run.repository';
 import { PrismaPaidCallReservationRepository } from '../adapters/persistence/repositories/prisma-paid-call-reservation.repository';
 import { UsageCallbackController } from '../delivery/http/usage-callback.controller';
+import type { AnalysisTransaction } from '../application/ports/unit-of-work.port';
 export const analysisComposition = () => {
   const env = loadServerEnv();
   const uow = {
-    execute: <T>(fn: (tx: unknown) => Promise<T>) =>
+    execute: <T>(fn: (tx: AnalysisTransaction) => Promise<T>) =>
       prisma.$transaction((tx) => fn(tx)),
   };
   const service = new RecordUsageService(
