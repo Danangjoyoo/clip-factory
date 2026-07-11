@@ -11,11 +11,15 @@ async def execute_activity_once(
     *,
     start_to_close_timeout: timedelta,
     heartbeat_timeout: timedelta | None = None,
+    on_started: Callable[[Any], None] | None = None,
 ) -> Any:
-    return await workflow.execute_activity(
+    handle = workflow.start_activity(
         activity,
         arg,
         start_to_close_timeout=start_to_close_timeout,
         heartbeat_timeout=heartbeat_timeout,
         retry_policy=RetryPolicy(maximum_attempts=1),
     )
+    if on_started:
+        on_started(handle)
+    return await handle

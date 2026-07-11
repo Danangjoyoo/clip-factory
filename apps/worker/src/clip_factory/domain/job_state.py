@@ -39,6 +39,21 @@ _TRANSITIONS = {
     (JobState.AWAITING_REVIEW, "cancel"): JobState.CANCELLED,
 }
 
+for _state in JobState:
+    if _state not in {JobState.COMPLETED, JobState.CANCELLED}:
+        _TRANSITIONS[(_state, "cancel")] = JobState.CANCELLED
+
+_TRANSITIONS.update(
+    {
+        (JobState.VALIDATING_SOURCE, "source_missing"): JobState.SOURCE_MISSING,
+        (JobState.SOURCE_MISSING, "relink"): JobState.RELINKING_SOURCE,
+        (JobState.RELINKING_SOURCE, "preprocess"): JobState.PREPROCESSING,
+        (JobState.TRANSCRIBING, "review"): JobState.AWAITING_REVIEW,
+    (JobState.AWAITING_REVIEW, "manual_clip"): JobState.AWAITING_REVIEW,
+    (JobState.AWAITING_REVIEW, "review"): JobState.AWAITING_REVIEW,
+    }
+)
+
 
 def transition(current: JobState, event: str) -> JobState:
     try:
