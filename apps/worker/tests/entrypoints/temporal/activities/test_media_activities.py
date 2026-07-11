@@ -34,6 +34,7 @@ def test_preprocess_activity_payload_contains_no_paths() -> None:
         preprocess_source(
             cast(PreprocessSource, Service()),
             PreprocessSourceInput(asset_id, project_id),
+            lambda *_: None,
         )
     )
     assert "/" not in str(result.source_asset_id)
