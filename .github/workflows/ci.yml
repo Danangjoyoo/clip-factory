@@ -1,0 +1,127 @@
+name: CI
+on:
+  pull_request: { branches: [master] }
+  push: { branches: [master] }
+  workflow_dispatch:
+permissions: { contents: read }
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  {
+    CI: 'true',
+    NODE_VERSION: '24.18.0',
+    PNPM_VERSION: '11.11.0',
+    UV_VERSION: '0.11.28',
+  }
+jobs:
+  web-quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: '24.18.0', cache: pnpm }
+      - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm --filter @clip-factory/web lint
+      - run: pnpm --filter @clip-factory/web typecheck
+      - run: pnpm exec vitest run --project unit --coverage
+      - run: pnpm --filter @clip-factory/web build
+  worker-quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+        with:
+          { version: '0.11.28', python-version: '3.12.11', enable-cache: true }
+      - run: uv sync --directory apps/worker --frozen
+      - run: uv run --directory apps/worker ruff format --check src tests
+      - run: uv run --directory apps/worker ruff check src tests
+      - run: uv run --directory apps/worker mypy src tests
+      - run: uv run --directory apps/worker pytest --cov=clip_factory --cov-fail-under=90
+  architecture-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: '24.18.0', cache: pnpm }
+      - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
+      - run: pnpm install --frozen-lockfile && pnpm test:architecture && pnpm test:contracts
+  migrations:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.5-bookworm@sha256:fbcea1bd13b6a882cd6caa6b58db3ae5c102efe50ec625b3e2a5cbc50db5bfe4
+        env:
+          {
+            POSTGRES_DB: clip_factory_test,
+            POSTGRES_USER: clip_factory,
+            POSTGRES_PASSWORD: clip_factory_test,
+          }
+        ports: ['5432:5432']
+    env:
+      {
+        DATABASE_URL: 'postgresql://clip_factory:clip_factory_test@127.0.0.1:5432/clip_factory_test',
+      }
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: '24.18.0', cache: pnpm }
+      - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile
+      - run: pnpm prisma:generate && pnpm exec prisma validate && pnpm db:migrate:deploy
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: '24.18.0', cache: pnpm }
+      - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile
+      - run: node scripts/ci-integration.mjs -- pnpm test:integration
+        env:
+          COMPOSE_PROJECT_NAME: clip-factory-ci-${{ github.run_id }}
+          WEB_COMMAND: pnpm --filter @clip-factory/web start --hostname 127.0.0.1 --port 3000
+          WORKER_COMMAND: uv run --directory apps/worker clip-factory-worker --adapter fake
+  media:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+        with:
+          { version: '0.11.28', python-version: '3.12.11', enable-cache: true }
+      - run: uv sync --directory apps/worker --frozen && scripts/bootstrap-native.sh --platform linux-x86_64 --check-sha256
+      - run: PATH="$PWD/.tools/bin:$PATH" uv run --directory apps/worker pytest tests/media -q
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: '24.18.0', cache: pnpm }
+      - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium
+      - run: node scripts/ci-e2e.mjs -- pnpm test:e2e
+        env:
+          COMPOSE_PROJECT_NAME: clip-factory-e2e-${{ github.run_id }}
+          WEB_COMMAND: pnpm --filter @clip-factory/web start --hostname 127.0.0.1 --port 3000
+          WORKER_COMMAND: uv run --directory apps/worker clip-factory-worker --adapter fake
+  docker-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        with:
+          {
+            context: .,
+            file: infra/compose/web.Dockerfile,
+            push: false,
+            load: false,
+          }
+      - run: docker compose --env-file .env.example -f infra/compose/docker-compose.yml config --quiet
