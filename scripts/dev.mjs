@@ -42,7 +42,7 @@ export async function start({
         code === 0 ? resolve() : reject(new Error(`docker exited ${code}`)),
       );
     }),
-  preflight = () => import('./preflight.mjs'),
+  preflight = () => import('./preflight.mjs').then(({ check }) => check()),
   waitMs = 15000,
 } = {}) {
   await preflight();

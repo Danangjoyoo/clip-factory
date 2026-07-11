@@ -1,7 +1,26 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import test from 'node:test';
-import { shutdown } from '../../scripts/dev.mjs';
+import { shutdown, start } from '../../scripts/dev.mjs';
+
+test('start does not launch compose or worker after preflight failure', async () => {
+  const calls = [];
+  await assert.rejects(
+    start({
+      preflight: async () => {
+        throw new Error('missing native dependency');
+      },
+      spawnProcess: () => {
+        calls.push('worker');
+      },
+      run: async () => {
+        calls.push('compose');
+      },
+    }),
+    /missing native dependency/,
+  );
+  assert.deepEqual(calls, []);
+});
 
 test('shutdown terminates worker before compose', async () => {
   const events = [];

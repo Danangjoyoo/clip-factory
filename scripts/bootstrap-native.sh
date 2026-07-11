@@ -6,12 +6,15 @@ DOWNLOADS="$TOOLS/downloads"
 FFMPEG_VERSION="8.1.2"
 FFMPEG_SHA256="464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c"
 PLATFORM="${1:-}"
+DRY_RUN=false
 if [[ "$PLATFORM" == "--platform" ]]; then PLATFORM="${2:?--platform requires darwin-arm64 or linux-x86_64}"
 elif [[ -z "$PLATFORM" && "$(uname -s)" == Darwin && "$(uname -m)" == arm64 ]]; then PLATFORM=darwin-arm64
 elif [[ -z "$PLATFORM" && "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]]; then PLATFORM=linux-x86_64
 fi
+if [[ "${3:-}" == "--dry-run" || "${1:-}" == "--dry-run" ]]; then DRY_RUN=true; fi
 mkdir -p "$DOWNLOADS" "$TOOLS/bin"
-"$ROOT/scripts/bootstrap-uv.sh"
+if $DRY_RUN; then "$ROOT/scripts/bootstrap-uv.sh" --platform "$PLATFORM" --dry-run; exit 0; fi
+"$ROOT/scripts/bootstrap-uv.sh" --platform "$PLATFORM"
 case "$PLATFORM" in
   darwin-arm64) command -v brew >/dev/null; PKG_CONFIG_PATH="$(brew --prefix libass)/lib/pkgconfig:$(brew --prefix x264)/lib/pkgconfig"; FFMPEG_PLATFORM_FLAGS=(--enable-videotoolbox); BUILD_JOBS="$(sysctl -n hw.logicalcpu)" ;;
   linux-x86_64) sudo apt-get update; sudo apt-get install --yes --no-install-recommends build-essential pkg-config nasm libass-dev libx264-dev ca-certificates curl xz-utils; PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig; FFMPEG_PLATFORM_FLAGS=(); BUILD_JOBS="$(getconf _NPROCESSORS_ONLN)" ;;
