@@ -118,6 +118,8 @@ export interface ProgressPresentation {
   totalUnits: number;
   unit: string;
   occurredAt: string;
+  status?: string;
+  heartbeatAt?: string;
 }
 export function calculateProgress(
   input: ProgressCalculationInput,

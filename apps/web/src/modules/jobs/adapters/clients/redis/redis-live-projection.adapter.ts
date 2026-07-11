@@ -39,7 +39,10 @@ export class RedisLiveProjectionAdapter implements LiveProjectionPort {
         continue;
       }
       for (const stream of rows)
-        for (const [id, fields] of stream.messages) {
+        for (const message of stream.messages) {
+          const [id, fields] = Array.isArray(message)
+            ? message
+            : [message.id, message.message];
           cursor = id;
           yield {
             id,
