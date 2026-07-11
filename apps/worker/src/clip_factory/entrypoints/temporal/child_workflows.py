@@ -1,5 +1,7 @@
 from datetime import timedelta
 from temporalio import activity, workflow
+from temporalio.common import RetryPolicy
+from temporalio.exceptions import ActivityError
 
 from clip_factory.application.execute_analysis_child import ExecuteAnalysisChild
 from clip_factory.domain.cost import verify_remaining_budget
@@ -14,6 +16,21 @@ from clip_factory.ports.render_batch import (
     RenderBatchChildInput,
     RenderBatchChildResult,
 )
+from clip_factory.ports.highlight_model import HighlightResponse
+from clip_factory.ports.paid_call import (
+    OPENAI_PRE_SEND_FAILURE,
+    PaidCallInput,
+)
+from clip_factory.entrypoints.temporal.activities.highlight_activities import (
+    call_openai_once_activity,
+    reconcile_paid_call_activity,
+)
+
+PAID_ACTIVITY_OPTIONS = {
+    "start_to_close_timeout": timedelta(minutes=30),
+    "heartbeat_timeout": timedelta(seconds=30),
+    "retry_policy": RetryPolicy(maximum_attempts=1),
+}
 
 
 class _EmptyAnalysisExecutor:
@@ -38,15 +55,19 @@ async def verify_analysis_budget(input: tuple[int, tuple[int, ...]]) -> bool:
 @activity.defn
 async def persist_budget_action(input: PersistBudgetActionInput) -> BudgetActionResult:
     action = input.action
-    accepted = action.kind == "CANCEL" or (
-        action.kind == "RAISE_CAP"
-        and action.new_cap_microusd is not None
-        and action.new_cap_microusd >= 0
-    ) or (
-        action.kind == "CHOOSE_COVERAGE"
-        and action.start_ms is not None
-        and action.end_ms is not None
-        and 0 <= action.start_ms < action.end_ms
+    accepted = (
+        action.kind == "CANCEL"
+        or (
+            action.kind == "RAISE_CAP"
+            and action.new_cap_microusd is not None
+            and action.new_cap_microusd >= 0
+        )
+        or (
+            action.kind == "CHOOSE_COVERAGE"
+            and action.start_ms is not None
+            and action.end_ms is not None
+            and 0 <= action.start_ms < action.end_ms
+        )
     )
     return BudgetActionResult(accepted)
 
@@ -126,3 +147,64 @@ class RenderBatchChildWorkflow:
     @workflow.run
     async def run(self, input: RenderBatchChildInput) -> RenderBatchChildResult:
         return RenderBatchChildResult(input.clip_ids)
+
+
+@workflow.defn
+class PaidCallWorkflow:
+    def __init__(self) -> None:
+        self._state = "QUEUED"
+        self._acknowledged = False
+
+    @workflow.query
+    def state(self) -> str:
+        return self._state
+
+    @workflow.signal
+    def retry_uncertain_paid_call(self, acknowledge_possible_prior_spend: bool) -> None:
+        if acknowledge_possible_prior_spend:
+            self._acknowledged = True
+
+    @workflow.run
+    async def run(self, input: PaidCallInput) -> HighlightResponse:
+        self._state = "SENT"
+        try:
+            result = await workflow.execute_activity(
+                call_openai_once_activity,
+                input,
+                start_to_close_timeout=timedelta(minutes=30),
+                heartbeat_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(maximum_attempts=1),
+            )
+            self._state = "COMPLETED"
+            return result
+        except ActivityError as error:
+            cause = error.cause
+            if getattr(cause, "type", None) == OPENAI_PRE_SEND_FAILURE:
+                self._state = "PRE_SEND_FAILURE"
+                raise
+            self._state = "PAID_CALL_UNCERTAIN"
+            await workflow.wait_condition(lambda: self._acknowledged)
+            reconciled = await workflow.execute_activity(
+                reconcile_paid_call_activity,
+                input,
+                start_to_close_timeout=timedelta(minutes=2),
+            )
+            if reconciled is not None:
+                self._state = "COMPLETED"
+                return reconciled
+            fresh = PaidCallInput(
+                input.project_id,
+                input.analysis_run_id,
+                input.request,
+                f"{input.call_id}-retry",
+                input.worst_case_microusd,
+            )
+            result = await workflow.execute_activity(
+                call_openai_once_activity,
+                fresh,
+                start_to_close_timeout=timedelta(minutes=30),
+                heartbeat_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(maximum_attempts=1),
+            )
+            self._state = "COMPLETED"
+            return result

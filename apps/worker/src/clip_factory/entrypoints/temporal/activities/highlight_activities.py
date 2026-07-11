@@ -1,5 +1,6 @@
 from typing import Any, Awaitable, Callable
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 from clip_factory.ports.highlight_model import HighlightRequest
 from clip_factory.ports.paid_call import PaidCallInput, call_openai_once
@@ -26,4 +27,17 @@ def build_highlight_activity(
 async def call_openai_once_activity(input: PaidCallInput) -> Any:
     if _paid_model is None or _paid_dependencies is None:
         raise RuntimeError("paid highlight activity is not configured")
-    return await call_openai_once(_paid_model, _paid_dependencies, input)
+    try:
+        return await call_openai_once(_paid_model, _paid_dependencies, input)
+    except Exception as exc:
+        error_type = getattr(exc, "error_type", "OPENAI_OUTCOME_UNCERTAIN")
+        raise ApplicationError(str(exc), type=error_type, non_retryable=True) from exc
+
+
+@activity.defn
+async def reconcile_paid_call_activity(input: PaidCallInput) -> Any:
+    if _paid_dependencies is None:
+        raise RuntimeError("paid highlight activity is not configured")
+    from clip_factory.ports.paid_call import reconcile_paid_call
+
+    return await reconcile_paid_call(_paid_dependencies, input)

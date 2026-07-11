@@ -28,7 +28,7 @@ def rank_candidates(
         items, key=lambda item: (-item.overall_score, item.start_ms)
     ):
         if candidate.rank and ranks.get(candidate.rank, 0) > 1:
-            continue
+            raise HighlightValidationError("duplicate candidate rank")
         try:
             if window is not None:
                 validate_candidate(candidate, window, maximum_duration_ms)
@@ -39,7 +39,7 @@ def rank_candidates(
                     maximum_duration_ms,
                 )
         except HighlightValidationError:
-            continue
+            raise
         if any(
             intersection_over_union(
                 TimeRange(candidate.start_ms, candidate.end_ms),

@@ -57,13 +57,12 @@ class OpenAIHighlightAdapter:
             parsed = _response_json(response)
             response_id = getattr(response, "id", "")
             usage_value = getattr(response, "usage", None)
-        candidates = tuple(
-            candidate
-            for item in parsed.get("candidates", [])
-            if isinstance(item, dict)
-            for candidate in (_safe_candidate(item),)
-            if candidate is not None
-        )
+        raw_candidates = parsed.get("candidates", [])
+        if not isinstance(raw_candidates, list):
+            raise ValueError("malformed highlight candidates")
+        candidates = tuple(_candidate(item) for item in raw_candidates if isinstance(item, dict))
+        if len(candidates) != len(raw_candidates):
+            raise ValueError("malformed highlight candidate")
         return HighlightResponse(candidates, response_id, _usage(usage_value))
 
 
