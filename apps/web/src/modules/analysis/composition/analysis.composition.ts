@@ -9,6 +9,7 @@ import { PrismaAnalysisRunRepository } from '../adapters/persistence/repositorie
 import { PrismaPaidCallReservationRepository } from '../adapters/persistence/repositories/prisma-paid-call-reservation.repository';
 import { UsageCallbackController } from '../delivery/http/usage-callback.controller';
 import type { AnalysisTransaction } from '../application/ports/unit-of-work.port';
+import { ReconcileUncertainPaidCallService } from '../application/services/reconcile-uncertain-paid-call.service';
 export const analysisComposition = () => {
   const env = loadServerEnv();
   const uow = {
@@ -24,6 +25,7 @@ export const analysisComposition = () => {
     ),
   );
   return {
+    reconcileUncertainPaidCallService: new ReconcileUncertainPaidCallService(service),
     usageCallbackController: new UsageCallbackController(
       service,
       env.INTERNAL_SERVICE_TOKEN,
