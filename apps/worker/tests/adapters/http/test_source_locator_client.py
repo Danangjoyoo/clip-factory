@@ -1,4 +1,5 @@
 import json
+from typing import cast
 from urllib.request import Request
 
 from clip_factory.adapters.http.source_locator_client import HttpSourceLocatorClient
@@ -24,4 +25,6 @@ def test_internal_validation_request_is_only_place_with_raw_path() -> None:
         )
     )
     assert "/Users/me/a.mov" not in requests[0].full_url
-    assert "/Users/me/a.mov" in requests[1].data.decode()
+    payload = cast(bytes, requests[1].data)
+    assert payload is not None
+    assert "/Users/me/a.mov" in payload.decode()
