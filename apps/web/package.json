@@ -13,7 +13,10 @@
   "dependencies": {
     "@clip-factory/config": "workspace:*",
     "@clip-factory/contracts": "workspace:*",
+    "@prisma/adapter-pg": "7.0.0",
+    "@prisma/client": "7.0.0",
     "next": "16.2.10",
+    "pg": "^8.22.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "zod": "4.4.3"

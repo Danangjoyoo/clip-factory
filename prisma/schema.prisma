@@ -1,0 +1,422 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/web/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectModeRecord {
+  AI_HIGHLIGHTS
+  MANUAL
+}
+
+enum ProjectStatusRecord {
+  DRAFT
+  VALIDATING_SOURCE
+  UPLOADING
+  QUEUED
+  PREPROCESSING
+  TRANSCRIBING
+  VERIFYING_BUDGET
+  AWAITING_BUDGET
+  ANALYZING
+  PAID_CALL_UNCERTAIN
+  GENERATING_PREVIEWS
+  AWAITING_REVIEW
+  RENDERING
+  COMPLETED
+  FAILED
+  CANCELLED
+  SOURCE_MISSING
+  SOURCE_CHANGED
+  SOURCE_NOT_ALLOWED
+  RELINKING_SOURCE
+}
+
+enum SourceKindRecord {
+  LOCAL_FILE
+  BROWSER_UPLOAD
+}
+
+enum SourceHealthRecord {
+  UNKNOWN
+  LOCATED
+  HEALTHY
+  MISSING
+  CHANGED
+  NOT_ALLOWED
+  INVALID
+}
+
+enum AnalysisStatusRecord {
+  PLANNED
+  VERIFYING_BUDGET
+  AWAITING_BUDGET
+  RUNNING
+  PAID_CALL_UNCERTAIN
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ClipOriginRecord {
+  AI_HIGHLIGHT
+  MANUAL
+}
+
+enum ClipStateRecord {
+  CANDIDATE
+  ACCEPTED
+  REJECTED
+  PREVIEW_READY
+  RENDERING
+  RENDERED
+  FAILED
+}
+
+enum RenderStatusRecord {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum JobStatusRecord {
+  QUEUED
+  RUNNING
+  WAITING
+  COMPLETED
+  FAILED
+  CANCELLED
+  WORKER_OFFLINE
+}
+
+enum UploadStatusRecord {
+  CREATED
+  UPLOADING
+  COMPLETED
+  ABORTED
+  EXPIRED
+}
+
+enum PaidCallStatusRecord {
+  RESERVED
+  SENT
+  COMPLETED
+  UNCERTAIN
+  ABANDONED
+}
+
+enum AllocationMethodRecord {
+  EQUAL_SHARE
+}
+
+enum ReasoningRecord {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  XHIGH
+  MAX
+}
+
+enum PlatformPresetRecord {
+  YOUTUBE_SHORTS
+  INSTAGRAM_REELS
+  TIKTOK
+}
+
+model Project {
+  id                    String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String                   @db.VarChar(200)
+  mode                  ProjectModeRecord
+  languageTag           String                   @map("language_tag") @db.VarChar(35)
+  defaultMaxClipSeconds Int                      @map("default_max_clip_seconds")
+  defaultPlatformPreset PlatformPresetRecord     @map("default_platform_preset")
+  status                ProjectStatusRecord      @default(DRAFT)
+  activeWorkflowId      String?                  @map("active_workflow_id") @db.Uuid
+  openaiSpendMicrousd   BigInt                   @default(0) @map("openai_spend_microusd")
+  createdAt             DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sourceAsset           SourceAsset?
+  transcript            Transcript?
+  analysisRuns          AnalysisRun[]
+  usageEvents           AIUsageEvent[]
+  paidCallReservations  PaidCallReservation[]
+  clips                 Clip[]
+  renders               Render[]
+  jobProjections        JobProjection[]
+  timingObservations    StageTimingObservation[]
+  uploadSessions        UploadSession[]
+
+  @@index([status, createdAt])
+  @@map("projects")
+}
+
+model SourceAsset {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String             @unique @map("project_id") @db.Uuid
+  kind            SourceKindRecord
+  displayPath     String             @map("display_path") @db.Text
+  resolvedPath    String?            @map("resolved_path") @db.Text
+  objectKey       String?            @map("object_key") @db.Text
+  objectVersionId String?            @map("object_version_id") @db.Text
+  objectSha256    String?            @map("object_sha256") @db.Char(64)
+  sizeBytes       BigInt?            @map("size_bytes")
+  modifiedAt      DateTime?          @map("modified_at") @db.Timestamptz(3)
+  fingerprint     String?            @db.VarChar(128)
+  probeJson       Json?              @map("probe_json") @db.JsonB
+  health          SourceHealthRecord @default(UNKNOWN)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  transcript      Transcript?
+
+  @@index([health])
+  @@map("source_assets")
+}
+
+model Transcript {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String      @unique @map("project_id") @db.Uuid
+  sourceAssetId   String      @unique @map("source_asset_id") @db.Uuid
+  backend         String      @db.VarChar(100)
+  model           String      @db.VarChar(200)
+  modelRevision   String      @map("model_revision") @db.VarChar(200)
+  weightsSha256   String?     @map("weights_sha256") @db.Char(64)
+  languageTag     String      @map("language_tag") @db.VarChar(35)
+  objectBucket    String      @default("clip-factory") @map("object_bucket") @db.VarChar(63)
+  objectKey       String      @map("object_key") @db.Text
+  objectVersionId String?     @map("object_version_id") @db.Text
+  objectSha256    String      @map("object_sha256") @db.Char(64)
+  durationMs      Int         @map("duration_ms")
+  wordCount       Int         @map("word_count")
+  runtimeMs       Int         @map("runtime_ms")
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  project         Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceAsset     SourceAsset @relation(fields: [sourceAssetId], references: [id], onDelete: Cascade)
+
+  @@map("transcripts")
+}
+
+model AnalysisRun {
+  id                        String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId                 String                @map("project_id") @db.Uuid
+  modelId                   String                @map("model_id") @db.VarChar(200)
+  reasoning                 ReasoningRecord
+  promptVersion             String                @map("prompt_version") @db.VarChar(100)
+  schemaVersion             String                @map("schema_version") @db.VarChar(30)
+  pricingVersion            String                @map("pricing_version") @db.VarChar(100)
+  budgetMicrousd            BigInt                @map("budget_microusd")
+  safetyNumerator           Int                   @default(3) @map("safety_numerator")
+  safetyDenominator         Int                   @default(2) @map("safety_denominator")
+  coverageStartMs           Int                   @map("coverage_start_ms")
+  coverageEndMs             Int                   @map("coverage_end_ms")
+  estimatedMaxMicrousd      BigInt                @map("estimated_max_microusd")
+  actualMicrousd            BigInt                @default(0) @map("actual_microusd")
+  uncertainCallCount        Int                   @default(0) @map("uncertain_call_count")
+  uncertainReservedMicrousd BigInt                @default(0) @map("uncertain_reserved_microusd")
+  status                    AnalysisStatusRecord  @default(PLANNED)
+  createdAt                 DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                 DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  project                   Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  usageEvents               AIUsageEvent[]
+  allocations               CostAllocation[]
+  clips                     Clip[]
+  paidCallReservations      PaidCallReservation[]
+
+  @@index([projectId, createdAt])
+  @@index([status])
+  @@map("analysis_runs")
+}
+
+model AIUsageEvent {
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId             String               @map("project_id") @db.Uuid
+  analysisRunId         String               @map("analysis_run_id") @db.Uuid
+  clipId                String?              @map("clip_id") @db.Uuid
+  providerResponseId    String               @unique @map("provider_response_id") @db.VarChar(200)
+  requestHash           String               @map("request_hash") @db.Char(64)
+  purpose               String               @db.VarChar(100)
+  modelId               String               @map("model_id") @db.VarChar(200)
+  reasoning             ReasoningRecord
+  promptVersion         String               @map("prompt_version") @db.VarChar(100)
+  schemaVersion         String               @map("schema_version") @db.VarChar(30)
+  pricingVersion        String               @map("pricing_version") @db.VarChar(100)
+  inputTokens           Int                  @map("input_tokens")
+  cachedInputTokens     Int                  @map("cached_input_tokens")
+  cacheWriteInputTokens Int                  @map("cache_write_input_tokens")
+  outputTokens          Int                  @map("output_tokens")
+  reasoningTokens       Int                  @map("reasoning_tokens")
+  pricingTier           String               @map("pricing_tier") @db.VarChar(50)
+  costMicrousd          BigInt               @map("cost_microusd")
+  occurredAt            DateTime             @map("occurred_at") @db.Timestamptz(3)
+  createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  project               Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analysisRun           AnalysisRun          @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  clip                  Clip?                @relation(fields: [clipId], references: [id], onDelete: SetNull)
+  paidCallReservation   PaidCallReservation?
+
+  @@index([analysisRunId, occurredAt])
+  @@map("ai_usage_events")
+}
+
+model PaidCallReservation {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId          String               @map("project_id") @db.Uuid
+  analysisRunId      String               @map("analysis_run_id") @db.Uuid
+  callId             String               @unique @map("call_id") @db.Uuid
+  requestHash        String               @map("request_hash") @db.Char(64)
+  worstCaseMicrousd  BigInt               @map("worst_case_microusd")
+  status             PaidCallStatusRecord @default(RESERVED)
+  providerResponseId String?              @unique @map("provider_response_id") @db.VarChar(200)
+  responseObjectKey  String?              @map("response_object_key") @db.Text
+  usageEventId       String?              @unique @map("usage_event_id") @db.Uuid
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  sentAt             DateTime?            @map("sent_at") @db.Timestamptz(3)
+  completedAt        DateTime?            @map("completed_at") @db.Timestamptz(3)
+  project            Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analysisRun        AnalysisRun          @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  usageEvent         AIUsageEvent?        @relation(fields: [usageEventId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([analysisRunId, status])
+  @@map("paid_call_reservations")
+}
+
+model CostAllocation {
+  id             String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  analysisRunId  String                 @map("analysis_run_id") @db.Uuid
+  clipId         String                 @map("clip_id") @db.Uuid
+  method         AllocationMethodRecord @default(EQUAL_SHARE)
+  amountMicrousd BigInt                 @map("amount_microusd")
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  analysisRun    AnalysisRun            @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  clip           Clip                   @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  @@unique([analysisRunId, clipId])
+  @@map("cost_allocations")
+}
+
+model Clip {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId     String           @map("project_id") @db.Uuid
+  analysisRunId String?          @map("analysis_run_id") @db.Uuid
+  origin        ClipOriginRecord
+  startMs       Int              @map("start_ms")
+  endMs         Int              @map("end_ms")
+  title         String?          @db.VarChar(120)
+  rank          Int?
+  scoreJson     Json?            @map("score_json") @db.JsonB
+  captionJson   Json             @map("caption_json") @db.JsonB
+  styleJson     Json             @map("style_json") @db.JsonB
+  frameJson     Json             @map("frame_json") @db.JsonB
+  state         ClipStateRecord  @default(CANDIDATE)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analysisRun   AnalysisRun?     @relation(fields: [analysisRunId], references: [id], onDelete: SetNull)
+  usageEvents   AIUsageEvent[]
+  allocations   CostAllocation[]
+  renders       Render[]
+
+  @@index([projectId, state])
+  @@map("clips")
+}
+
+model Render {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId         String             @map("project_id") @db.Uuid
+  clipId            String             @map("clip_id") @db.Uuid
+  status            RenderStatusRecord @default(QUEUED)
+  inputSnapshotJson Json               @map("input_snapshot_json") @db.JsonB
+  outputObjectKey   String?            @map("output_object_key") @db.Text
+  srtObjectKey      String?            @map("srt_object_key") @db.Text
+  probeJson         Json?              @map("probe_json") @db.JsonB
+  encoder           String             @db.VarChar(100)
+  startedAt         DateTime?          @map("started_at") @db.Timestamptz(3)
+  finishedAt        DateTime?          @map("finished_at") @db.Timestamptz(3)
+  durationMs        Int?               @map("duration_ms")
+  errorCode         String?            @map("error_code") @db.VarChar(100)
+  errorMessage      String?            @map("error_message") @db.Text
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clip              Clip               @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  @@index([clipId, createdAt])
+  @@index([status])
+  @@map("renders")
+}
+
+model JobProjection {
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId           String          @map("project_id") @db.Uuid
+  workflowId          String          @map("workflow_id") @db.Uuid
+  runId               String          @map("run_id") @db.VarChar(200)
+  status              JobStatusRecord
+  stage               String          @db.VarChar(100)
+  progressBasisPoints Int             @map("progress_basis_points")
+  etaLowSeconds       Int?            @map("eta_low_seconds")
+  etaHighSeconds      Int?            @map("eta_high_seconds")
+  terminalResultJson  Json?           @map("terminal_result_json") @db.JsonB
+  lastHeartbeatAt     DateTime?       @map("last_heartbeat_at") @db.Timestamptz(3)
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  project             Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, runId])
+  @@index([projectId, status])
+  @@map("job_projections")
+}
+
+model StageTimingObservation {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId            String   @map("project_id") @db.Uuid
+  stage                String   @db.VarChar(100)
+  hardwareKey          String   @map("hardware_key") @db.VarChar(200)
+  backendKey           String   @map("backend_key") @db.VarChar(200)
+  workUnits            BigInt   @map("work_units")
+  durationMs           Int      @map("duration_ms")
+  throughputMicrounits BigInt   @map("throughput_microunits")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([stage, hardwareKey, backendKey, createdAt])
+  @@map("stage_timing_observations")
+}
+
+model UploadSession {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId           String             @map("project_id") @db.Uuid
+  objectKey           String             @map("object_key") @db.Text
+  uploadId            String             @unique @map("upload_id") @db.VarChar(300)
+  sizeBytes           BigInt             @map("size_bytes")
+  completedPartsJson  Json               @map("completed_parts_json") @db.JsonB
+  completionPartsHash String?            @map("completion_parts_hash") @db.Char(64)
+  objectVersionId     String?            @map("object_version_id") @db.Text
+  objectSha256        String?            @map("object_sha256") @db.Char(64)
+  status              UploadStatusRecord @default(CREATED)
+  expiresAt           DateTime           @map("expires_at") @db.Timestamptz(3)
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  project             Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@map("upload_sessions")
+}
+
+model IdempotencyReceipt {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key          String    @unique @db.Uuid
+  scope        String    @db.VarChar(100)
+  requestHash  String    @map("request_hash") @db.Char(64)
+  status       String    @db.VarChar(30)
+  responseJson Json?     @map("response_json") @db.JsonB
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz(3)
+
+  @@map("idempotency_receipts")
+}
