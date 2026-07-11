@@ -171,6 +171,6 @@ export function calculateProgress(
     totalUnits: input.totalUnits,
     unit: input.unit,
     occurredAt: input.occurredAt ?? new Date().toISOString(),
-    status: jobStatusFromState(input.state),
+    ...(status ? { status } : {}),
   };
 }
