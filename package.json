@@ -27,7 +27,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "compose:config": "docker compose --env-file .env -f infra/compose/docker-compose.yml config --quiet",
-    "compose:up": "docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait",
+    "compose:up": "docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait web postgres redis minio temporal temporal-ui && docker compose --env-file .env -f infra/compose/docker-compose.yml run --rm minio-init",
     "compose:down": "docker compose --env-file .env -f infra/compose/docker-compose.yml down",
     "worker:sync": ".tools/bin/uv sync --directory apps/worker --frozen",
     "worker:lint": ".tools/bin/uv run --directory apps/worker ruff check src tests",
