@@ -24,6 +24,14 @@ class AudioValidationReceipt:
     audio_object: ObjectReference
 
 
+class AudioValidationReceiptPort(Protocol):
+    """Durable receipt store used to make audio extraction restart-safe."""
+
+    def get(self, key: str) -> AudioValidationReceipt | None: ...
+
+    def put(self, receipt: AudioValidationReceipt) -> None: ...
+
+
 ProgressCallback = Callable[[int, int], Awaitable[None] | None]
 
 

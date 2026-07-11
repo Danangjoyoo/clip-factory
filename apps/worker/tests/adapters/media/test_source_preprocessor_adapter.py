@@ -37,9 +37,12 @@ class Probe:
 
 
 class Ffmpeg:
+    calls = 0
+
     async def extract_speech(
         self, source: Path, destination: Path, _progress: Any
     ) -> None:
+        self.calls += 1
         assert destination.parent != source.parent
         destination.write_bytes(b"audio")
 
@@ -47,7 +50,6 @@ class Ffmpeg:
 class Artifacts:
     def __init__(self) -> None:
         self.puts = 0
-        self.receipts: dict[str, AudioValidationReceipt] = {}
 
     def put(self, path: Path, key: str) -> ObjectReference:
         self.puts += 1
@@ -55,14 +57,19 @@ class Artifacts:
         assert path.exists()
         return ObjectReference("bucket", key, "v1", "digest")
 
-    def get_validation_receipt(self, key: str) -> AudioValidationReceipt | None:
-        return self.receipts.get(key)
-
-    def record_validation_receipt(self, receipt: AudioValidationReceipt) -> None:
-        self.receipts[receipt.audio_object.key] = receipt
-
     def head(self, _key: str) -> dict[str, str]:
         return {"version_id": "v1", "sha256": "digest"}
+
+
+class Receipts:
+    def __init__(self) -> None:
+        self.values: dict[str, AudioValidationReceipt] = {}
+
+    def get(self, key: str) -> AudioValidationReceipt | None:
+        return self.values.get(key)
+
+    def put(self, receipt: AudioValidationReceipt) -> None:
+        self.values[receipt.audio_object.key] = receipt
 
 
 def test_preprocessor_posts_typed_validation_and_keeps_source_read_only(
@@ -73,13 +80,16 @@ def test_preprocessor_posts_typed_validation_and_keeps_source_read_only(
     locator = Locator(source)
     asset = uuid4()
     artifacts = Artifacts()
+    receipts = Receipts()
+    ffmpeg = Ffmpeg()
     adapter = SourcePreprocessorAdapter(
         locator,
         Probe(),  # type: ignore[arg-type]
-        Ffmpeg(),  # type: ignore[arg-type]
+        ffmpeg,  # type: ignore[arg-type]
         artifacts,
         LocalSourceFilesystem((tmp_path,)),
         object(),
+        receipts,
     )
     project = uuid4()
     asyncio.run(adapter.prepare(asset, project, lambda *_: None))
@@ -89,3 +99,4 @@ def test_preprocessor_posts_typed_validation_and_keeps_source_read_only(
     assert not (tmp_path / "speech.wav").exists()
     asyncio.run(adapter.prepare(asset, project, lambda *_: None))
     assert artifacts.puts == 1
+    assert ffmpeg.calls == 1

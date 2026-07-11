@@ -16,6 +16,7 @@ from clip_factory.adapters.http.source_locator_client import modified_at
 from clip_factory.domain.media import MediaProbe, validate_probe
 from clip_factory.ports.source_preprocessor import (
     AudioValidationReceipt,
+    AudioValidationReceiptPort,
     ObjectReference,
     PreparedSource,
     ProgressCallback,
@@ -34,7 +35,7 @@ class SourcePreprocessorAdapter:
         artifact_store: Any,
         local_filesystem: LocalSourceFilesystem,
         materializer: Any,
-        validation_receipts: Any | None = None,
+        validation_receipts: AudioValidationReceiptPort,
     ) -> None:
         self._locator_client = locator_client
         self._ffprobe = ffprobe
@@ -42,7 +43,7 @@ class SourcePreprocessorAdapter:
         self._artifact_store = artifact_store
         self._local_filesystem = local_filesystem
         self._materializer = materializer
-        self._validation_receipts = validation_receipts or artifact_store
+        self._validation_receipts = validation_receipts
 
     async def prepare(
         self, source_asset_id: UUID, project_id: UUID, heartbeat: ProgressCallback
@@ -96,10 +97,9 @@ class SourcePreprocessorAdapter:
         self, key: str, source_asset_id: str, fingerprint: str
     ) -> ObjectReference | None:
         head = getattr(self._artifact_store, "head", None)
-        lookup = getattr(self._validation_receipts, "get_validation_receipt", None)
-        if not fingerprint or not callable(head) or not callable(lookup):
+        if not fingerprint or not callable(head):
             return None
-        receipt = lookup(key)
+        receipt = self._validation_receipts.get(key)
         if not isinstance(receipt, AudioValidationReceipt):
             return None
         reference = receipt.audio_object
@@ -120,9 +120,7 @@ class SourcePreprocessorAdapter:
         return reference
 
     def _record_receipt(self, receipt: AudioValidationReceipt) -> None:
-        record = getattr(self._validation_receipts, "record_validation_receipt", None)
-        if callable(record):
-            record(receipt)
+        self._validation_receipts.put(receipt)
 
     def _put_audio(self, audio: Path, key: str) -> ObjectReference:
         result = self._artifact_store.put(audio, key)
