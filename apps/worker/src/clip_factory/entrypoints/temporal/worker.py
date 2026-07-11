@@ -31,7 +31,12 @@ def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
     dependencies = LocalPaidCallDependencies(
         os.environ.get("CLIP_FACTORY_PAID_STATE", ".clip-factory-paid-calls.sqlite3")
     )
-    if os.environ.get("OPENAI_API_KEY"):
+    adapter = os.environ.get("OPENAI_ADAPTER", "fake")
+    if adapter not in {"fake", "live"}:
+        raise ValueError(f"Unsupported OPENAI_ADAPTER: {adapter}")
+    if adapter == "live":
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise ValueError("OPENAI_API_KEY is required when OPENAI_ADAPTER=live")
         from openai import AsyncOpenAI
 
         sdk_client: Any = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
