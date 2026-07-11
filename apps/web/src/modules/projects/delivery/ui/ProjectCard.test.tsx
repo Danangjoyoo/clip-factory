@@ -1,0 +1,3 @@
+import { render, screen } from '@testing-library/react'; import { describe, expect, it, vi } from 'vitest'; import { ProjectCard } from './ProjectCard';
+const project = { id:'1', name:'Episode', href:'/projects/1', sourceHealthLabel:'Healthy', sourceHealthTone:'neutral' as const, modeLabel:'Manual', progressLabel:'Complete', etaLabel:null, candidateCount:1, renderCount:1, spendLabel:'$0.00', updatedLabel:'Today' };
+describe('ProjectCard',()=>it('provides a labeled delete action',()=>{render(<ProjectCard project={project} onDelete={vi.fn()}/>); expect(screen.getByRole('button',{name:'Delete Episode'})).toBeVisible();}));

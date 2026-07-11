@@ -1,0 +1,2 @@
+import { render, screen } from '@testing-library/react'; import { describe, expect, it, vi } from 'vitest'; import { DeleteProjectDialog } from './DeleteProjectDialog';
+describe('DeleteProjectDialog',()=>it('states local files are preserved',()=>{render(<DeleteProjectDialog open projectName="Episode" busy={false} error={null} onCancel={vi.fn()} onConfirm={vi.fn()}/>); expect(screen.getByText('Local filepath sources are never deleted.')).toBeVisible(); expect(screen.getByRole('heading',{name:'Delete Episode?'})).toBeVisible();}));
