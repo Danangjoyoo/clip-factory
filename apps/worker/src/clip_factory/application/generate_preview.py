@@ -1,7 +1,6 @@
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from clip_factory.domain.media import MediaProbe
 from clip_factory.domain.render_spec import RenderSpec
@@ -32,20 +31,19 @@ class GeneratePreview:
         with tempfile.TemporaryDirectory(prefix="clip-preview-") as directory:
             root = Path(directory)
             preview_path, thumbnail_path = root / "preview.mp4", root / "thumbnail.jpg"
-            probe = await self._renderer.render(command.render_spec, preview_path, 360, 640)
+            probe = await self._renderer.render(
+                command.render_spec, preview_path, 360, 640
+            )
             await self._renderer.thumbnail(preview_path, thumbnail_path)
             prefix = f"projects/{command.project_id}/clips/{command.clip_id}"
-            preview = await _put_file(self._store, f"{prefix}/preview.mp4", preview_path)
-            thumbnail = await _put_file(self._store, f"{prefix}/thumbnail.jpg", thumbnail_path)
+            preview = await _put_file(
+                self._store, f"{prefix}/preview.mp4", preview_path
+            )
+            thumbnail = await _put_file(
+                self._store, f"{prefix}/thumbnail.jpg", thumbnail_path
+            )
             return PreviewArtifacts(preview, thumbnail, probe)
 
 
 async def _put_file(store: ArtifactStorePort, key: str, path: Path) -> ObjectReference:
-    put_file = getattr(store, "put_file", None)
-    if put_file is not None:
-        return await put_file(key, path)
-    put_bytes = getattr(store, "put_bytes", None)
-    if put_bytes is None:
-        raise TypeError("artifact store must support put_file")
-    result: Any = put_bytes(key, path.read_bytes())
-    return await result if hasattr(result, "__await__") else result
+    return await store.put_file(key, path)

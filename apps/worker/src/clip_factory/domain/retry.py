@@ -17,7 +17,8 @@ class RetryDecision:
     non_retryable_types: frozenset[str] = frozenset()
 
     def delay_ms(self, attempt: int, jitter_micros: int = 1_000_000) -> int:
-        base = min(self.initial_ms * (2 ** max(0, attempt - 1)), self.maximum_ms)
+        exponent = max(0, attempt - 1)
+        base: int = min(self.initial_ms * (2**exponent), self.maximum_ms)
         return (base * jitter_micros) // 1_000_000
 
 
@@ -25,7 +26,11 @@ def classify_error(error_type: str) -> ErrorClass:
     if error_type == "OPENAI_OUTCOME_UNCERTAIN":
         return ErrorClass.OUTCOME_UNCERTAIN
     transient = ("MINIO", "REDIS", "TEMPORAL", "HTTP", "PROCESS_IO")
-    return ErrorClass.TRANSIENT if error_type.startswith(transient) else ErrorClass.NON_RETRYABLE
+    return (
+        ErrorClass.TRANSIENT
+        if error_type.startswith(transient)
+        else ErrorClass.NON_RETRYABLE
+    )
 
 
 def decision_for(error_type: str) -> RetryDecision:
