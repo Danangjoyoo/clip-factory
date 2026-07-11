@@ -82,7 +82,6 @@ export function estimateEta(input: EtaInput): EtaRange {
   const widen = input.stage?.toUpperCase().includes('OPENAI')
     ? [0.7, 2]
     : [1, 1];
-  const status = jobStatusFromState(input.state);
   return {
     lowSeconds: Math.ceil((remaining / p75) * widen[0]!),
     highSeconds: Math.ceil((remaining / p25) * widen[1]!),
@@ -156,6 +155,7 @@ export function calculateProgress(
 ): ProgressPresentation {
   const completed = toNonNegativeBigInt(input.completedUnits);
   const total = toPositiveBigInt(input.totalUnits);
+  const status = jobStatusFromState(input.state);
   return {
     projectId: input.projectId,
     workflowId: input.workflowId,
@@ -171,6 +171,6 @@ export function calculateProgress(
     totalUnits: input.totalUnits,
     unit: input.unit,
     occurredAt: input.occurredAt ?? new Date().toISOString(),
-    ...(status ? { status } : {}),
+    status: jobStatusFromState(input.state),
   };
 }
