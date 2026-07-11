@@ -1,0 +1,6 @@
+from typing import Protocol, Any
+
+
+class RecoveryState(Protocol):
+    async def rebuild(self, project_id: str, events: list[dict[str, Any]]) -> None: ...
+    async def mark_offline(self, project_id: str) -> None: ...

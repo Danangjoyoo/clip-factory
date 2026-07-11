@@ -1,0 +1,6 @@
+from typing import Protocol
+
+
+class CleanupStore(Protocol):
+    async def abort_multipart(self, upload_id: str) -> None: ...
+    async def delete_project_temporary(self, project_id: str, keys: list[str]) -> None: ...
