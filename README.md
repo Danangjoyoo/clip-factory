@@ -21,7 +21,7 @@ brew bundle
 ```bash
 corepack enable
 corepack pnpm install
-cp .env.example .env
+cp env/.env.example .env
 corepack pnpm prisma:generate
 corepack pnpm worker:sync
 ```
