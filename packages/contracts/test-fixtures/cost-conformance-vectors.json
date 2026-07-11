@@ -1,0 +1,248 @@
+[
+  {
+    "id": "ceiling-gpt-5.5-high",
+    "modelId": "gpt-5.5",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "32768"
+    },
+    "reasoning": "high",
+    "retries": 1,
+    "expectedCostMicrousd": "995540",
+    "expectedReserveMicrousd": "2986620"
+  },
+  {
+    "id": "ceiling-gpt-5.5-low",
+    "modelId": "gpt-5.5",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "16384"
+    },
+    "reasoning": "low",
+    "retries": 1,
+    "expectedCostMicrousd": "504020",
+    "expectedReserveMicrousd": "1512060"
+  },
+  {
+    "id": "ceiling-gpt-5.5-medium",
+    "modelId": "gpt-5.5",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "24576"
+    },
+    "reasoning": "medium",
+    "retries": 1,
+    "expectedCostMicrousd": "749780",
+    "expectedReserveMicrousd": "2249340"
+  },
+  {
+    "id": "ceiling-gpt-5.5-none",
+    "modelId": "gpt-5.5",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "4096"
+    },
+    "reasoning": "none",
+    "retries": 1,
+    "expectedCostMicrousd": "135380",
+    "expectedReserveMicrousd": "406140"
+  },
+  {
+    "id": "ceiling-gpt-5.5-xhigh",
+    "modelId": "gpt-5.5",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "49152"
+    },
+    "reasoning": "xhigh",
+    "retries": 1,
+    "expectedCostMicrousd": "1487060",
+    "expectedReserveMicrousd": "4461180"
+  },
+  {
+    "id": "ceiling-gpt-5.6-sol-high",
+    "modelId": "gpt-5.6-sol",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "32768"
+    },
+    "reasoning": "high",
+    "retries": 1,
+    "expectedCostMicrousd": "995540",
+    "expectedReserveMicrousd": "2986620"
+  },
+  {
+    "id": "ceiling-gpt-5.6-sol-low",
+    "modelId": "gpt-5.6-sol",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "16384"
+    },
+    "reasoning": "low",
+    "retries": 1,
+    "expectedCostMicrousd": "504020",
+    "expectedReserveMicrousd": "1512060"
+  },
+  {
+    "id": "ceiling-gpt-5.6-sol-max",
+    "modelId": "gpt-5.6-sol",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "65536"
+    },
+    "reasoning": "max",
+    "retries": 1,
+    "expectedCostMicrousd": "1978580",
+    "expectedReserveMicrousd": "5935740"
+  },
+  {
+    "id": "ceiling-gpt-5.6-sol-medium",
+    "modelId": "gpt-5.6-sol",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "24576"
+    },
+    "reasoning": "medium",
+    "retries": 1,
+    "expectedCostMicrousd": "749780",
+    "expectedReserveMicrousd": "2249340"
+  },
+  {
+    "id": "ceiling-gpt-5.6-sol-none",
+    "modelId": "gpt-5.6-sol",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "4096"
+    },
+    "reasoning": "none",
+    "retries": 1,
+    "expectedCostMicrousd": "135380",
+    "expectedReserveMicrousd": "406140"
+  },
+  {
+    "id": "ceiling-gpt-5.6-sol-xhigh",
+    "modelId": "gpt-5.6-sol",
+    "tokens": {
+      "uncachedInput": "2500",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "49152"
+    },
+    "reasoning": "xhigh",
+    "retries": 1,
+    "expectedCostMicrousd": "1487060",
+    "expectedReserveMicrousd": "4461180"
+  },
+  {
+    "id": "one-cache-write-token",
+    "tokens": {
+      "uncachedInput": "0",
+      "cachedInput": "0",
+      "cacheWriteInput": "1",
+      "output": "0"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "expectedCostMicrousd": "7",
+    "expectedReserveMicrousd": "11"
+  },
+  {
+    "id": "one-cached-token",
+    "tokens": {
+      "uncachedInput": "0",
+      "cachedInput": "1",
+      "cacheWriteInput": "0",
+      "output": "0"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "expectedCostMicrousd": "1",
+    "expectedReserveMicrousd": "2"
+  },
+  {
+    "id": "one-uncached-token",
+    "tokens": {
+      "uncachedInput": "1",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "0"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "expectedCostMicrousd": "5",
+    "expectedReserveMicrousd": "8"
+  },
+  {
+    "id": "reserve-round-up",
+    "tokens": {
+      "uncachedInput": "0",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "0"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "remainingCallCosts": ["101", "200"],
+    "expectedCostMicrousd": "301",
+    "expectedReserveMicrousd": "452"
+  },
+  {
+    "id": "threshold-272000",
+    "tokens": {
+      "uncachedInput": "272000",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "100000"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "expectedCostMicrousd": "4360000",
+    "expectedReserveMicrousd": "6540000"
+  },
+  {
+    "id": "threshold-272001",
+    "tokens": {
+      "uncachedInput": "272001",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "100000"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "expectedCostMicrousd": "7220010",
+    "expectedReserveMicrousd": "10830015"
+  },
+  {
+    "id": "threshold-272001-zero-output",
+    "tokens": {
+      "uncachedInput": "272001",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "0"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "expectedCostMicrousd": "2720010",
+    "expectedReserveMicrousd": "4080015"
+  }
+]

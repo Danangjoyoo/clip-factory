@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups: { pnpm-minor-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: pip
+    directory: /apps/worker
+    schedule: { interval: weekly, day: monday }
+    groups: { python-minor-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: docker
+    directory: /infra/compose
+    schedule: { interval: weekly, day: monday }
+    groups: { docker-minor-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups: { actions-minor-patch: { update-types: [minor, patch] } }

@@ -1,0 +1,9 @@
+.timeline {
+  display: flex;
+  gap: 1rem;
+}
+.timeline label {
+  display: grid;
+  gap: 0.25rem;
+  flex: 1;
+}

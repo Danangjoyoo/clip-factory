@@ -1,0 +1,8 @@
+packages:
+  - apps/web
+  - packages/*
+minimumReleaseAge: 0
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  sharp: true

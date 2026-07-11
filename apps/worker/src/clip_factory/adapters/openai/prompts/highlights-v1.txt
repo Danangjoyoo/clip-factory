@@ -1,0 +1,1 @@
+Identify concise, upload-ready highlights. Score hook, coherence, payoff, novelty, energy, instruction fit, and boundary quality from 0 to 1000000. Return only the requested JSON schema.

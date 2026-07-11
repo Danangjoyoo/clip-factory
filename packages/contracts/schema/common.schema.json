@@ -1,0 +1,375 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/common/1.0.0",
+  "title": "Common",
+  "$defs": {
+    "objectReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bucket", "key", "versionId", "sha256"],
+      "properties": {
+        "bucket": {
+          "const": "clip-factory"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "versionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "category",
+        "retryable",
+        "message",
+        "requiredAction",
+        "details"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "enum": ["RETRYABLE", "NON_RETRYABLE", "WAITING", "CANCELLED"]
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiredAction": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "mediaVideo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "codec",
+        "width",
+        "height",
+        "frameRateNumerator",
+        "frameRateDenominator"
+      ],
+      "properties": {
+        "codec": {
+          "type": "string",
+          "minLength": 1
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "frameRateNumerator": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "frameRateDenominator": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "mediaAudio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["codec", "sampleRateHz", "channels"],
+      "properties": {
+        "codec": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sampleRateHz": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "transcriptWord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "startMs", "endMs", "confidenceMicros"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "confidenceMicros": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "transcriptSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "startMs",
+        "endMs",
+        "wordStartIndex",
+        "wordEndIndex"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wordStartIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wordEndIndex": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hook",
+        "coherence",
+        "payoff",
+        "novelty",
+        "energy",
+        "instructionFit",
+        "boundaryQuality"
+      ],
+      "properties": {
+        "hook": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "coherence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "payoff": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "novelty": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "energy": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "instructionFit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "boundaryQuality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      }
+    },
+    "cropPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeMs",
+        "centerXMicros",
+        "centerYMicros",
+        "confidenceMicros",
+        "source"
+      ],
+      "properties": {
+        "timeMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "centerXMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "centerYMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "confidenceMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "source": {
+          "enum": ["SUBJECT_TRACK", "CENTER_FALLBACK", "MANUAL_FOCAL_POINT"]
+        }
+      }
+    },
+    "captionCue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "startMs", "endMs", "words"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "words": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text", "startMs", "endMs"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "startMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "endMs": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "captionStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fontFamily",
+        "fontSizePx",
+        "textColor",
+        "outlineColor",
+        "backgroundColor",
+        "activeWordColor",
+        "verticalPositionMicros",
+        "maxWordsPerLine",
+        "activeWordEmphasis"
+      ],
+      "properties": {
+        "fontFamily": {
+          "enum": ["Inter", "Arial", "Helvetica Neue"]
+        },
+        "fontSizePx": {
+          "type": "integer",
+          "minimum": 24,
+          "maximum": 160
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "outlineColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "backgroundColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "activeWordColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "verticalPositionMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "maxWordsPerLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "activeWordEmphasis": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

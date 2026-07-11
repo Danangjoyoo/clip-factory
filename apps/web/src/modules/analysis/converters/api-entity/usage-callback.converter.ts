@@ -1,0 +1,30 @@
+import type { UsageCallbackApiDto } from '../../delivery/http/dto/api/usage-callback-api.dto';
+import type { UsageEntityInput } from '../../application/services/record-usage.service';
+export const usageCallbackApiToEntity = (
+  api: UsageCallbackApiDto,
+  analysisRunId: string,
+): UsageEntityInput => ({
+  callId: api.callId,
+  projectId: api.projectId,
+  analysisRunId,
+  clipId: api.clipId ?? null,
+  providerResponseId: api.providerResponseId,
+  requestHash: api.requestHash,
+  purpose: api.purpose,
+  modelId: api.modelId,
+  reasoning: api.reasoning,
+  promptVersion: api.promptVersion,
+  schemaVersion: api.schemaVersion,
+  pricingVersion: api.pricingVersion,
+  pricingTier: api.pricingTier,
+  totalInputTokens: BigInt(api.inputTokens),
+  cachedInputTokens: BigInt(api.cachedInputTokens ?? 0),
+  cacheWriteInputTokens: BigInt(api.cacheWriteInputTokens ?? 0),
+  outputTokens: BigInt(api.outputTokens),
+  reasoningTokens: BigInt(api.reasoningTokens ?? 0),
+  occurredAt: new Date(api.occurredAt),
+  reservationCallId: api.callId,
+  reservationProjectId: api.projectId,
+  reservationAnalysisRunId: analysisRunId,
+  responseObjectReference: api.responseObjectReference ?? null,
+});

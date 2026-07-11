@@ -1,0 +1,41 @@
+[project]
+name = "clip-factory-worker"
+version = "0.1.0"
+requires-python = "==3.12.11"
+dependencies = [
+    "pydantic==2.13.4",
+    "huggingface-hub==1.23.0",
+    "minio==7.2.20",
+    "mlx-whisper==0.4.3; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "temporalio==1.30.0",
+    "tiktoken==0.13.0",
+    "openai==2.45.0",
+    "mediapipe==0.10.35; sys_platform == 'darwin'",
+    "redis==8.0.1",
+]
+
+[project.scripts]
+clip-factory-worker = "clip_factory.entrypoints.temporal.main:main"
+
+[dependency-groups]
+dev = [
+  "datamodel-code-generator==0.35.0",
+  "import-linter==2.13",
+  "mypy==2.2.0",
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "ruff==0.15.21",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+exclude = ["src/clip_factory/entrypoints/contracts/generated"]
+
+[[tool.mypy.overrides]]
+module = ["clip_factory.entrypoints.contracts.generated.*"]
+ignore_errors = true

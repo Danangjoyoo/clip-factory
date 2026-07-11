@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/CostData/1.0.0",
+  "title": "CostData",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "analysisRunId",
+    "modelId",
+    "reasoning",
+    "pricingVersion",
+    "budgetMicrousd",
+    "reservedMicrousd",
+    "spentMicrousd",
+    "calls"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "analysisRunId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "modelId": {
+      "enum": ["gpt-5.6-sol", "gpt-5.5"]
+    },
+    "reasoning": {
+      "enum": ["none", "low", "medium", "high", "xhigh", "max"]
+    },
+    "pricingVersion": {
+      "const": "openai-2026-07-11.1"
+    },
+    "budgetMicrousd": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reservedMicrousd": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "spentMicrousd": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "purpose",
+          "responseId",
+          "inputTokens",
+          "cachedInputTokens",
+          "cacheWriteInputTokens",
+          "outputTokens",
+          "reasoningTokens",
+          "costMicrousd"
+        ],
+        "properties": {
+          "purpose": {
+            "enum": ["HIGHLIGHT_WINDOW", "GLOBAL_RANKING"]
+          },
+          "responseId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputTokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cachedInputTokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cacheWriteInputTokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "outputTokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reasoningTokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "costMicrousd": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "modelId": {
+            "const": "gpt-5.6-sol"
+          }
+        },
+        "required": ["modelId"]
+      },
+      "then": {
+        "properties": {
+          "reasoning": {
+            "enum": ["none", "low", "medium", "high", "xhigh", "max"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "modelId": {
+            "const": "gpt-5.5"
+          }
+        },
+        "required": ["modelId"]
+      },
+      "then": {
+        "properties": {
+          "reasoning": {
+            "enum": ["none", "low", "medium", "high", "xhigh"]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/WorkflowResult/1.0.0",
+  "title": "WorkflowResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "projectId",
+    "status",
+    "transcriptObject",
+    "clipIds",
+    "error",
+    "completedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "workflowId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "projectId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "enum": ["COMPLETED", "FAILED", "CANCELLED"]
+    },
+    "transcriptObject": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bucket", "key", "versionId", "sha256"],
+          "properties": {
+            "bucket": {
+              "const": "clip-factory"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1
+            },
+            "versionId": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "clipIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "category",
+            "retryable",
+            "message",
+            "requiredAction",
+            "details"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "category": {
+              "enum": ["RETRYABLE", "NON_RETRYABLE", "WAITING", "CANCELLED"]
+            },
+            "retryable": {
+              "type": "boolean"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requiredAction": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "details": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
