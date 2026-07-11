@@ -19,7 +19,7 @@ clip-factory-worker = "clip_factory.entrypoints.temporal.main:main"
 
 [dependency-groups]
 dev = [
-  "datamodel-code-generator==0.35.0",
+  "datamodel-code-generator==0.68.1",
   "import-linter==2.13",
   "mypy==2.2.0",
   "pytest==9.1.1",
