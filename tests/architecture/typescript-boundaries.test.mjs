@@ -112,6 +112,19 @@ test('allows composition to import concrete adapters', async () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
+test('allows adapters and delivery to use their owned converters', async () => {
+  const result = await runScanner({
+    'modules/projects/adapters/repositories/store.ts':
+      "import type { Record } from '../converters/store';\nexport type Store = Record;\n",
+    'modules/projects/adapters/converters/store.ts':
+      'export type Record = unknown;\n',
+    'modules/projects/delivery/route.ts':
+      "import type { Api } from '../converters/api';\nexport type Route = Api;\n",
+    'modules/projects/converters/api.ts': 'export type Api = unknown;\n',
+  });
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test('rejects alias re-exports and side-effect imports across inner boundaries', async () => {
   const root = await mkdtemp(join(tmpdir(), 'clip-factory-boundary-'));
   try {

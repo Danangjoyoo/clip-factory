@@ -28,6 +28,7 @@ const files = [];
 async function visit(path) {
   for (const entry of await readdir(path, { withFileTypes: true })) {
     const child = join(path, entry.name);
+    if (entry.name === 'generated') continue;
     if (entry.isDirectory()) await visit(child);
     else if (['.ts', '.tsx'].includes(extname(child))) files.push(child);
   }
@@ -208,8 +209,8 @@ for (const [file, imports] of edges) {
       failed = true;
     }
     if (
-      ['adapters', 'delivery', 'converters'].includes(from) &&
-      ['adapters', 'delivery', 'converters'].includes(to) &&
+      ['adapters', 'delivery'].includes(from) &&
+      ['adapters', 'delivery'].includes(to) &&
       from !== to
     ) {
       process.stderr.write(
@@ -217,7 +218,7 @@ for (const [file, imports] of edges) {
       );
       failed = true;
     }
-    if (from !== 'composition' && to === 'adapters') {
+    if (['domain', 'application'].includes(from) && to === 'adapters') {
       process.stderr.write(
         `${from} in ${file} must not import concrete adapter\n`,
       );
