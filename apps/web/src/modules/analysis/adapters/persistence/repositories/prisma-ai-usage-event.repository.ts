@@ -1,4 +1,5 @@
 import { prisma } from '../../../../../infrastructure/prisma/client';
+import type { $Enums } from '../../../../../generated/prisma/client';
 import { aiUsageEventEntityToRecord, aiUsageEventRecordToEntity } from '../converters/ai-usage-event.converter';
 import type { AIUsageEventEntityDto } from '../../../application/dto/entity';
 import type { AIUsageEventRepository } from '../../../application/ports/ai-usage-event.repository';
@@ -21,7 +22,7 @@ export class PrismaAIUsageEventRepository implements AIUsageEventRepository {
         requestHash: record.requestHash,
         purpose: record.purpose,
         modelId: record.modelId,
-        reasoning: record.reasoning as never,
+        reasoning: record.reasoning as $Enums.ReasoningRecord,
         promptVersion: record.promptVersion,
         schemaVersion: record.schemaVersion,
         pricingVersion: record.pricingVersion,
