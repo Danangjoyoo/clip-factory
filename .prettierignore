@@ -1,0 +1,6 @@
+.superpowers/
+docs/
+pnpm-lock.yaml
+.tools/
+node_modules/
+apps/worker/.venv/

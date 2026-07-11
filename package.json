@@ -1,0 +1,48 @@
+{
+  "name": "clip-factory",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.11.0",
+  "engines": {
+    "node": "24.18.0",
+    "pnpm": "11.11.0"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm -r lint && pnpm worker:lint",
+    "typecheck": "pnpm -r typecheck && pnpm worker:typecheck",
+    "test:unit": "vitest run --config vitest.workspace.ts --project unit && pnpm worker:test",
+    "test:coverage": "vitest run --coverage && .tools/bin/uv run --directory apps/worker pytest --cov=clip_factory --cov-report=term-missing --cov-fail-under=90",
+    "test:architecture": "node --test tests/architecture/*.test.mjs && pnpm worker:architecture",
+    "test:contracts": "pnpm --filter @clip-factory/contracts test",
+    "test:integration": "vitest run --config vitest.workspace.ts --project integration",
+    "test:media": ".tools/bin/uv run --directory apps/worker pytest tests/media -v",
+    "test:e2e": "playwright test",
+    "prisma:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "compose:config": "docker compose --env-file .env -f infra/compose/docker-compose.yml config --quiet",
+    "compose:up": "docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait",
+    "compose:down": "docker compose --env-file .env -f infra/compose/docker-compose.yml down",
+    "worker:sync": ".tools/bin/uv sync --directory apps/worker --frozen",
+    "worker:lint": ".tools/bin/uv run --directory apps/worker ruff check src tests",
+    "worker:typecheck": ".tools/bin/uv run --directory apps/worker mypy src tests",
+    "worker:test": ".tools/bin/uv run --directory apps/worker pytest -q",
+    "worker:architecture": ".tools/bin/uv run --directory apps/worker lint-imports",
+    "dev": "node scripts/dev.mjs",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:architecture && pnpm test:contracts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@vitest/coverage-v8": "4.1.10",
+    "dependency-cruiser": "18.0.0",
+    "eslint": "10.7.0",
+    "jsdom": "27.3.0",
+    "prettier": "3.8.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

@@ -17,3 +17,5 @@ test-results/
 __pycache__/
 *.py[cod]
 *.log
+*.tsbuildinfo
+.tools/
