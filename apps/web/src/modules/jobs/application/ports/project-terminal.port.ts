@@ -7,10 +7,15 @@ export interface ProjectTerminalPort {
   ): Promise<ApplyWorkerResultResponse>;
 }
 export interface FreshReservationPort {
-  authorizeFreshReservation(command: ApplyWorkerResultCommand): Promise<void>;
+  authorizeFreshReservation(
+    command: AuthorizeUncertainRetryCommand,
+  ): Promise<void>;
 }
 export interface ApplyWorkerResultCommand extends ApplyWorkerResultResponse {
   idempotencyKey: string;
   requestHash: string;
-  acknowledgePossiblePriorSpend?: boolean;
+}
+export interface AuthorizeUncertainRetryCommand {
+  workflowId: string;
+  acknowledgePossiblePriorSpend: true;
 }

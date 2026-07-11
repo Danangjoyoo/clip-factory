@@ -18,5 +18,4 @@ export interface ApplyWorkerResultResponse {
   error?: { code: string; message: string } | null | undefined;
   uncertainReservedMicrousd?: string | undefined;
   requiredAction?: 'AUTHORIZE_FRESH_RESERVATION' | undefined;
-  acknowledgePossiblePriorSpend?: boolean | undefined;
 }

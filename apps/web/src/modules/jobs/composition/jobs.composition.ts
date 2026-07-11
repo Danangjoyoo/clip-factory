@@ -7,10 +7,17 @@ import { PrismaIdempotencyReceiptRepository } from '../adapters/persistence/repo
 import { PrismaJobProjectionRepository } from '../adapters/persistence/repositories/prisma-job-projection.repository';
 import { WorkerResultController } from '../delivery/http/worker-result.controller';
 import type { UnitOfWork } from '../application/ports/unit-of-work.port';
+import type { FreshReservationPort } from '../application/ports/project-terminal.port';
 export function jobsComposition() {
   const env = loadServerEnv();
   const uow: UnitOfWork = {
     execute: (fn) => prisma.$transaction((tx) => fn(tx)),
+  };
+  // Task 14 must replace this adapter with the real reservation workflow.
+  const freshReservation: FreshReservationPort = {
+    authorizeFreshReservation: async () => {
+      throw new Error('FRESH_RESERVATION_NOT_CONFIGURED');
+    },
   };
   const service = new ApplyWorkerResultService(
     uow,
@@ -24,6 +31,7 @@ export function jobsComposition() {
         completedAt: command.completedAt,
       }),
     },
+    freshReservation,
   );
   return {
     workerResultController: new WorkerResultController(

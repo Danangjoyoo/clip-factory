@@ -53,3 +53,44 @@ it('durably blocks ordinary retries after an uncertain paid call', async () => {
     }),
   ).rejects.toBeInstanceOf(PaidCallUncertainError);
 });
+
+it('authorizes uncertain retry only through the separate command boundary', async () => {
+  const h = makeJobServiceHarness();
+  const uncertain = {
+    workflowId: 'w',
+    projectId: 'p',
+    status: 'PAID_CALL_UNCERTAIN',
+    completedAt: null,
+    uncertainReservedMicrousd: '10',
+    requiredAction: 'AUTHORIZE_FRESH_RESERVATION',
+    idempotencyKey: 'u',
+    requestHash: 'a'.repeat(64),
+  } as const;
+  await h.service.execute(uncertain);
+  await h.service.authorizeUncertainRetry({
+    workflowId: 'w',
+    acknowledgePossiblePriorSpend: true,
+  });
+  expect(h.reservationCalls).toEqual(['w']);
+});
+
+it('does not replay a receipt across idempotency scopes', async () => {
+  const h = makeJobServiceHarness();
+  h.receipts.set('cross-scope', {
+    key: 'cross-scope',
+    scope: 'source-validation',
+    requestHash: 'a'.repeat(64),
+    status: 'COMPLETED',
+    response: null,
+  });
+  await expect(
+    h.service.execute({
+      workflowId: 'w',
+      projectId: 'p',
+      status: 'COMPLETED',
+      completedAt: null,
+      idempotencyKey: 'cross-scope',
+      requestHash: 'a'.repeat(64),
+    }),
+  ).rejects.toThrow('scope conflict');
+});

@@ -3,7 +3,10 @@ import {
   authenticateInternalRequest,
   INTERNAL_UNAUTHORIZED,
 } from '../../../../shared/delivery/http/internal-auth';
-import { WorkerResultApiSchema } from './dto/api/worker-result-api.dto';
+import {
+  AuthorizeUncertainRetryApiSchema,
+  WorkerResultApiSchema,
+} from './dto/api/worker-result-api.dto';
 import { workerResultApiToEntity } from '../../converters/api-entity/worker-result.converter';
 import type { ApplyWorkerResultService } from '../../application/services/apply-worker-result.service';
 import {
@@ -74,6 +77,49 @@ export class WorkerResultController {
       if (error instanceof PaidCallUncertainError)
         return Response.json(
           { code: 'PAID_CALL_UNCERTAIN_ACK_REQUIRED' },
+          { status: 409 },
+        );
+      throw error;
+    }
+  }
+
+  async authorizeUncertainRetry(request: Request, workflowId: string) {
+    if (
+      !authenticateInternalRequest(
+        request.headers.get('authorization'),
+        this.token,
+      )
+    )
+      return Response.json(INTERNAL_UNAUTHORIZED, { status: 401 });
+    if (!UUID.test(workflowId))
+      return Response.json({ code: 'INVALID_WORKFLOW_ID' }, { status: 422 });
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json(
+        { code: 'INVALID_RETRY_AUTHORIZATION' },
+        { status: 422 },
+      );
+    }
+    const parsed = AuthorizeUncertainRetryApiSchema.safeParse(body);
+    if (!parsed.success)
+      return Response.json(
+        { code: 'INVALID_RETRY_AUTHORIZATION' },
+        { status: 422 },
+      );
+    try {
+      return Response.json(
+        await this.service.authorizeUncertainRetry({
+          workflowId,
+          acknowledgePossiblePriorSpend:
+            parsed.data.acknowledgePossiblePriorSpend,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof PaidCallUncertainError)
+        return Response.json(
+          { code: 'PAID_CALL_UNCERTAIN_REQUIRED' },
           { status: 409 },
         );
       throw error;

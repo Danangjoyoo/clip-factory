@@ -4,18 +4,27 @@ import { JobProjectionDataService } from '../application/data-services/job-proje
 export function makeJobServiceHarness() {
   const receipts = new Map<string, any>();
   const projects = { terminalMutationCount: 0 };
+  const reservationCalls: string[] = [];
   const receiptData = new IdempotencyReceiptDataService({
-    findByKey: async (key) => receipts.get(key) ?? null,
-    createPending: async (key, requestHash) => {
+    findByKey: async (key, scope) => {
+      const receipt = receipts.get(key);
+      if (receipt && receipt.scope !== scope)
+        throw new Error('idempotency scope conflict');
+      return receipt ?? null;
+    },
+    createPending: async (key, scope, requestHash) => {
       receipts.set(key, {
         key,
+        scope,
         requestHash,
         status: 'PENDING',
         response: null,
       });
     },
-    complete: async (key, response) => {
+    complete: async (key, scope, response) => {
       const r = receipts.get(key);
+      if (!r || r.scope !== scope)
+        throw new Error('idempotency scope conflict');
       Object.assign(r, { status: 'COMPLETED', response });
       return response;
     },
@@ -44,6 +53,11 @@ export function makeJobServiceHarness() {
         return response;
       },
     },
+    {
+      authorizeFreshReservation: async (command) => {
+        reservationCalls.push(command.workflowId);
+      },
+    },
   );
-  return { service, projects };
+  return { service, projects, receipts, reservationCalls };
 }

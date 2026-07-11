@@ -25,7 +25,6 @@ export const WorkerResultApiSchema = z
       .regex(/^[0-9]+$/)
       .optional(),
     requiredAction: z.literal('AUTHORIZE_FRESH_RESERVATION').optional(),
-    acknowledgePossiblePriorSpend: z.boolean().optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -38,10 +37,12 @@ export const WorkerResultApiSchema = z
         code: z.ZodIssueCode.custom,
         message: 'uncertain result requires reservation metadata',
       });
-    if (value.acknowledgePossiblePriorSpend && value.status !== 'COMPLETED')
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'acknowledgement requires a completed retry',
-      });
   });
 export type WorkerResultApiDto = z.infer<typeof WorkerResultApiSchema>;
+
+export const AuthorizeUncertainRetryApiSchema = z
+  .object({ acknowledgePossiblePriorSpend: z.literal(true) })
+  .strict();
+export type AuthorizeUncertainRetryApiDto = z.infer<
+  typeof AuthorizeUncertainRetryApiSchema
+>;
