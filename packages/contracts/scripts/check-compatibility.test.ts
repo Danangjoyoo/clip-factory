@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { assertBackwardCompatible } from './check-compatibility.mjs';
+import {
+  assertBackwardCompatible,
+  previousDirectoryFromArguments,
+} from './check-compatibility.mjs';
 
 const base = {
   $id: 'https://clip-factory.local/contracts/example/1.0.0',
@@ -12,6 +15,15 @@ const base = {
 };
 
 describe('schema compatibility', () => {
+  it('ignores forwarded package test arguments', () => {
+    expect(
+      previousDirectoryFromArguments(['--', 'validate.test.ts']),
+    ).toBeUndefined();
+    expect(previousDirectoryFromArguments(['/tmp/previous-contracts'])).toBe(
+      '/tmp/previous-contracts',
+    );
+  });
+
   it('rejects required-field removal, enum narrowing, and type narrowing', () => {
     expect(() =>
       assertBackwardCompatible(base, { ...base, required: ['name'] }),

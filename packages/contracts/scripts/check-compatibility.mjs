@@ -43,6 +43,10 @@ export function assertBackwardCompatible(previous, current) {
     compareNode(previous, current, current.$id ?? 'schema');
 }
 
+export function previousDirectoryFromArguments(args) {
+  return args.includes('--') ? undefined : args[0];
+}
+
 async function main(previousDir = process.env.COMPATIBILITY_PREVIOUS_DIR) {
   const root = resolve(import.meta.dirname, '..');
   const manifest = JSON.parse(
@@ -72,4 +76,4 @@ async function main(previousDir = process.env.COMPATIBILITY_PREVIOUS_DIR) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
-  await main(process.argv[2]);
+  await main(previousDirectoryFromArguments(process.argv.slice(2)));
