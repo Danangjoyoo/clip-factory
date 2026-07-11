@@ -1,7 +1,7 @@
 from datetime import timedelta
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
-from temporalio.exceptions import ActivityError
+from temporalio.exceptions import ActivityError, ApplicationError, CancelledError
 
 from clip_factory.application.execute_analysis_child import ExecuteAnalysisChild
 from clip_factory.domain.cost import verify_remaining_budget
@@ -23,6 +23,7 @@ from clip_factory.ports.paid_call import (
 )
 from clip_factory.entrypoints.temporal.activities.highlight_activities import (
     call_openai_once_activity,
+    reserve_paid_call_activity,
     reconcile_paid_call_activity,
 )
 
@@ -133,6 +134,14 @@ class AnalysisChildWorkflow:
             ):
                 continue
             self._state = "ANALYZING"
+            if input.paid_call is not None:
+                paid = await workflow.execute_child_workflow(
+                    PaidCallWorkflow.run,
+                    input.paid_call,
+                    id=f"{input.workflow_id}-paid-call",
+                )
+                self._state = "COMPLETED"
+                return AnalysisChildResult(tuple(c.title for c in paid.candidates))
             result = await workflow.execute_activity(
                 execute_analysis_child,
                 input,
@@ -154,6 +163,7 @@ class PaidCallWorkflow:
     def __init__(self) -> None:
         self._state = "QUEUED"
         self._acknowledged = False
+        self._cancelled = False
 
     @workflow.query
     def state(self) -> str:
@@ -163,6 +173,10 @@ class PaidCallWorkflow:
     def retry_uncertain_paid_call(self, acknowledge_possible_prior_spend: bool) -> None:
         if acknowledge_possible_prior_spend:
             self._acknowledged = True
+
+    @workflow.signal
+    def cancel_paid_call(self) -> None:
+        self._cancelled = True
 
     @workflow.run
     async def run(self, input: PaidCallInput) -> HighlightResponse:
@@ -178,12 +192,15 @@ class PaidCallWorkflow:
             self._state = "COMPLETED"
             return result
         except ActivityError as error:
-            cause = error.cause
-            if getattr(cause, "type", None) == OPENAI_PRE_SEND_FAILURE:
+            error_type = _application_error_type(error.cause)
+            if error_type == OPENAI_PRE_SEND_FAILURE:
                 self._state = "PRE_SEND_FAILURE"
                 raise
             self._state = "PAID_CALL_UNCERTAIN"
-            await workflow.wait_condition(lambda: self._acknowledged)
+            await workflow.wait_condition(lambda: self._acknowledged or self._cancelled)
+            if self._cancelled:
+                self._state = "CANCELLED"
+                raise CancelledError()
             reconciled = await workflow.execute_activity(
                 reconcile_paid_call_activity,
                 input,
@@ -196,8 +213,14 @@ class PaidCallWorkflow:
                 input.project_id,
                 input.analysis_run_id,
                 input.request,
-                f"{input.call_id}-retry",
+                f"{input.call_id}-retry-1",
                 input.worst_case_microusd,
+                True,
+            )
+            await workflow.execute_activity(
+                reserve_paid_call_activity,
+                fresh,
+                start_to_close_timeout=timedelta(seconds=30),
             )
             result = await workflow.execute_activity(
                 call_openai_once_activity,
@@ -208,3 +231,12 @@ class PaidCallWorkflow:
             )
             self._state = "COMPLETED"
             return result
+
+
+def _application_error_type(cause: BaseException | None) -> str:
+    current = cause
+    while isinstance(current, ApplicationError):
+        if current.type:
+            return current.type
+        current = current.__cause__
+    return "OPENAI_OUTCOME_UNCERTAIN"

@@ -1,9 +1,16 @@
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, cast
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
 from clip_factory.ports.highlight_model import HighlightRequest
-from clip_factory.ports.paid_call import PaidCallInput, call_openai_once
+from clip_factory.ports.highlight_model import HighlightResponse
+from clip_factory.ports.paid_call import (
+    PaidCallDependencies,
+    PaidCallInput,
+    call_openai_once,
+    reconcile_paid_call,
+    reserve_paid_call,
+)
 
 _paid_model: Any = None
 _paid_dependencies: Any = None
@@ -24,20 +31,34 @@ def build_highlight_activity(
 
 
 @activity.defn
-async def call_openai_once_activity(input: PaidCallInput) -> Any:
+async def call_openai_once_activity(input: PaidCallInput) -> HighlightResponse:
     if _paid_model is None or _paid_dependencies is None:
         raise RuntimeError("paid highlight activity is not configured")
     try:
-        return await call_openai_once(_paid_model, _paid_dependencies, input)
+        return await call_openai_once(
+            cast(Any, _paid_model),
+            cast(PaidCallDependencies, _paid_dependencies),
+            input,
+            reserved=input.reservation_prepared,
+        )
     except Exception as exc:
         error_type = getattr(exc, "error_type", "OPENAI_OUTCOME_UNCERTAIN")
         raise ApplicationError(str(exc), type=error_type, non_retryable=True) from exc
 
 
 @activity.defn
-async def reconcile_paid_call_activity(input: PaidCallInput) -> Any:
+async def reserve_paid_call_activity(input: PaidCallInput) -> None:
     if _paid_dependencies is None:
         raise RuntimeError("paid highlight activity is not configured")
-    from clip_factory.ports.paid_call import reconcile_paid_call
+    await reserve_paid_call(cast(PaidCallDependencies, _paid_dependencies), input)
 
-    return await reconcile_paid_call(_paid_dependencies, input)
+
+@activity.defn
+async def reconcile_paid_call_activity(
+    input: PaidCallInput,
+) -> HighlightResponse | None:
+    if _paid_dependencies is None:
+        raise RuntimeError("paid highlight activity is not configured")
+    return await reconcile_paid_call(
+        cast(PaidCallDependencies, _paid_dependencies), input
+    )

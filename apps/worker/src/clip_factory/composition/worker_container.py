@@ -16,6 +16,7 @@ from clip_factory.entrypoints.temporal.child_workflows import (
 from clip_factory.entrypoints.temporal.activities.highlight_activities import (
     call_openai_once_activity,
     reconcile_paid_call_activity,
+    reserve_paid_call_activity,
 )
 
 
@@ -30,5 +31,6 @@ def project_activities() -> list[Callable[..., Any]]:
         persist_budget_action,
         execute_analysis_child,
         call_openai_once_activity,
+        reserve_paid_call_activity,
         reconcile_paid_call_activity,
     ]

@@ -19,6 +19,7 @@ class Deps:
     def __init__(self):
         self.sent = []
         self.artifacts = {}
+        self.completed = {}
 
     async def reserve(self, request):
         return object()
@@ -29,9 +30,23 @@ class Deps:
     async def put_json(self, key, value):
         self.artifacts[key] = value
 
+    async def record_paid_call(self, value):
+        self.completed[(value["callId"], value["requestHash"])] = value
+
+    async def reconcile(self, call_id, request_hash):
+        return self.completed.get((call_id, request_hash))
+
+    async def head_json(self, key):
+        return key in self.artifacts
+
+    async def get_json(self, key):
+        return self.artifacts[key]
+
 
 def call():
-    return PaidCallInput("p", "a", HighlightRequest("hello", "gpt-5.5", "low"), "c1", 10)
+    return PaidCallInput(
+        "p", "a", HighlightRequest("hello", "gpt-5.5", "low"), "c1", 10
+    )
 
 
 def test_paid_call_marks_exact_hash_and_persists_validated_response():
