@@ -9,5 +9,10 @@ export interface SourceAssetRepository {
     tx: TransactionContext,
   ): Promise<SourceAssetEntityDto>;
   findByProjectId(projectId: string): Promise<SourceAssetEntityDto | null>;
+  findById?(id: string): Promise<SourceAssetEntityDto | null>;
+  applyValidatedLocator?(
+    input: SourceAssetEntityDto,
+    tx: TransactionContext,
+  ): Promise<SourceAssetEntityDto>;
   deleteByProjectId(projectId: string, tx: TransactionContext): Promise<void>;
 }

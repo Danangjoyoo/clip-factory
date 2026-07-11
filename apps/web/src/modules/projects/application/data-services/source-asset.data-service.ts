@@ -9,6 +9,17 @@ export class SourceAssetDataService {
   getByProjectId(id: string) {
     return this.repository.findByProjectId(id);
   }
+  findById(id: string) {
+    return this.repository.findById?.(id) ?? Promise.resolve(null);
+  }
+  applyValidatedLocator(
+    input: CreateSourceAssetEntityDto,
+    tx: TransactionContext,
+  ) {
+    if (!this.repository.applyValidatedLocator)
+      throw new Error('Source validation repository unavailable');
+    return this.repository.applyValidatedLocator(input as never, tx);
+  }
   deleteByProjectId(id: string, tx: TransactionContext) {
     return this.repository.deleteByProjectId(id, tx);
   }

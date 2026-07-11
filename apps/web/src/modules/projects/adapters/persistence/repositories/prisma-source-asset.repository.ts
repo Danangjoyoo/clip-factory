@@ -59,6 +59,25 @@ export class PrismaSourceAssetRepository implements SourceAssetRepository {
     const r = await prisma.sourceAsset.findUnique({ where: { projectId } });
     return r ? sourceAssetRecordToEntity(r) : null;
   }
+  async findById(id: string) {
+    const r = await prisma.sourceAsset.findUnique({ where: { id } });
+    return r ? sourceAssetRecordToEntity(r) : null;
+  }
+  async applyValidatedLocator(input: any, tx: TransactionContext) {
+    const db = this.db(tx);
+    const r = await db.update({
+      where: { id: input.sourceAssetId ?? input.id },
+      data: {
+        resolvedPath: input.resolvedPath,
+        sizeBytes: input.sizeBytes,
+        modifiedAt: new Date(input.modifiedAt),
+        fingerprint: input.fingerprint,
+        probeJson: input.probe,
+        health: 'LOCATED',
+      },
+    });
+    return sourceAssetRecordToEntity(r);
+  }
   async deleteByProjectId(projectId: string, tx: TransactionContext) {
     await this.db(tx).delete({ where: { projectId } });
   }
