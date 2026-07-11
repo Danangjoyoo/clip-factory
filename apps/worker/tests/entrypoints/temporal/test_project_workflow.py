@@ -13,7 +13,10 @@ from clip_factory.entrypoints.temporal.activities.project_activities import (
     validate_source,
 )
 from clip_factory.entrypoints.temporal.project_workflow import ProjectWorkflow
-from clip_factory.entrypoints.temporal.child_workflows import RenderBatchChildWorkflow
+from clip_factory.entrypoints.temporal.child_workflows import (
+    RenderBatchChildWorkflow,
+    RenderWorkflow,
+)
 from clip_factory.ports.project_results import WorkflowInput
 from clip_factory.ports.project_results import (
     EditorInput,
@@ -178,7 +181,7 @@ async def _test_two_render_batches_are_serialized_before_completion() -> None:
         async with Worker(
             env.client,
             task_queue="render-test",
-            workflows=[ProjectWorkflow, RenderBatchChildWorkflow],
+            workflows=[ProjectWorkflow, RenderBatchChildWorkflow, RenderWorkflow],
             activities=[validate, extract, speech, editor],
         ):
             handle = await env.client.start_workflow(

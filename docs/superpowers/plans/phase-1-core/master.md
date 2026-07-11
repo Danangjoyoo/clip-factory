@@ -1,5 +1,17 @@
 # Clip Factory Phase 1 Core MVP Implementation Plan
 
+## Finalization status (2026-07-11)
+
+Current implementation is a verified partial Phase 1 snapshot, not a full acceptance-gate completion.
+
+- Web unit suite: 72 files / 135 tests passed.
+- Worker suite: 117 tests passed.
+- Rendering integration: 20 tests passed; 3 are skipped when `DATABASE_URL` is unavailable.
+- Verified implementation areas include progress/ETA/Redis reconstruction and render batches/downloads with Prisma field/status mapping.
+- Remaining acceptance blockers: unchecked tasks across the plan, existing TypeScript typecheck failures outside rendering, an ESLint parser configuration failure, and unverified Compose/media/Playwright/CI/Apple-Silicon gates.
+
+The phase must not be labeled complete until those blockers are resolved and the Complete Verification commands below pass.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the approved local-first Clip Factory Core MVP from source intake through editable, downloadable 1080×1920 clips, with bounded paid analysis, durable recovery, and no Phase 2 publishing behavior.

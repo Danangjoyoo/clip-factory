@@ -10,6 +10,7 @@ from clip_factory.composition.paid_call import LocalPaidCallDependencies
 from clip_factory.adapters.openai.model_access_adapter import OpenAIModelAccessAdapter
 from clip_factory.adapters.storage.minio_artifact_store import MinioArtifactStore
 from clip_factory.application.check_model_access import CheckModelAccess
+from clip_factory.application.execute_render_batch import RenderBatchExecutor
 from clip_factory.adapters.openai.fake_highlight_adapter import FakeHighlightAdapter
 from clip_factory.adapters.openai.highlight_adapter import OpenAIHighlightAdapter
 from clip_factory.entrypoints.temporal.activities.highlight_activities import (
@@ -19,6 +20,8 @@ from clip_factory.entrypoints.temporal.child_workflows import (
     AnalysisChildWorkflow,
     RenderBatchChildWorkflow,
     PaidCallWorkflow,
+    RenderWorkflow,
+    configure_render_batch_executor,
 )
 from clip_factory.entrypoints.temporal.project_workflow import ProjectWorkflow
 from clip_factory.ports.model_access import ModelAccessResult
@@ -51,12 +54,14 @@ def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
     configure_transcript_loader(
         MinioArtifactStore(Path(os.environ.get("CLIP_FACTORY_ARTIFACT_ROOT", ".clip-factory-artifacts")))
     )
+    configure_render_batch_executor(RenderBatchExecutor(RenderWorkflow.run))
     return Worker(
         client,
         task_queue=task_queue,
         workflows=[
             ProjectWorkflow,
             AnalysisChildWorkflow,
+            RenderWorkflow,
             RenderBatchChildWorkflow,
             PaidCallWorkflow,
         ],

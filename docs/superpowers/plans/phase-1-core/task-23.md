@@ -37,11 +37,11 @@ Implement design §§18 and 23 plus acceptance criterion 10: selected/all render
 
 ## RED → GREEN → REFACTOR
 
-- [ ] **RED: time-skipping sibling failure.** Three child renders `[success, failure, success]` produce batch `{completed:2,failed:1}`, two downloadable callbacks, and no cancellation of successful children.
+- [x] **RED: time-skipping sibling failure.** Three child renders `[success, failure, success]` produce batch `{completed:2,failed:1}`, two downloadable callbacks, and no cancellation of successful children.
 
-- [ ] Create compile-safe render-batch workflow/payload shells whose run returns an empty result set, verify collection passes, then run the test; expect the named three-independent-results assertion to FAIL with zero results.
+- [x] Create compile-safe render-batch workflow/payload shells whose run returns an empty result set, verify collection passes, then run the test; expect the named three-independent-results assertion to FAIL with zero results.
 
-- [ ] **GREEN: bind Task 13's child-workflow shell to independent execution.** Implement `RenderBatchExecutorPort.execute(RenderBatchChildInput) -> RenderBatchChildResult` in `ports/render_batch_executor.py` and `ExecuteRenderBatch.execute` in `application/execute_render_batch.py`; register that executor in Task 13's `RenderBatchChildWorkflow` composition. It starts one `RenderWorkflow` per render, captures each outcome independently, and returns `RenderBatchChildResult` without importing `ProjectWorkflow`. Run `uv run --directory apps/worker pytest tests/entrypoints/temporal/test_render_batch_workflow.py -q`; expect PASS.
+- [x] **GREEN: bind Task 13's child-workflow shell to independent execution.** Implement `RenderBatchExecutorPort.execute(RenderBatchChildInput) -> RenderBatchChildResult` in `ports/render_batch_executor.py` and `ExecuteRenderBatch.execute` in `application/execute_render_batch.py`; register that executor in Task 13's `RenderBatchChildWorkflow` composition. It starts one `RenderWorkflow` per render, captures each outcome independently, and returns `RenderBatchChildResult` without importing `ProjectWorkflow`. Run `uv run --directory apps/worker pytest tests/entrypoints/temporal/test_render_batch_workflow.py -q`; expect PASS.
 
 ```python
 class RenderBatchExecutor:
@@ -58,19 +58,9 @@ class RenderBatchExecutor:
 
 - [ ] Run `uv run --directory apps/worker pytest tests/entrypoints/temporal/test_render_batch_workflow.py -q`; expect PASS.
 
-- [ ] **RED: failed-only retry test.** Completed render IDs are rejected with `RENDER_NOT_FAILED`; failed render produces a new Render ID carrying the identical immutable snapshot hash; editing requires a normal new render, not retry.
+- [x] **RED: failed-only retry test.** Completed render IDs are rejected with `RENDER_NOT_FAILED`; failed render produces a new Render ID carrying the identical immutable snapshot hash; editing requires a normal new render, not retry.
 
-- [ ] **GREEN:** `RetryFailedRenderService` requires failed row, copies snapshot/encoder into a new queued row with `retryOfRenderId`, signals only that clip, and returns new ID. Add migration `20260711000200_render_retry` with nullable self-reference and index.
-
-```bash
-# GREEN attachment: implement the exact files/functions named above.
-uv run --directory apps/worker pytest tests/entrypoints/temporal/test_render_batch_workflow.py tests/application/test_build_archive.py -q
-# Expected: PASS
-```
-
-- [ ] **RED: download/archive test.** Individual completed render returns a 300-second scoped presigned URL; failed/running returns 409. Archive includes only successful MP4 and requested SRT entries named `001-<sanitized-title>.mp4`, never path traversal, and persists an object reference.
-
-- [ ] **GREEN:** `GetDownloadService` verifies project ownership/status then calls `DownloadUrlPort.presign(key,300)`. `CreateArchiveService` sorts accepted clips by filmstrip order, sanitizes title to lowercase ASCII hyphen max 80, adds successful MP4 and optional generated SRT, writes `projects/<projectId>/archives/<archiveId>.zip`, and returns a 300-second URL.
+- [x] **GREEN:** `RetryFailedRenderService` requires failed row, copies snapshot/encoder into a new queued row with `retryOfRenderId`, signals only that clip, and returns new ID. Add migration `20260711000200_render_retry` with nullable self-reference and index.
 
 ```bash
 # GREEN attachment: implement the exact files/functions named above.
@@ -78,7 +68,17 @@ uv run --directory apps/worker pytest tests/entrypoints/temporal/test_render_bat
 # Expected: PASS
 ```
 
-- [ ] **REFACTOR:** archive builder streams objects and ZIP output without whole-file memory buffering, aborts multipart archive on cancellation, and idempotently reuses same archive request hash. Test empty-success batch returns `NO_SUCCESSFUL_RENDERS`.
+- [x] **RED: download/archive test.** Individual completed render returns a 300-second scoped presigned URL; failed/running returns 409. Archive includes only successful MP4 and requested SRT entries named `001-<sanitized-title>.mp4`, never path traversal, and persists an object reference.
+
+- [x] **GREEN:** `GetDownloadService` verifies project ownership/status then calls `DownloadUrlPort.presign(key,300)`. `CreateArchiveService` sorts accepted clips by filmstrip order, sanitizes title to lowercase ASCII hyphen max 80, adds successful MP4 and optional generated SRT, writes `projects/<projectId>/archives/<archiveId>.zip`, and returns a 300-second URL.
+
+```bash
+# GREEN attachment: implement the exact files/functions named above.
+uv run --directory apps/worker pytest tests/entrypoints/temporal/test_render_batch_workflow.py tests/application/test_build_archive.py -q
+# Expected: PASS
+```
+
+- [x] **REFACTOR:** archive builder streams objects and ZIP output without whole-file memory buffering, aborts multipart archive on cancellation, and idempotently reuses same archive request hash. Test empty-success batch returns `NO_SUCCESSFUL_RENDERS`.
 
 ```bash
 # REFACTOR attachment: implement the exact files/functions named above.

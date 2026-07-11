@@ -1,0 +1,38 @@
+.library {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+}
+
+.grid {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-8) 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+@media (--desktop) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

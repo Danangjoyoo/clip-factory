@@ -33,7 +33,7 @@ Implement Projects screen and visual/accessibility foundation from design §§5 
 
 ## RED → GREEN → REFACTOR
 
-- [ ] **RED: render all required project metadata and accessible states.**
+- [x] **RED: render all required project metadata and accessible states.**
 
 ```tsx
 it('renders source health, mode, progress, eta, counts, and spend without color-only status', () => {
@@ -47,9 +47,9 @@ it('renders source health, mode, progress, eta, counts, and spend without color-
 });
 ```
 
-- [ ] Create a typed `ProjectLibrary` shell rendering an empty `<main aria-label="Projects">`, verify typecheck passes, then run the test; expect the named persisted-project-card assertion to FAIL because no card is rendered.
+- [x] Create a typed `ProjectLibrary` shell rendering an empty `<main aria-label="Projects">`, verify typecheck passes, then run the test; expect the named persisted-project-card assertion to FAIL because no card is rendered.
 
-- [ ] **GREEN: create explicit presentation props and semantic markup.**
+- [x] **GREEN: create explicit presentation props and semantic markup.**
 
 ```tsx
 export type ProjectCardView = Readonly<{ id: string; name: string; href: string; sourceHealthLabel: string; sourceHealthTone: 'neutral'|'warning'|'danger'; modeLabel: string; progressLabel: string; etaLabel: string|null; candidateCount: number; renderCount: number; spendLabel: string; updatedLabel: string }>;
@@ -58,11 +58,11 @@ export function ProjectLibrary({ projects, onDelete }: Readonly<{ projects: read
 }
 ```
 
-- [ ] Run `pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/ProjectLibrary.test.tsx`; expect PASS. Add concrete tests for empty/loading/error/retry, 100-character name wrapping, keyboard link order, and ETA absent in waiting states.
+- [x] Run `pnpm exec vitest run apps/web/src/modules/projects/delivery/ui/ProjectLibrary.test.tsx`; expect PASS. Add concrete tests for empty/loading/error/retry, 100-character name wrapping, keyboard link order, and ETA absent in waiting states.
 
-- [ ] **RED: deletion dialog behavior.** Assert native dialog has heading `Delete <name>?`, copy `Local filepath sources are never deleted.`, Cancel restores focus, Delete disables during request, failure stays open with alert, success removes card.
+- [x] **RED: deletion dialog behavior.** Assert native dialog has heading `Delete <name>?`, copy `Local filepath sources are never deleted.`, Cancel restores focus, Delete disables during request, failure stays open with alert, success removes card.
 
-- [ ] **GREEN:** controlled `DeleteProjectDialog` receives `open`, `projectName`, `busy`, `error`, `onCancel`, `onConfirm`; use `<dialog>`, labeled buttons, `aria-describedby`, and no deletion policy. Hook calls DELETE once and refreshes presentation list.
+- [x] **GREEN:** controlled `DeleteProjectDialog` receives `open`, `projectName`, `busy`, `error`, `onCancel`, `onConfirm`; use `<dialog>`, labeled buttons, `aria-describedby`, and no deletion policy. Hook calls DELETE once and refreshes presentation list.
 
 ```bash
 # GREEN attachment: implement the exact files/functions named above.
@@ -70,9 +70,9 @@ pnpm exec vitest run apps/web/src/modules/projects/delivery/ui
 # Expected: PASS
 ```
 
-- [ ] **RED: token contract test** reads `tokens.css` and asserts mint focus token, dark surfaces, spacing scale, 1024 breakpoint custom media query usage, and reduced-motion rule.
+- [x] **RED: token contract test** reads `tokens.css` and asserts mint focus token, dark surfaces, spacing scale, 1024 breakpoint custom media query usage, and reduced-motion rule.
 
-- [ ] **GREEN: create global foundation.**
+- [x] **GREEN: create global foundation.**
 
 ```css
 :root {
@@ -98,7 +98,7 @@ button, input, select, textarea { font: inherit; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
 ```
 
-- [ ] **REFACTOR:** component CSS uses tokens; at `<1024px` cards become one column and actions wrap, without global overflow hiding. Run axe component smoke with zero serious violations.
+- [x] **REFACTOR:** component CSS uses tokens; at `<1024px` cards become one column and actions wrap, without global overflow hiding. Run axe component smoke with zero serious violations.
 
 ```bash
 # REFACTOR attachment: implement the exact files/functions named above.

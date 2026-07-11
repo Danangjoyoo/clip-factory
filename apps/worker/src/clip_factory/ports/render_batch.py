@@ -1,6 +1,10 @@
 from dataclasses import dataclass
+from typing import Literal, Protocol
 
 from clip_factory.ports.project_results import RenderBatchInput
+
+
+RenderBatchStatus = Literal["COMPLETED", "FAILED"]
 
 
 @dataclass(frozen=True)
@@ -14,5 +18,32 @@ class RenderBatchChildInput:
 
 
 @dataclass(frozen=True)
+class RenderBatchResultItem:
+    clip_id: str
+    status: RenderBatchStatus
+    error: str | None = None
+
+
+@dataclass(frozen=True)
 class RenderBatchChildResult:
-    clip_ids: tuple[str, ...] = ()
+    outcomes: tuple[RenderBatchResultItem, ...] = ()
+
+    @property
+    def completed(self) -> tuple[str, ...]:
+        return tuple(item.clip_id for item in self.outcomes if item.status == "COMPLETED")
+
+    @property
+    def failed(self) -> tuple[str, ...]:
+        return tuple(item.clip_id for item in self.outcomes if item.status == "FAILED")
+
+    @property
+    def completed_count(self) -> int:
+        return len(self.completed)
+
+    @property
+    def failed_count(self) -> int:
+        return len(self.failed)
+
+
+class RenderBatchExecutorPort(Protocol):
+    async def execute(self, payload: RenderBatchChildInput) -> RenderBatchChildResult: ...

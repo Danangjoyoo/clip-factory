@@ -24,10 +24,8 @@ describe('RecordProgressService', () => {
       workflowId: 'w',
       stage: 'TRANSCRIBE',
       state: 'RUNNING',
-      completed: 1n,
-      total: 2n,
       elapsedSeconds: 1,
-      historicalThroughputs: [],
+      historicalThroughputs: [] as number[],
       completedUnits: 1,
       totalUnits: 2,
       unit: 'ITEMS',
@@ -35,5 +33,36 @@ describe('RecordProgressService', () => {
       durationMs: 0,
     });
     expect(calls).toEqual(['projection', 'timing', 'live']);
+  });
+
+  it('skips timing storage for non-terminal heartbeats', async () => {
+    const calls: string[] = [];
+    const service = new RecordProgressService(
+      {
+        upsert: async () => void calls.push('projection'),
+        findActive: async () => [],
+      },
+      {
+        create: async () => void calls.push('timing'),
+        listThroughputs: async () => [],
+      } as any,
+      {
+        publish: async () => void calls.push('live'),
+        snapshot: async () => null,
+        events: async function* () {},
+      },
+    );
+    await service.execute({
+      projectId: 'p',
+      workflowId: 'w',
+      stage: 'TRANSCRIBE',
+      state: 'RUNNING',
+      elapsedSeconds: 1,
+      historicalThroughputs: [] as number[],
+      completedUnits: 1,
+      totalUnits: 2,
+      unit: 'ITEMS',
+    });
+    expect(calls).toEqual(['projection', 'live']);
   });
 });

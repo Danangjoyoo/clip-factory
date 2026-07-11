@@ -336,6 +336,7 @@ model Render {
   id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   projectId         String             @map("project_id") @db.Uuid
   clipId            String             @map("clip_id") @db.Uuid
+  retryOfRenderId   String?            @map("retry_of_render_id") @db.Uuid
   status            RenderStatusRecord @default(QUEUED)
   inputSnapshotJson Json               @map("input_snapshot_json") @db.JsonB
   outputObjectKey   String?            @map("output_object_key") @db.Text
@@ -350,8 +351,11 @@ model Render {
   createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   clip              Clip               @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  retryOfRender     Render?            @relation("RenderRetry", fields: [retryOfRenderId], references: [id], onDelete: SetNull)
+  retriedRenders    Render[]           @relation("RenderRetry")
 
   @@index([clipId, createdAt])
+  @@index([retryOfRenderId])
   @@index([status])
   @@map("renders")
 }

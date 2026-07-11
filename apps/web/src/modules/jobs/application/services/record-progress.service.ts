@@ -31,7 +31,10 @@ export class RecordProgressService {
             input.backendKey,
           )
         : input.historicalThroughputs;
-    const event = calculateProgress({ ...input, historicalThroughputs });
+    const event = calculateProgress({
+      ...input,
+      ...(historicalThroughputs ? { historicalThroughputs } : {}),
+    });
     await this.projections.upsert(event);
     if (
       input.terminal &&

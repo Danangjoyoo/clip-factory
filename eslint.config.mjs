@@ -12,15 +12,4 @@ export default [
     files: ['**/*.{js,mjs,cjs}'],
     rules: {},
   },
-  {
-    files: ['**/*.{ts,tsx}'],
-    languageOptions: {
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: { jsx: true },
-      },
-    },
-    rules: {},
-  },
 ];

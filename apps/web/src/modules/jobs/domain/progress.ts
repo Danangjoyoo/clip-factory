@@ -10,10 +10,34 @@ export interface EtaInput {
   completed: bigint;
   total: bigint;
   elapsedSeconds: number;
-  historicalThroughputs: number[];
+  historicalThroughputs?: number[];
   stage?: string;
 }
 export class ProgressError extends Error {}
+
+const jobStatusFromState = (state: ProgressState): string | undefined => {
+  if (
+    state === 'QUEUED' ||
+    state === 'RUNNING' ||
+    state === 'WAITING' ||
+    state === 'COMPLETED' ||
+    state === 'FAILED' ||
+    state === 'CANCELLED'
+  )
+    return state;
+  return undefined;
+};
+
+function toNonNegativeBigInt(value: number): bigint {
+  if (!Number.isInteger(value) || value < 0) throw new ProgressError('INVALID_WORK_UNITS');
+  return BigInt(value);
+}
+
+function toPositiveBigInt(value: number): bigint {
+  const result = toNonNegativeBigInt(value);
+  if (result === 0n) throw new ProgressError('INVALID_WORK_UNITS');
+  return result;
+}
 
 export function progressBasisPoints(completed: bigint, total: bigint): number {
   if (completed < 0n || total <= 0n || completed > total)
@@ -37,7 +61,7 @@ export function estimateEta(input: EtaInput): EtaRange {
     input.completed > 0n && input.elapsedSeconds > 0
       ? Number(input.completed) / input.elapsedSeconds
       : 0;
-  const rates = input.historicalThroughputs
+  const rates = (input.historicalThroughputs ?? [])
     .filter((rate) => rate > 0)
     .sort((a, b) => a - b);
   if (rates.length < 5) {
@@ -58,9 +82,10 @@ export function estimateEta(input: EtaInput): EtaRange {
   const widen = input.stage?.toUpperCase().includes('OPENAI')
     ? [0.7, 2]
     : [1, 1];
+  const status = jobStatusFromState(input.state);
   return {
-      lowSeconds: Math.ceil((remaining / p75) * widen[0]!),
-      highSeconds: Math.ceil((remaining / p25) * widen[1]!),
+    lowSeconds: Math.ceil((remaining / p75) * widen[0]!),
+    highSeconds: Math.ceil((remaining / p25) * widen[1]!),
     confidence: rates.length >= 20 ? 'HIGH' : 'MEDIUM',
   };
 }
@@ -99,7 +124,10 @@ export function queueEtaRange(
   };
 }
 
-export interface ProgressCalculationInput extends EtaInput {
+export interface ProgressCalculationInput {
+  state: ProgressState;
+  elapsedSeconds: number;
+  historicalThroughputs?: number[];
   projectId: string;
   workflowId: string;
   stage: string;
@@ -107,6 +135,8 @@ export interface ProgressCalculationInput extends EtaInput {
   totalUnits: number;
   unit: string;
   occurredAt?: string;
+  hardwareKey?: string;
+  backendKey?: string;
 }
 export interface ProgressPresentation {
   projectId: string;
@@ -124,17 +154,23 @@ export interface ProgressPresentation {
 export function calculateProgress(
   input: ProgressCalculationInput,
 ): ProgressPresentation {
-  const completed = BigInt(input.completedUnits),
-    total = BigInt(input.totalUnits);
+  const completed = toNonNegativeBigInt(input.completedUnits);
+  const total = toPositiveBigInt(input.totalUnits);
   return {
     projectId: input.projectId,
     workflowId: input.workflowId,
     stage: input.stage,
     progressBasisPoints: progressBasisPoints(completed, total),
-    eta: estimateEta({ ...input, completed, total }),
+    eta: estimateEta({
+      ...input,
+      completed,
+      total,
+      historicalThroughputs: input.historicalThroughputs ?? [],
+    }),
     completedUnits: input.completedUnits,
     totalUnits: input.totalUnits,
     unit: input.unit,
     occurredAt: input.occurredAt ?? new Date().toISOString(),
+    ...(status ? { status } : {}),
   };
 }

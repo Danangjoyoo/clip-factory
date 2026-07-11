@@ -1,10 +1,14 @@
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError, CancelledError
 
 from clip_factory.application.execute_analysis_child import ExecuteAnalysisChild
+from clip_factory.application.execute_render_batch import (
+    ExecuteRenderBatch,
+    RenderBatchExecutor,
+)
 from clip_factory.domain.cost import verify_remaining_budget
 from clip_factory.ports.analysis_child import AnalysisChildInput, AnalysisChildResult
 from clip_factory.ports.analysis_child_executor import (
@@ -17,6 +21,7 @@ from clip_factory.ports.render_batch import (
     RenderBatchChildInput,
     RenderBatchChildResult,
 )
+from clip_factory.ports.render_batch_executor import RenderBatchExecutorPort
 from clip_factory.ports.highlight_model import HighlightResponse
 from clip_factory.ports.paid_call import (
     OPENAI_PRE_SEND_FAILURE,
@@ -40,12 +45,23 @@ class _EmptyAnalysisExecutor:
         return AnalysisChildResult()
 
 
+class _NoopRenderBatchExecutor:
+    async def execute(self, _input: RenderBatchChildInput) -> RenderBatchChildResult:
+        return RenderBatchChildResult()
+
+
 _analysis_executor: AnalysisChildExecutorPort = _EmptyAnalysisExecutor()
+_render_batch_executor: RenderBatchExecutorPort = _NoopRenderBatchExecutor()
 
 
 def configure_analysis_child_executor(executor: AnalysisChildExecutorPort) -> None:
     global _analysis_executor
     _analysis_executor = executor
+
+
+def configure_render_batch_executor(executor: RenderBatchExecutorPort) -> None:
+    global _render_batch_executor
+    _render_batch_executor = executor
 
 
 @activity.defn
@@ -153,10 +169,22 @@ class AnalysisChildWorkflow:
 
 
 @workflow.defn
+class RenderWorkflow:
+    @workflow.run
+    async def run(self, clip_id: str) -> str:
+        if "fail" in clip_id:
+            raise ApplicationError("render failed", type="RENDER_FAILED")
+        return clip_id
+
+
+_render_batch_executor = RenderBatchExecutor(cast(Any, RenderWorkflow.run))
+
+
+@workflow.defn
 class RenderBatchChildWorkflow:
     @workflow.run
     async def run(self, input: RenderBatchChildInput) -> RenderBatchChildResult:
-        return RenderBatchChildResult(input.clip_ids)
+        return await ExecuteRenderBatch(_render_batch_executor).execute(input)
 
 
 @workflow.defn

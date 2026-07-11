@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
-export async function PUT() {
-  return NextResponse.json(
-    { code: 'EDIT_SERVICE_NOT_CONFIGURED' },
-    { status: 501 },
-  );
+import { clipsComposition } from '../../../../../modules/clips/composition/clips.composition';
+
+export async function PUT(
+  request: Request,
+  context: { params: Promise<{ clipId: string }> },
+) {
+  const { clipId } = await context.params;
+  return clipsComposition().editController.put(request, clipId);
 }

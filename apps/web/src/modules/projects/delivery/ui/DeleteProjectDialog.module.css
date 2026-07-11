@@ -1,0 +1,35 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: auto;
+  max-width: min(520px, 100% - 2 * var(--space-4));
+  width: 100%;
+  background: transparent;
+}
+
+.content {
+  border-radius: var(--radius-panel);
+  border: 1px solid color-mix(in oklab, var(--color-danger), transparent 62%);
+  padding: var(--space-6);
+  background: var(--color-surface);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: transparent;
+}
+
+.alert {
+  color: var(--color-danger);
+}
