@@ -11,7 +11,10 @@ def reframe_result_to_payload(result: ReframeResult) -> dict[str, object]:
             "detectorRevision": result.provenance.detector_revision,
             "confidenceFloorMicros": result.provenance.confidence_floor_micros,
             "smoothingAlphaMicros": result.provenance.smoothing_alpha_micros,
-            "proxy": {"width": result.provenance.proxy_width, "sampleRateHz": result.provenance.proxy_sample_rate_hz},
+            "proxy": {
+                "width": result.provenance.proxy_width,
+                "sampleRateHz": result.provenance.proxy_sample_rate_hz,
+            },
         },
         "points": [point.__dict__ for point in result.points],
     }

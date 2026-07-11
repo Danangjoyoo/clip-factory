@@ -64,7 +64,9 @@ class Model:
 
 
 def _input() -> PaidCallInput:
-    return PaidCallInput("p", "a", HighlightRequest("text", "gpt-5.5", "low"), "call-1", 10)
+    return PaidCallInput(
+        "p", "a", HighlightRequest("text", "gpt-5.5", "low"), "call-1", 10
+    )
 
 
 def test_callback_loss_reconciles_without_second_provider_call() -> None:
@@ -76,8 +78,22 @@ async def _run_callback_loss() -> None:
     deps.callback = False
     configure_paid_highlight_call(model, deps)
     async with await WorkflowEnvironment.start_time_skipping() as env:
-        async with Worker(env.client, task_queue="paid-recovery-1", workflows=[PaidCallWorkflow], activities=[call_openai_once_activity, reserve_paid_call_activity, reconcile_paid_call_activity]):
-            handle = await env.client.start_workflow(PaidCallWorkflow.run, _input(), id="paid-recovery-1", task_queue="paid-recovery-1")
+        async with Worker(
+            env.client,
+            task_queue="paid-recovery-1",
+            workflows=[PaidCallWorkflow],
+            activities=[
+                call_openai_once_activity,
+                reserve_paid_call_activity,
+                reconcile_paid_call_activity,
+            ],
+        ):
+            handle = await env.client.start_workflow(
+                PaidCallWorkflow.run,
+                _input(),
+                id="paid-recovery-1",
+                task_queue="paid-recovery-1",
+            )
             for _ in range(100):
                 if await handle.query(PaidCallWorkflow.state) == "PAID_CALL_UNCERTAIN":
                     break
@@ -88,9 +104,13 @@ async def _run_callback_loss() -> None:
             assert result.response_id == "response-1"
             assert model.calls == 1
             original = _input()
-            assert [(r.call_id, r.request_hash) for r in deps.reservations] == [("call-1", original.request_hash)]
+            assert [(r.call_id, r.request_hash) for r in deps.reservations] == [
+                ("call-1", original.request_hash)
+            ]
             assert deps.sent == [("call-1", original.request_hash)]
-            assert next(iter(deps.artifacts)) == "projects/p/analysis/a/calls/call-1.json"
+            assert (
+                next(iter(deps.artifacts)) == "projects/p/analysis/a/calls/call-1.json"
+            )
 
 
 def test_worker_loss_waits_for_acknowledgement_before_fresh_call() -> None:
@@ -101,8 +121,22 @@ async def _run_worker_loss() -> None:
     deps, model = Deps(callback=True), Model(fail_once=True)
     configure_paid_highlight_call(model, deps)
     async with await WorkflowEnvironment.start_time_skipping() as env:
-        async with Worker(env.client, task_queue="paid-recovery-2", workflows=[PaidCallWorkflow], activities=[call_openai_once_activity, reserve_paid_call_activity, reconcile_paid_call_activity]):
-            handle = await env.client.start_workflow(PaidCallWorkflow.run, _input(), id="paid-recovery-2", task_queue="paid-recovery-2")
+        async with Worker(
+            env.client,
+            task_queue="paid-recovery-2",
+            workflows=[PaidCallWorkflow],
+            activities=[
+                call_openai_once_activity,
+                reserve_paid_call_activity,
+                reconcile_paid_call_activity,
+            ],
+        ):
+            handle = await env.client.start_workflow(
+                PaidCallWorkflow.run,
+                _input(),
+                id="paid-recovery-2",
+                task_queue="paid-recovery-2",
+            )
             for _ in range(100):
                 if await handle.query(PaidCallWorkflow.state) == "PAID_CALL_UNCERTAIN":
                     break
@@ -117,7 +151,9 @@ async def _run_worker_loss() -> None:
             assert deps.reservations[0].call_id == "call-1"
             assert deps.reservations[0].request_hash == original.request_hash
             assert deps.reservations[1].call_id != deps.reservations[0].call_id
-            assert deps.reservations[1].request_hash != deps.reservations[0].request_hash
+            assert (
+                deps.reservations[1].request_hash != deps.reservations[0].request_hash
+            )
             assert deps.sent == [
                 (deps.reservations[0].call_id, original.request_hash),
                 (deps.reservations[1].call_id, deps.reservations[1].request_hash),

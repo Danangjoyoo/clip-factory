@@ -197,11 +197,15 @@ class PaidCallWorkflow:
             if error_type == OPENAI_PRE_SEND_FAILURE:
                 self._state = "PRE_SEND_FAILURE"
                 retry = PaidCallInput(
-                    input.project_id, input.analysis_run_id, input.request,
-                    str(workflow.uuid4()), input.worst_case_microusd,
+                    input.project_id,
+                    input.analysis_run_id,
+                    input.request,
+                    str(workflow.uuid4()),
+                    input.worst_case_microusd,
                 )
                 await workflow.execute_activity(
-                    reserve_paid_call_activity, retry,
+                    reserve_paid_call_activity,
+                    retry,
                     start_to_close_timeout=timedelta(seconds=30),
                 )
                 result = await workflow.execute_activity(

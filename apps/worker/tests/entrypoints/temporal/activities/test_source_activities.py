@@ -14,4 +14,6 @@ def test_activity_returns_path_free_receipt() -> None:
                 "fingerprint": "f",
             }
 
-    assert "/Users/" not in repr(validate_local_source(cast(ValidateLocalSource, Activity()), "source"))
+    assert "/Users/" not in repr(
+        validate_local_source(cast(ValidateLocalSource, Activity()), "source")
+    )

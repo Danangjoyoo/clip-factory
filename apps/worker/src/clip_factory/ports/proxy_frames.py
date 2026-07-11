@@ -14,4 +14,6 @@ class ProxyFrame:
 
 
 class ProxyFramePort(Protocol):
-    async def frames(self, source: str, probe: MediaProbe, sample_rate_hz: int = 5, width: int = 640) -> Sequence[ProxyFrame]: ...
+    async def frames(
+        self, source: str, probe: MediaProbe, sample_rate_hz: int = 5, width: int = 640
+    ) -> Sequence[ProxyFrame]: ...

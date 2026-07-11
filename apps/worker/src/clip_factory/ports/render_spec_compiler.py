@@ -14,4 +14,6 @@ class CompiledRenderSpec:
 
 
 class RenderSpecCompiler(Protocol):
-    def compile(self, spec: RenderSpec, profile: RenderProfile) -> CompiledRenderSpec: ...
+    def compile(
+        self, spec: RenderSpec, profile: RenderProfile
+    ) -> CompiledRenderSpec: ...

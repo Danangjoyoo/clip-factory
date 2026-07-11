@@ -15,6 +15,7 @@ from clip_factory.ports.paid_call import (
     reserve_paid_call,
 )
 
+
 class _UnconfiguredPaidCallDependencies:
     async def reserve(self, _request: Any) -> object:
         raise RuntimeError("paid highlight dependencies are not configured")
@@ -44,14 +45,21 @@ _model_access: CheckModelAccess | None = None
 
 
 def configure_paid_highlight_call(
-    model: Any, dependencies: PaidCallDependencies, model_access: CheckModelAccess | None = None
+    model: Any,
+    dependencies: PaidCallDependencies,
+    model_access: CheckModelAccess | None = None,
 ) -> None:
     global _paid_model, _paid_dependencies, _model_access
     if model_access is None:
+
         class _LegacyAccess:
             async def check(self, model_id: str) -> ModelAccessResult:
                 check = getattr(model, "check", None)
-                return await check(model_id) if check else ModelAccessResult(model_id, ModelAccessStatus.AVAILABLE)
+                return (
+                    await check(model_id)
+                    if check
+                    else ModelAccessResult(model_id, ModelAccessStatus.AVAILABLE)
+                )
 
         model_access = CheckModelAccess(_LegacyAccess())
     _paid_model, _paid_dependencies, _model_access = model, dependencies, model_access
@@ -73,8 +81,14 @@ async def call_openai_once_activity(input: PaidCallInput) -> HighlightResponse:
             raise RuntimeError("model access gate is not configured")
         access = await _model_access.execute(input.request.model)
         if access.status is not ModelAccessStatus.AVAILABLE:
-            raise ApplicationError(access.presentation or "model is not available", type="OPENAI_PRE_SEND_FAILURE", non_retryable=True)
-        return await call_openai_once(_paid_model, _paid_dependencies, input, reserved=input.reservation_prepared)
+            raise ApplicationError(
+                access.presentation or "model is not available",
+                type="OPENAI_PRE_SEND_FAILURE",
+                non_retryable=True,
+            )
+        return await call_openai_once(
+            _paid_model, _paid_dependencies, input, reserved=input.reservation_prepared
+        )
     except Exception as exc:
         error_type = getattr(exc, "error_type", "OPENAI_OUTCOME_UNCERTAIN")
         raise ApplicationError(str(exc), type=error_type, non_retryable=True) from exc

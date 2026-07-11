@@ -18,10 +18,14 @@ def test_compile_ass_emits_vertical_video_and_karaoke_cues(tmp_path):
                 "maxWordsPerLine": 6,
             },
             "captions": [
-                {"startMs": 0, "endMs": 1250, "words": [
-                    {"text": "hello", "startMs": 0, "endMs": 500},
-                    {"text": "{world}", "startMs": 500, "endMs": 1250},
-                ]}
+                {
+                    "startMs": 0,
+                    "endMs": 1250,
+                    "words": [
+                        {"text": "hello", "startMs": 0, "endMs": 500},
+                        {"text": "{world}", "startMs": 500, "endMs": 1250},
+                    ],
+                }
             ],
         },
         tmp_path,

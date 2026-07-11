@@ -32,15 +32,15 @@ def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
         from openai import AsyncOpenAI
 
         sdk_client: Any = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
-        model: Any = OpenAIHighlightAdapter(
-            sdk_client
-        )
+        model: Any = OpenAIHighlightAdapter(sdk_client)
         model_access: Any = OpenAIModelAccessAdapter(sdk_client)
     else:
         model = FakeHighlightAdapter()
+
         class _FakeModelAccess:
             async def check(self, model_id: str) -> ModelAccessResult:
                 from clip_factory.ports.model_access import ModelAccessStatus
+
                 return ModelAccessResult(model_id, ModelAccessStatus.AVAILABLE)
 
         model_access = _FakeModelAccess()
@@ -48,8 +48,13 @@ def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
     from clip_factory.entrypoints.temporal.activities.project_activities import (
         configure_transcript_loader,
     )
+
     configure_transcript_loader(
-        MinioArtifactStore(Path(os.environ.get("CLIP_FACTORY_ARTIFACT_ROOT", ".clip-factory-artifacts")))
+        MinioArtifactStore(
+            Path(
+                os.environ.get("CLIP_FACTORY_ARTIFACT_ROOT", ".clip-factory-artifacts")
+            )
+        )
     )
     return Worker(
         client,

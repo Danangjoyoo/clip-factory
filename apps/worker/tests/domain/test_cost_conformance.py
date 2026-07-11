@@ -65,12 +65,15 @@ def _price(tokens: dict[str, str], rule: PriceRule) -> int:
 
 
 def test_shared_vectors_reserve_values() -> None:
-    vectors = cast(list[dict[str, object]], json.loads(
-        (
-            Path(__file__).parents[4]
-            / "packages/contracts/test-fixtures/cost-conformance-vectors.json"
-        ).read_text()
-    ))
+    vectors = cast(
+        list[dict[str, object]],
+        json.loads(
+            (
+                Path(__file__).parents[4]
+                / "packages/contracts/test-fixtures/cost-conformance-vectors.json"
+            ).read_text()
+        ),
+    )
     for vector in vectors:
         if (
             "tokens" in vector
@@ -95,4 +98,6 @@ def test_shared_vectors_reserve_values() -> None:
         if "remainingCallCosts" in vector:
             remaining = cast(list[int | str], vector["remainingCallCosts"])
             expected = cast(int | str, vector["expectedReserveMicrousd"])
-            assert required_reserve_microusd([int(value) for value in remaining]) == int(expected)
+            assert required_reserve_microusd(
+                [int(value) for value in remaining]
+            ) == int(expected)

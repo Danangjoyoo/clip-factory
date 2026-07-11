@@ -22,14 +22,23 @@ def _color(value: str) -> str:
 def compile_ass(spec: dict[str, Any], font_directory: Path) -> str:
     style = spec["style"]
     family = style["fontFamily"]
-    if not any(path.stem.lower() == family.lower() for path in font_directory.glob("*")):
+    if not any(
+        path.stem.lower() == family.lower() for path in font_directory.glob("*")
+    ):
         raise ValueError("FONT_NOT_FOUND")
     lines = [
-        "[Script Info]", "ScriptType: v4.00+", "PlayResX: 1080", "PlayResY: 1920",
-        "ScaledBorderAndShadow: yes", "", "[V4+ Styles]",
+        "[Script Info]",
+        "ScriptType: v4.00+",
+        "PlayResX: 1080",
+        "PlayResY: 1920",
+        "ScaledBorderAndShadow: yes",
+        "",
+        "[V4+ Styles]",
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
         f"Style: Default,{family},{style['fontSizePx']},{_color(style['textColor'])},{_color(style['textColor'])},{_color(style['outlineColor'])},{_color(style['backgroundColor'])},0,0,0,0,100,100,0,0,1,2,0,5,40,40,40,1",
-        "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
+        "",
+        "[Events]",
+        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
     ]
     for cue in spec.get("captions", []):
         words = cue.get("words", [])
@@ -38,8 +47,16 @@ def compile_ass(spec: dict[str, Any], font_directory: Path) -> str:
             tag = f"\\k{max(1, round((word['endMs'] - word['startMs']) / 10))}"
             if i:
                 tag += f"\\c{_color(style['activeWordColor'])}"
-            value = word["text"].replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}").replace("\n", "\\N")
+            value = (
+                word["text"]
+                .replace("\\", "\\\\")
+                .replace("{", "\\{")
+                .replace("}", "\\}")
+                .replace("\n", "\\N")
+            )
             rendered.append(f"{{{tag}}}{value}")
         text = "".join(rendered)
-        lines.append(f"Dialogue: 0,{_time(cue['startMs'])},{_time(cue['endMs'])},Default,,0,0,0,,{text}")
+        lines.append(
+            f"Dialogue: 0,{_time(cue['startMs'])},{_time(cue['endMs'])},Default,,0,0,0,,{text}"
+        )
     return "\n".join(lines) + "\n"
