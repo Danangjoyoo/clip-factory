@@ -1,6 +1,5 @@
-import type { ClipEntityDto, CreateManualClip } from '../dto/entity';
-export type ClipTransaction = unknown;
+import type { ClipEntityDto } from '../dto/entity';
+
 export interface ClipRepository {
-  createManual(input: CreateManualClip, tx?: ClipTransaction): Promise<ClipEntityDto>;
-  findByIdempotency?(projectId: string, key: string): Promise<ClipEntityDto | null>;
+  createManual(input: Omit<ClipEntityDto, 'id' | 'createdAt' | 'updatedAt' | 'selectionCostMicrousd'>, idempotencyKey?: string): Promise<ClipEntityDto>;
 }

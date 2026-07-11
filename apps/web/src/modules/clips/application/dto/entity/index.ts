@@ -1,1 +1,2 @@
-export type { AddManualClipEntityRequest, ClipEntityDto, CreateManualClip } from './clip-entity.dto';
+export * from './clip-entity.dto';
+export type { FrameConfigurationEntityDto } from './frame-configuration-entity.dto';
