@@ -9,6 +9,11 @@ export const workerResultApiToEntity = (
   projectId: api.projectId,
   status: api.status,
   completedAt: api.completedAt,
+  transcriptObject: api.transcriptObject ?? null,
+  clipIds: api.clipIds,
+  error: api.error ?? null,
+  uncertainReservedMicrousd: api.uncertainReservedMicrousd,
+  requiredAction: api.requiredAction,
   idempotencyKey,
   requestHash,
 });

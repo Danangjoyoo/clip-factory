@@ -45,6 +45,16 @@ export class InMemorySourceAssetRepository implements SourceAssetRepository {
   async findByProjectId(id: string) {
     return this.items.get(id) ?? null;
   }
+  async findById(id: string) {
+    return [...this.items.values()].find((item) => item.id === id) ?? null;
+  }
+  async applyValidatedLocator(input: import('../application/dto/entity/worker-source-locator-entity.dto').ApplySourceValidationCommand) {
+    const value = [...this.items.values()].find((item) => item.id === input.sourceAssetId);
+    if (!value) throw new Error('source not found');
+    const updated = { ...value, resolvedPath: input.resolvedPath, sizeBytes: input.sizeBytes, modifiedAt: new Date(input.modifiedAt), fingerprint: input.fingerprint, probe: input.probe, health: 'LOCATED' as const };
+    this.items.set(value.projectId, updated);
+    return updated;
+  }
   async deleteByProjectId(id: string) {
     this.items.delete(id);
   }

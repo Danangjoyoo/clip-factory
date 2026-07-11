@@ -11,6 +11,10 @@ import type { UnitOfWork } from '../application/ports/unit-of-work.port';
 import type { WorkflowControlPort } from '../application/ports/workflow-control.port';
 import type { ArtifactCleanupPort } from '../application/ports/artifact-cleanup.port';
 import { ProjectController } from '../delivery/http/project.controller';
+import { GetWorkerSourceLocatorService } from '../application/services/get-worker-source-locator.service';
+import { ApplySourceValidationService } from '../application/services/apply-source-validation.service';
+import { WorkerSourceLocatorController } from '../delivery/http/worker-source-locator.controller';
+import { loadServerEnv } from '../../../config/server-env';
 const uow: UnitOfWork = {
   execute: (fn) => prisma.$transaction((tx) => fn(tx)),
 };
@@ -27,6 +31,11 @@ export function projectsComposition() {
       new ListProjectsService(projects, sources),
       new GetProjectService(projects, sources),
       new DeleteProjectService(uow, projects, sources, workflows, artifacts),
+    ),
+    workerSourceLocatorController: new WorkerSourceLocatorController(
+      new GetWorkerSourceLocatorService(sources),
+      new ApplySourceValidationService(sources, uow),
+      loadServerEnv().INTERNAL_SERVICE_TOKEN,
     ),
   };
 }

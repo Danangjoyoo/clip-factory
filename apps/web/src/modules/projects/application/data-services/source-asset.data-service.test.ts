@@ -4,6 +4,8 @@ it('delegates each source operation to its repository', async () => {
   const repository = {
     insert: vi.fn(),
     findByProjectId: vi.fn(),
+    findById: vi.fn(),
+    applyValidatedLocator: vi.fn(),
     deleteByProjectId: vi.fn(),
   };
   const service = new SourceAssetDataService(repository);

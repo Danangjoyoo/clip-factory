@@ -38,7 +38,8 @@ export class ApplyWorkerResultService {
           tx,
         );
       const response = await this.projects.applyWorkerResult(command, tx);
-      await this.jobs.recordResult(command.workflowId, response, tx);
+      if (command.status !== 'PAID_CALL_UNCERTAIN')
+        await this.jobs.recordResult(command.workflowId, response, tx);
       return this.receipts.complete(command.idempotencyKey, response, tx);
     });
   }
