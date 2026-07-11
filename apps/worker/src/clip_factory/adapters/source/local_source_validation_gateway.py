@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, cast
 
 from clip_factory.adapters.filesystem.local_source import LocalSourceFilesystem
 from clip_factory.adapters.http.source_locator_client import modified_at
@@ -7,6 +8,18 @@ from clip_factory.adapters.http.source_locator_client_models import (
     SourceValidationUpdate,
 )
 from clip_factory.domain.source import SourceValidationReceipt
+
+
+def _without_paths(value: object) -> object:
+    if isinstance(value, dict):
+        return {
+            key: _without_paths(child)
+            for key, child in value.items()
+            if "path" not in key.lower()
+        }
+    if isinstance(value, list):
+        return [_without_paths(child) for child in value]
+    return value
 
 
 class LocalSourceValidationGateway:
@@ -32,8 +45,8 @@ class LocalSourceValidationGateway:
         )
         probe = result.get("probe")
         safe_probe = (
-            {k: v for k, v in probe.items() if "path" not in k.lower()}
-            if isinstance(probe, dict)
+            cast(dict[str, Any], _without_paths(probe))
+            if isinstance(probe, (dict, list))
             else None
         )
         return SourceValidationReceipt(

@@ -18,6 +18,7 @@ import { RelinkSourceController } from '../delivery/http/relink-source.controlle
 import { RelinkSourceService } from '../application/services/relink-source.service';
 import { loadServerEnv } from '../../../config/server-env';
 import { PrismaSourceValidationReceiptRepository } from '../adapters/persistence/repositories/prisma-source-validation-receipt.repository';
+import { HttpSourceValidationClient } from '../adapters/worker/http-source-validation.client';
 const uow: UnitOfWork = {
   execute: (fn) => prisma.$transaction((tx) => fn(tx)),
 };
@@ -44,6 +45,17 @@ export function projectsComposition() {
       ),
       loadServerEnv().INTERNAL_SERVICE_TOKEN,
     ),
-    relinkSourceController: new RelinkSourceController(new RelinkSourceService(uow, sources, workflows, { validateCandidate: async () => { throw new Error('SOURCE_VALIDATION_UNAVAILABLE'); } }), loadServerEnv().INTERNAL_SERVICE_TOKEN),
+    relinkSourceController: new RelinkSourceController(
+      new RelinkSourceService(
+        uow,
+        sources,
+        workflows,
+        new HttpSourceValidationClient(
+          process.env.WORKER_VALIDATION_URL ?? 'http://127.0.0.1:8001',
+          loadServerEnv().INTERNAL_SERVICE_TOKEN,
+        ),
+      ),
+      loadServerEnv().INTERNAL_SERVICE_TOKEN,
+    ),
   };
 }
