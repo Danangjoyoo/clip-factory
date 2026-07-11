@@ -1,0 +1,3 @@
+export type TranscriptWordEntity = { text: string; startMs: number; endMs: number; confidenceMicros: number | null };
+export type TranscriptSegmentEntity = { text: string; startMs: number; endMs: number; wordStartIndex: number; wordEndIndex: number };
+export interface TranscriptEntityDto { id: string; projectId: string; sourceAssetId: string; backend: 'MLX_WHISPER' | 'FAKE'; model: string; modelRevision: string; weightsSha256: string | null; languageTag: string; objectBucket: string; objectKey: string; objectVersionId: string | null; objectSha256: string; durationMs: number; wordCount: number; runtimeMs: number; createdAt: Date }
