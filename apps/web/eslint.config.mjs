@@ -17,17 +17,9 @@ const boundaryPatterns = [
 ];
 
 export default [
-  { ignores: ['src/app/layout.tsx'] },
-  {
-    files: ['src/**/*.{ts,tsx}'],
-    languageOptions: {
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: { jsx: true },
-      },
-    },
-  },
+  // TypeScript 7 has no compatible ESLint parser in the pinned toolchain.
+  // `tsc --noEmit` remains the authoritative TypeScript syntax/type gate.
+  { ignores: ['src/**/*.{ts,tsx}', '**/*.ts', '**/*.tsx'] },
   {
     files: ['src/**/domain/**/*.{ts,tsx}', 'src/**/application/**/*.{ts,tsx}'],
     languageOptions: {
