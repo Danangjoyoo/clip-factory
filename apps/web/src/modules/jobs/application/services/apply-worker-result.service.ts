@@ -2,19 +2,26 @@ import type { ApplyWorkerResultCommand } from '../ports/project-terminal.port';
 import type { UnitOfWork } from '../ports/unit-of-work.port';
 import { IdempotencyReceiptDataService } from '../data-services/idempotency-receipt.data-service';
 import { JobProjectionDataService } from '../data-services/job-projection.data-service';
-import type { ProjectTerminalPort } from '../ports/project-terminal.port';
+import type {
+  FreshReservationPort,
+  ProjectTerminalPort,
+} from '../ports/project-terminal.port';
 export class IdempotencyConflictError extends Error {
   constructor(key: string) {
     super(`Idempotency key conflict: ${key}`);
     this.name = 'IdempotencyConflictError';
   }
 }
+export class PaidCallUncertainError extends Error {}
 export class ApplyWorkerResultService {
   constructor(
     private readonly unitOfWork: UnitOfWork,
     private readonly receipts: IdempotencyReceiptDataService,
     private readonly jobs: JobProjectionDataService,
     private readonly projects: ProjectTerminalPort,
+    private readonly reservations: FreshReservationPort = {
+      authorizeFreshReservation: async () => undefined,
+    },
   ) {}
   execute(command: ApplyWorkerResultCommand) {
     return this.unitOfWork.execute(async (tx) => {
@@ -31,15 +38,24 @@ export class ApplyWorkerResultService {
           tx,
         );
       const existing = await this.jobs.findByWorkflowId(command.workflowId, tx);
-      if (existing?.terminalResult)
+      if (
+        existing?.terminalResult?.status === 'PAID_CALL_UNCERTAIN' &&
+        !command.acknowledgePossiblePriorSpend
+      )
+        throw new PaidCallUncertainError(command.workflowId);
+      if (
+        existing?.terminalResult &&
+        existing.terminalResult.status !== 'PAID_CALL_UNCERTAIN'
+      )
         return this.receipts.complete(
           command.idempotencyKey,
           existing.terminalResult,
           tx,
         );
       const response = await this.projects.applyWorkerResult(command, tx);
-      if (command.status !== 'PAID_CALL_UNCERTAIN')
-        await this.jobs.recordResult(command.workflowId, response, tx);
+      if (command.acknowledgePossiblePriorSpend)
+        await this.reservations.authorizeFreshReservation(command);
+      await this.jobs.recordResult(command.workflowId, response, tx);
       return this.receipts.complete(command.idempotencyKey, response, tx);
     });
   }

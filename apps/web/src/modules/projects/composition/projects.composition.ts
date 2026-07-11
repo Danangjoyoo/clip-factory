@@ -15,6 +15,7 @@ import { GetWorkerSourceLocatorService } from '../application/services/get-worke
 import { ApplySourceValidationService } from '../application/services/apply-source-validation.service';
 import { WorkerSourceLocatorController } from '../delivery/http/worker-source-locator.controller';
 import { loadServerEnv } from '../../../config/server-env';
+import { PrismaSourceValidationReceiptRepository } from '../adapters/persistence/repositories/prisma-source-validation-receipt.repository';
 const uow: UnitOfWork = {
   execute: (fn) => prisma.$transaction((tx) => fn(tx)),
 };
@@ -34,7 +35,11 @@ export function projectsComposition() {
     ),
     workerSourceLocatorController: new WorkerSourceLocatorController(
       new GetWorkerSourceLocatorService(sources),
-      new ApplySourceValidationService(sources, uow),
+      new ApplySourceValidationService(
+        uow,
+        sources,
+        new PrismaSourceValidationReceiptRepository(),
+      ),
       loadServerEnv().INTERNAL_SERVICE_TOKEN,
     ),
   };

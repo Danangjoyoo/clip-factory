@@ -6,7 +6,11 @@ export interface ProjectTerminalPort {
     tx?: JobTransaction,
   ): Promise<ApplyWorkerResultResponse>;
 }
+export interface FreshReservationPort {
+  authorizeFreshReservation(command: ApplyWorkerResultCommand): Promise<void>;
+}
 export interface ApplyWorkerResultCommand extends ApplyWorkerResultResponse {
   idempotencyKey: string;
   requestHash: string;
+  acknowledgePossiblePriorSpend?: boolean;
 }

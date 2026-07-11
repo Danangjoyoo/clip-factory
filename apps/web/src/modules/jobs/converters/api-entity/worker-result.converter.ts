@@ -14,6 +14,7 @@ export const workerResultApiToEntity = (
   error: api.error ?? null,
   uncertainReservedMicrousd: api.uncertainReservedMicrousd,
   requiredAction: api.requiredAction,
+  acknowledgePossiblePriorSpend: api.acknowledgePossiblePriorSpend ?? false,
   idempotencyKey,
   requestHash,
 });

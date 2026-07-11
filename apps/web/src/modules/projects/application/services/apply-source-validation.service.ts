@@ -4,43 +4,43 @@ import type {
   SourceValidationAcknowledgement,
 } from '../dto/entity/worker-source-locator-entity.dto';
 import type { UnitOfWork } from '../ports/unit-of-work.port';
-export type SourceValidationReceipt = { requestHash: string; response: SourceValidationAcknowledgement | null };
-export type SourceValidationReceiptStore = { find(key: string): Promise<SourceValidationReceipt | null>; complete(key: string, hash: string, response: SourceValidationAcknowledgement): Promise<void> };
-const memoryReceipts = new Map<string, SourceValidationReceipt>();
-const fallbackReceipts: SourceValidationReceiptStore = {
-  async find(key) { return memoryReceipts.get(key) ?? null; },
-  async complete(key, requestHash, response) { memoryReceipts.set(key, { requestHash, response }); },
-};
+import type { SourceValidationReceiptPort } from '../ports/source-validation-receipt.port';
+export class SourceValidationInProgressError extends Error {}
 export class ApplySourceValidationService {
-  private readonly uow: UnitOfWork;
-  private readonly receipts: SourceValidationReceiptStore;
-  constructor(uow: UnitOfWork, sources: SourceAssetDataService, receipts?: SourceValidationReceiptStore);
-  constructor(sources: SourceAssetDataService, uow?: UnitOfWork, receipts?: SourceValidationReceiptStore);
   constructor(
-    first: UnitOfWork | SourceAssetDataService,
-    second?: UnitOfWork | SourceAssetDataService,
-    receipts: SourceValidationReceiptStore = fallbackReceipts,
-  ) {
-    const firstIsSources = 'applyValidatedLocator' in first;
-    this.sources = (firstIsSources ? first : second) as SourceAssetDataService;
-    const uow = firstIsSources ? second : first;
-    this.uow = (uow && 'execute' in uow ? uow : { execute: (fn) => fn(undefined) });
-    this.receipts = receipts;
-  }
-  private readonly sources: SourceAssetDataService;
+    private readonly uow: UnitOfWork,
+    private readonly sources: SourceAssetDataService,
+    private readonly receipts: SourceValidationReceiptPort,
+  ) {}
   async execute(
     command: ApplySourceValidationCommand,
   ): Promise<SourceValidationAcknowledgement> {
     if (!command.requestHash) throw new Error('request hash required');
     return this.uow.execute(async (tx) => {
-      const prior = await this.receipts.find(command.idempotencyKey);
+      const prior = await this.receipts.findByKey(command.idempotencyKey, tx);
       if (prior) {
-        if (prior.requestHash !== command.requestHash) throw new Error('idempotency conflict');
+        if (prior.requestHash !== command.requestHash)
+          throw new Error('idempotency conflict');
         if (prior.response) return prior.response;
+        throw new SourceValidationInProgressError(command.idempotencyKey);
       }
+      await this.receipts.createPending(
+        command.idempotencyKey,
+        command.requestHash,
+        tx,
+      );
       const updated = await this.sources.applyValidatedLocator(command, tx);
-      const response = { sourceAssetId: updated.id, health: updated.health, fingerprint: updated.fingerprint ?? command.fingerprint };
-      await this.receipts.complete(command.idempotencyKey, command.requestHash, response);
+      const response = {
+        sourceAssetId: updated.id,
+        health: updated.health,
+        fingerprint: updated.fingerprint ?? command.fingerprint,
+      };
+      await this.receipts.complete(
+        command.idempotencyKey,
+        command.requestHash,
+        response,
+        tx,
+      );
       return response;
     });
   }

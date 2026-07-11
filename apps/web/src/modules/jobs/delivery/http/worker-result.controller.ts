@@ -6,8 +6,13 @@ import {
 import { WorkerResultApiSchema } from './dto/api/worker-result-api.dto';
 import { workerResultApiToEntity } from '../../converters/api-entity/worker-result.converter';
 import type { ApplyWorkerResultService } from '../../application/services/apply-worker-result.service';
-import { IdempotencyConflictError } from '../../application/services/apply-worker-result.service';
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import {
+  IdempotencyConflictError,
+  PaidCallUncertainError,
+} from '../../application/services/apply-worker-result.service';
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ARTIFACT_BUCKET = 'clip-factory';
 export class WorkerResultController {
   constructor(
     private readonly service: ApplyWorkerResultService,
@@ -24,7 +29,12 @@ export class WorkerResultController {
     if (!UUID.test(workflowId))
       return Response.json({ code: 'INVALID_WORKFLOW_ID' }, { status: 422 });
     const key = request.headers.get('idempotency-key');
-    if (!key || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(key))
+    if (
+      !key ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        key,
+      )
+    )
       return Response.json(
         { code: 'INVALID_IDEMPOTENCY_KEY' },
         { status: 422 },
@@ -38,8 +48,17 @@ export class WorkerResultController {
     const parsed = WorkerResultApiSchema.safeParse(body);
     if (!parsed.success)
       return Response.json({ code: 'INVALID_WORKER_RESULT' }, { status: 422 });
-    if (parsed.data.transcriptObject && !parsed.data.transcriptObject.key.startsWith(`projects/${parsed.data.projectId}/`))
-      return Response.json({ code: 'INVALID_OBJECT_REFERENCE' }, { status: 422 });
+    if (
+      parsed.data.transcriptObject &&
+      (parsed.data.transcriptObject.bucket !== ARTIFACT_BUCKET ||
+        !parsed.data.transcriptObject.key.startsWith(
+          `projects/${parsed.data.projectId}/`,
+        ))
+    )
+      return Response.json(
+        { code: 'INVALID_OBJECT_REFERENCE' },
+        { status: 422 },
+      );
     const hash = createHash('sha256')
       .update(JSON.stringify(parsed.data))
       .digest('hex');
@@ -52,6 +71,11 @@ export class WorkerResultController {
     } catch (error) {
       if (error instanceof IdempotencyConflictError)
         return Response.json({ code: 'IDEMPOTENCY_CONFLICT' }, { status: 409 });
+      if (error instanceof PaidCallUncertainError)
+        return Response.json(
+          { code: 'PAID_CALL_UNCERTAIN_ACK_REQUIRED' },
+          { status: 409 },
+        );
       throw error;
     }
   }

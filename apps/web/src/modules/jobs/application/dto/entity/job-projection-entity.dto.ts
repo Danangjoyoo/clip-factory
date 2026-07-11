@@ -10,9 +10,13 @@ export interface ApplyWorkerResultResponse {
   projectId: string;
   status: string;
   completedAt: string | null;
-  transcriptObject?: { bucket: string; key: string; versionId: string | null; sha256: string } | null | undefined;
+  transcriptObject?:
+    | { bucket: string; key: string; versionId: string | null; sha256: string }
+    | null
+    | undefined;
   clipIds?: string[] | undefined;
   error?: { code: string; message: string } | null | undefined;
   uncertainReservedMicrousd?: string | undefined;
   requiredAction?: 'AUTHORIZE_FRESH_RESERVATION' | undefined;
+  acknowledgePossiblePriorSpend?: boolean | undefined;
 }
