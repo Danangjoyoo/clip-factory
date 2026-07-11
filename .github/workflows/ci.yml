@@ -27,7 +27,7 @@ jobs:
       - run: pnpm format:check
       - run: pnpm --filter @clip-factory/web lint
       - run: pnpm --filter @clip-factory/web typecheck
-      - run: pnpm exec vitest run --project unit --coverage
+      - run: pnpm exec vitest run --config vitest.workspace.ts --project=unit --coverage
       - run: pnpm --filter @clip-factory/web build
   worker-quality:
     runs-on: ubuntu-24.04
