@@ -35,9 +35,8 @@ export function priceTokens(
   rule: PricingRule,
 ): bigint {
   const long =
-    tokens.output > 0n &&
     tokens.uncachedInput + tokens.cachedInput + tokens.cacheWriteInput >
-      BigInt(rule.longContextThresholdTokens);
+    BigInt(rule.longContextThresholdTokens);
   const one = { numerator: 1, denominator: 1 } as const;
   const inputMultiplier = long ? rule.longContextInputMultiplier : one;
   const outputMultiplier = long ? rule.longContextOutputMultiplier : one;

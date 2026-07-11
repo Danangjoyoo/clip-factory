@@ -9,6 +9,8 @@ class AnalysisChildInput:
     workflow_id: str
     project_id: str
     transcript: ObjectReference
+    remaining_budget_microusd: int = 0
+    worst_case_calls: tuple[int, ...] = (0,)
 
     @classmethod
     def from_project(cls, payload: WorkflowInput, transcript: ObjectReference) -> "AnalysisChildInput":

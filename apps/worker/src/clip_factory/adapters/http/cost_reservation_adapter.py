@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import UUID
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -24,7 +24,30 @@ class HttpCostReservationAdapter:
             raise ValueError("worst-case cost must be nonnegative")
         response = await self._reserve_call(request)
         if isinstance(response, CostReservation):
+            if response.request != request or not _valid_id(response.reservation_id):
+                raise ReservationConflictError("PAID_CALL_CONFLICT")
             return response
         if isinstance(response, dict) and response.get("error"):
             raise ReservationConflictError(response["error"])
-        return CostReservation(str(response.get("reservationId", uuid4())), request)
+        if not isinstance(response, dict) or not _valid_id(response.get("reservationId")):
+            raise ReservationConflictError("INVALID_RESERVATION_RESPONSE")
+        fields = {
+            "projectId": request.project_id,
+            "analysisRunId": request.analysis_run_id,
+            "callId": request.call_id,
+            "requestHash": request.request_hash,
+            "worstCaseMicrousd": request.worst_case_microusd,
+        }
+        if any(response.get(key) != value for key, value in fields.items()):
+            raise ReservationConflictError("RESERVATION_OWNERSHIP_CONFLICT")
+        return CostReservation(response["reservationId"], request, str(response.get("status", "RESERVED")))
+
+
+def _valid_id(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        UUID(value)
+    except ValueError:
+        return False
+    return True

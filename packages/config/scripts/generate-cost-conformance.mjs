@@ -14,9 +14,8 @@ const ruleFor = (modelId) =>
 const ceilDiv = (value, divisor) => (value + divisor - 1n) / divisor;
 const price = (tokens, rule) => {
   const long =
-    tokens.output > 0n &&
     tokens.uncachedInput + tokens.cachedInput + tokens.cacheWriteInput >
-      BigInt(rule.longContextThresholdTokens);
+    BigInt(rule.longContextThresholdTokens);
   const input = long
     ? rule.longContextInputMultiplier
     : { numerator: 1, denominator: 1 };
@@ -71,6 +70,15 @@ for (const [id, tokens] of [
       output: 100000n,
     },
   ],
+  [
+    'threshold-272001-zero-output',
+    {
+      uncachedInput: 272001n,
+      cachedInput: 0n,
+      cacheWriteInput: 0n,
+      output: 0n,
+    },
+  ],
 ]) {
   const cost = price(tokens, ruleFor('gpt-5.6-sol'));
   rows.push({
@@ -116,10 +124,14 @@ rows.push({
   expectedReserveMicrousd: '452',
 });
 rows.sort((a, b) => a.id.localeCompare(b.id));
-await writeFile(
-  new URL(
-    '../../contracts/test-fixtures/cost-conformance-vectors.json',
-    import.meta.url,
-  ),
-  `${JSON.stringify(rows, null, 2)}\n`,
+const fixtureUrl = new URL(
+  '../../contracts/test-fixtures/cost-conformance-vectors.json',
+  import.meta.url,
 );
+const content = `${JSON.stringify(rows, null, 2)}\n`;
+if (process.argv.includes('--check')) {
+  const existing = await readFile(fixtureUrl, 'utf8');
+  if (existing !== content) throw new Error('cost conformance fixture is stale');
+} else {
+  await writeFile(fixtureUrl, content);
+}

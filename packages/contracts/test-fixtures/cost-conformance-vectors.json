@@ -202,7 +202,10 @@
     },
     "reasoning": null,
     "retries": 0,
-    "remainingCallCosts": ["101", "200"],
+    "remainingCallCosts": [
+      "101",
+      "200"
+    ],
     "expectedCostMicrousd": "301",
     "expectedReserveMicrousd": "452"
   },
@@ -231,5 +234,18 @@
     "retries": 0,
     "expectedCostMicrousd": "7220010",
     "expectedReserveMicrousd": "10830015"
+  },
+  {
+    "id": "threshold-272001-zero-output",
+    "tokens": {
+      "uncachedInput": "272001",
+      "cachedInput": "0",
+      "cacheWriteInput": "0",
+      "output": "0"
+    },
+    "reasoning": null,
+    "retries": 0,
+    "expectedCostMicrousd": "2720010",
+    "expectedReserveMicrousd": "4080015"
   }
 ]

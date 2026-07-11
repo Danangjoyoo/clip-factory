@@ -23,7 +23,7 @@ describe('cost policy', () => {
         cacheWriteInput: 0n,
         output: 0n,
       },
-      5_000_000n,
+      10_000_000n,
     ],
     [
       {
@@ -32,7 +32,7 @@ describe('cost policy', () => {
         cacheWriteInput: 0n,
         output: 0n,
       },
-      500_000n,
+      1_000_000n,
     ],
     [
       {
@@ -41,7 +41,7 @@ describe('cost policy', () => {
         cacheWriteInput: 1_000_000n,
         output: 0n,
       },
-      6_250_000n,
+      12_500_000n,
     ],
     [
       {
@@ -57,9 +57,9 @@ describe('cost policy', () => {
         uncachedInput: 272_001n,
         cachedInput: 0n,
         cacheWriteInput: 0n,
-        output: 100_000n,
+        output: 0n,
       },
-      7_220_010n,
+      2_720_010n,
     ],
   ])('prices token categories', (tokens, expected) =>
     expect(priceTokens(tokens, rule)).toBe(expected),
