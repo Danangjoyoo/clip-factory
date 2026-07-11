@@ -21,3 +21,6 @@ class MinioArtifactStore:
             (self.root / reference.bucket / reference.key).read_bytes()
         )
         return reference.version_id
+
+    async def load_text(self, reference: ObjectReference) -> str:
+        return (self.root / reference.bucket / reference.key).read_text()

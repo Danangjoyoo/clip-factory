@@ -1,9 +1,12 @@
 from typing import Any, Awaitable, Callable
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
+from clip_factory.application.check_model_access import CheckModelAccess
 
 from clip_factory.ports.highlight_model import HighlightRequest
 from clip_factory.ports.highlight_model import HighlightResponse
+from clip_factory.ports.model_access import ModelAccessStatus
+from clip_factory.ports.model_access import ModelAccessResult
 from clip_factory.ports.paid_call import (
     PaidCallDependencies,
     PaidCallInput,
@@ -37,11 +40,21 @@ class _UnconfiguredPaidCallDependencies:
 
 _paid_model: Any = _UnconfiguredPaidCallDependencies()
 _paid_dependencies: PaidCallDependencies = _UnconfiguredPaidCallDependencies()
+_model_access: CheckModelAccess | None = None
 
 
-def configure_paid_highlight_call(model: Any, dependencies: PaidCallDependencies) -> None:
-    global _paid_model, _paid_dependencies
-    _paid_model, _paid_dependencies = model, dependencies
+def configure_paid_highlight_call(
+    model: Any, dependencies: PaidCallDependencies, model_access: CheckModelAccess | None = None
+) -> None:
+    global _paid_model, _paid_dependencies, _model_access
+    if model_access is None:
+        class _LegacyAccess:
+            async def check(self, model_id: str) -> ModelAccessResult:
+                check = getattr(model, "check", None)
+                return await check(model_id) if check else ModelAccessResult(model_id, ModelAccessStatus.AVAILABLE)
+
+        model_access = CheckModelAccess(_LegacyAccess())
+    _paid_model, _paid_dependencies, _model_access = model, dependencies, model_access
 
 
 def build_highlight_activity(
@@ -56,6 +69,11 @@ def build_highlight_activity(
 @activity.defn
 async def call_openai_once_activity(input: PaidCallInput) -> HighlightResponse:
     try:
+        if _model_access is None:
+            raise RuntimeError("model access gate is not configured")
+        access = await _model_access.execute(input.request.model)
+        if access.status is not ModelAccessStatus.AVAILABLE:
+            raise ApplicationError(access.presentation or "model is not available", type="OPENAI_PRE_SEND_FAILURE", non_retryable=True)
         return await call_openai_once(_paid_model, _paid_dependencies, input, reserved=input.reservation_prepared)
     except Exception as exc:
         error_type = getattr(exc, "error_type", "OPENAI_OUTCOME_UNCERTAIN")

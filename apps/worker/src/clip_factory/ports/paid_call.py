@@ -179,13 +179,37 @@ async def call_openai_once(
     except Exception as exc:
         raise PaidCallUncertainError("provider outcome is uncertain") from exc
     window = _as_time_range(call.request.window)
-    if window is None and response.candidates:
-        raise ValueError("highlight request window is required")
-    candidates = (
-        rank_candidates(response.candidates, window, call.request.maximum_clips, call.request.maximum_duration_ms)
-        if isinstance(window, TimeRange)
-        else ()
-    )
+    try:
+        if window is None and response.candidates:
+            raise ValueError("highlight request window is required")
+        candidates = (
+            rank_candidates(response.candidates, window, call.request.maximum_clips, call.request.maximum_duration_ms)
+            if isinstance(window, TimeRange)
+            else ()
+        )
+    except (TypeError, ValueError) as exc:
+        key = f"projects/{call.project_id}/analysis/{call.analysis_run_id}/calls/{call.call_id}.json"
+        await deps.put_json(
+            key,
+            {
+                "callId": call.call_id,
+                "requestHash": call.request_hash,
+                "providerResponseId": response.response_id or "",
+                "normalizedUsage": response.usage or {},
+                "validationError": str(exc),
+            },
+        )
+        await deps.record_paid_call(
+            {
+                "callId": call.call_id,
+                "requestHash": call.request_hash,
+                "providerResponseId": response.response_id or "",
+                "normalizedUsage": response.usage or {},
+                "artifactKey": key,
+                "validationError": str(exc),
+            }
+        )
+        raise
     response = HighlightResponse(candidates, response.response_id, response.usage)
     artifact: dict[str, object] = {
         "callId": call.call_id,

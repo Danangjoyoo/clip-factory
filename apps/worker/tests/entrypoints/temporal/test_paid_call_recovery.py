@@ -11,7 +11,6 @@ from clip_factory.entrypoints.temporal.activities.highlight_activities import (
     reserve_paid_call_activity,
 )
 from clip_factory.entrypoints.temporal.child_workflows import PaidCallWorkflow
-from clip_factory.domain.highlight import HighlightCandidate, HighlightScores
 from clip_factory.ports.highlight_model import HighlightRequest, HighlightResponse
 from clip_factory.ports.paid_call import PaidCallInput
 
@@ -21,12 +20,17 @@ class Deps:
         self.callback = callback
         self.artifacts = {}
         self.calls = 0
+        self.reservations = []
+        self.sent = []
+        self.completed = []
 
     async def reserve(self, request):
+        self.reservations.append(request)
         return request
 
-    async def mark_sent(self, _call_id, _request_hash):
+    async def mark_sent(self, call_id, request_hash):
         self.calls += 1
+        self.sent.append((call_id, request_hash))
 
     async def put_json(self, key, value):
         self.artifacts[key] = value
@@ -40,7 +44,8 @@ class Deps:
     async def get_json(self, key):
         return self.artifacts[key]
 
-    async def record_paid_call(self, _value):
+    async def record_paid_call(self, value):
+        self.completed.append(value)
         if not self.callback:
             self.callback = True
             raise ConnectionError("callback acknowledgement lost")
@@ -55,11 +60,7 @@ class Model:
         self.calls += 1
         if self.fail_once and self.calls == 1:
             raise TimeoutError("worker lost after SENT")
-        return HighlightResponse(
-            (HighlightCandidate(0, 20_000, "clip", "reason", 1, HighlightScores(1, 1, 1, 1, 1, 1, 1), 1),),
-            "response-1",
-            {},
-        )
+        return HighlightResponse((), "response-1", {})
 
 
 def _input() -> PaidCallInput:
@@ -77,11 +78,19 @@ async def _run_callback_loss() -> None:
     async with await WorkflowEnvironment.start_time_skipping() as env:
         async with Worker(env.client, task_queue="paid-recovery-1", workflows=[PaidCallWorkflow], activities=[call_openai_once_activity, reserve_paid_call_activity, reconcile_paid_call_activity]):
             handle = await env.client.start_workflow(PaidCallWorkflow.run, _input(), id="paid-recovery-1", task_queue="paid-recovery-1")
-            await env.sleep(timedelta(seconds=1))
+            for _ in range(100):
+                if await handle.query(PaidCallWorkflow.state) == "PAID_CALL_UNCERTAIN":
+                    break
+                await env.sleep(timedelta(milliseconds=10))
+            assert await handle.query(PaidCallWorkflow.state) == "PAID_CALL_UNCERTAIN"
             await handle.signal(PaidCallWorkflow.retry_uncertain_paid_call, args=[True])
             result = await handle.result()
             assert result.response_id == "response-1"
             assert model.calls == 1
+            original = _input()
+            assert [(r.call_id, r.request_hash) for r in deps.reservations] == [("call-1", original.request_hash)]
+            assert deps.sent == [("call-1", original.request_hash)]
+            assert next(iter(deps.artifacts)) == "projects/p/analysis/a/calls/call-1.json"
 
 
 def test_worker_loss_waits_for_acknowledgement_before_fresh_call() -> None:
@@ -94,10 +103,22 @@ async def _run_worker_loss() -> None:
     async with await WorkflowEnvironment.start_time_skipping() as env:
         async with Worker(env.client, task_queue="paid-recovery-2", workflows=[PaidCallWorkflow], activities=[call_openai_once_activity, reserve_paid_call_activity, reconcile_paid_call_activity]):
             handle = await env.client.start_workflow(PaidCallWorkflow.run, _input(), id="paid-recovery-2", task_queue="paid-recovery-2")
-            await env.sleep(timedelta(seconds=1))
+            for _ in range(100):
+                if await handle.query(PaidCallWorkflow.state) == "PAID_CALL_UNCERTAIN":
+                    break
+                await env.sleep(timedelta(milliseconds=10))
             assert await handle.query(PaidCallWorkflow.state) == "PAID_CALL_UNCERTAIN"
             assert model.calls == 1
             await handle.signal(PaidCallWorkflow.retry_uncertain_paid_call, args=[True])
             result = await handle.result()
             assert result.response_id == "response-1"
             assert model.calls == 2
+            original = _input()
+            assert deps.reservations[0].call_id == "call-1"
+            assert deps.reservations[0].request_hash == original.request_hash
+            assert deps.reservations[1].call_id != deps.reservations[0].call_id
+            assert deps.reservations[1].request_hash != deps.reservations[0].request_hash
+            assert deps.sent == [
+                (deps.reservations[0].call_id, original.request_hash),
+                (deps.reservations[1].call_id, deps.reservations[1].request_hash),
+            ]
