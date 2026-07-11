@@ -11,6 +11,13 @@ class WorkflowInput:
     mode: Literal["MANUAL", "AI_HIGHLIGHTS"]
     language_tag: str
     max_clip_seconds: int = 60
+    model_id: str = "gpt-5.5"
+    reasoning: str = "low"
+    budget_microusd: int = 10_000
+    maximum_clips: int = 1
+    instruction: str = ""
+    coverage_start_ms: int = 0
+    coverage_end_ms: int = 0
 
 
 @dataclass(frozen=True)

@@ -79,16 +79,18 @@ def _response_json(response: Any) -> dict[str, Any]:
 
 
 def _candidate(value: dict[str, Any]) -> HighlightCandidate:
-    scores = value.get("scores", {})
+    scores = value["scores"]
+    if not isinstance(scores, dict):
+        raise ValueError("malformed highlight scores")
     return HighlightCandidate(
         int(value["startMs"]),
         int(value["endMs"]),
-        str(value.get("title", "")),
-        str(value.get("rationale", "")),
-        int(value.get("overallScore", 0)),
+        str(value["title"]),
+        str(value["rationale"]),
+        int(value["overallScore"]),
         HighlightScores(
             *(
-                int(scores.get(key, 0))
+                int(scores[key])
                 for key in (
                     "hook",
                     "coherence",
@@ -100,7 +102,7 @@ def _candidate(value: dict[str, Any]) -> HighlightCandidate:
                 )
             )
         ),
-        int(value.get("rank", 0)),
+        int(value["rank"]),
     )
 
 
