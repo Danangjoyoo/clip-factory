@@ -1,0 +1,1 @@
+.list{display:flex;flex-direction:column;gap:.5rem}.list button{display:flex;flex-direction:column;text-align:left;padding:.75rem}.selected{outline:2px solid currentColor}
