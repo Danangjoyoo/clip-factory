@@ -7,7 +7,13 @@ export class ProgressSseController {
     const live = this.live;
     const stream = new ReadableStream({
       async start(controller) {
-        const abort = () => controller.close();
+        let closed = false;
+        const close = () => {
+          if (closed) return;
+          closed = true;
+          controller.close();
+        };
+        const abort = close;
         request.signal.addEventListener('abort', abort, { once: true });
         try {
           for await (const item of live.events(
@@ -25,7 +31,7 @@ export class ProgressSseController {
           }
         } finally {
           request.signal.removeEventListener('abort', abort);
-          controller.close();
+          close();
         }
       },
     });

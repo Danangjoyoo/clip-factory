@@ -31,3 +31,23 @@ it('honors Last-Event-ID and emits keepalive comments', async () => {
   expect(after).toBe('41-0');
   expect(await response.text()).toContain(': keepalive');
 });
+
+it('closes once when abort races stream cleanup', async () => {
+  const aborter = new AbortController();
+  const response = await new ProgressSseController({
+    publish: async () => {},
+    snapshot: async () => null,
+    events: async function* (_project, _after, signal) {
+      await new Promise<void>((resolve) =>
+        signal?.addEventListener('abort', () => resolve(), { once: true }),
+      );
+    },
+  }).stream(new Request('http://test', { signal: aborter.signal }), 'project');
+
+  const reader = response.body!.getReader();
+  aborter.abort();
+  await expect(reader.read()).resolves.toEqual({
+    done: true,
+    value: undefined,
+  });
+});
