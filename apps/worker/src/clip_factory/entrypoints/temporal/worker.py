@@ -21,6 +21,7 @@ from clip_factory.entrypoints.temporal.child_workflows import (
     PaidCallWorkflow,
 )
 from clip_factory.entrypoints.temporal.project_workflow import ProjectWorkflow
+from clip_factory.ports.model_access import ModelAccessResult
 
 
 def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
@@ -38,8 +39,8 @@ def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
     else:
         model = FakeHighlightAdapter()
         class _FakeModelAccess:
-            async def check(self, model_id: str):
-                from clip_factory.ports.model_access import ModelAccessResult, ModelAccessStatus
+            async def check(self, model_id: str) -> ModelAccessResult:
+                from clip_factory.ports.model_access import ModelAccessStatus
                 return ModelAccessResult(model_id, ModelAccessStatus.AVAILABLE)
 
         model_access = _FakeModelAccess()
