@@ -1,18 +1,32 @@
 from clip_factory.adapters.media.ass_compiler import compile_ass
-from clip_factory.domain.render_spec import RenderSpec
 
 
-def spec() -> RenderSpec:
-    return RenderSpec(
-        "1.0.0", "r", "c", {"kind": "OBJECT"}, (1080, 1920), (0, 2_000), (),
-        ({"startMs": 0, "endMs": 2_000, "words": ({"text": "hello {x}", "startMs": 0, "endMs": 500}, {"text": "world", "startMs": 500, "endMs": 2_000})},),
-        {"fontFamily": "Inter", "fontSizePx": 64, "textColor": "#112233FF", "outlineColor": "#000000FF", "backgroundColor": "#00000000", "activeWordColor": "#FF0000FF", "maxWordsPerLine": 8, "verticalPositionMicros": 500_000}, None, {"strategy": "SOFTWARE"}, "TIKTOK",
+def test_compile_ass_emits_vertical_video_and_karaoke_cues(tmp_path):
+    font = tmp_path / "Inter.ttf"
+    font.touch()
+    text = compile_ass(
+        {
+            "canvas": (1080, 1920),
+            "style": {
+                "fontFamily": "Inter",
+                "fontSizePx": 64,
+                "textColor": "#FFFFFFFF",
+                "outlineColor": "#000000FF",
+                "backgroundColor": "#00000080",
+                "activeWordColor": "#FFCC00FF",
+                "verticalPositionMicros": 500_000,
+                "maxWordsPerLine": 6,
+            },
+            "captions": [
+                {"startMs": 0, "endMs": 1250, "words": [
+                    {"text": "hello", "startMs": 0, "endMs": 500},
+                    {"text": "{world}", "startMs": 500, "endMs": 1250},
+                ]}
+            ],
+        },
+        tmp_path,
     )
-
-
-def test_ass_is_deterministic_and_uses_vertical_canvas() -> None:
-    result = compile_ass(spec())
-    assert "PlayResX: 1080" in result and "PlayResY: 1920" in result
-    assert "Dialogue: 0,0:00:00.00,0:00:02.00" in result
-    assert r"hello \{x\}" in result and r"{\k50}" in result
-    assert "&HFF332211" in result
+    assert "PlayResX: 1080" in text and "PlayResY: 1920" in text
+    assert "Style: Default,Inter,64" in text
+    assert "Dialogue: 0,0:00:00.00,0:00:01.25" in text
+    assert "{\\k50}hello" in text and "{\\k75\\c&HFF00CCFF&}" in text

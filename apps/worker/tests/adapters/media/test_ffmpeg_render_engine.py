@@ -1,22 +1,16 @@
 import asyncio
-from pathlib import Path
-
 from clip_factory.adapters.media.ffmpeg_render_engine import FfmpegRenderEngine
-from clip_factory.domain.render_spec import RenderSpec
 
 
-class Runner:
-    def __init__(self) -> None:
-        self.argv = None
-
-    async def run(self, argv, on_stdout_line=None):
-        self.argv = list(argv)
-        return 0, "", ""
-
-
-def test_render_uses_argv_and_quality_profile(tmp_path: Path) -> None:
-    runner = Runner()
-    spec = RenderSpec("1.0.0", "r", "c", {}, (1080, 1920), (0, 1000), (), (), {}, None, {"strategy": "SOFTWARE"}, "TIKTOK")
-    asyncio.run(FfmpegRenderEngine(runner).render(spec, tmp_path / "in.mp4", tmp_path / "a.ass", tmp_path / "out.mp4"))
-    assert runner.argv is not None and "libx264" in runner.argv and "-preset" in runner.argv
-    assert "192k" in runner.argv and "-map" in runner.argv
+def test_render_uses_safe_argv_and_quality_defaults(tmp_path):
+    calls = []
+    class Runner:
+        async def run(self, argv, on_stdout_line=None):
+            calls.append(list(argv))
+            return 0, "", ""
+    output = tmp_path / "out.mp4"
+    asyncio.run(FfmpegRenderEngine(Runner()).render(tmp_path / "source.mp4", output, tmp_path / "captions.ass", "SOFTWARE"))
+    argv = [str(value) for value in calls[0]]
+    assert "libx264" in argv and "-preset" in argv and "slow" in argv
+    assert "-crf" in argv and "18" in argv and "-b:a" in argv and "192k" in argv
+    assert "-map" in argv and "0:a:0" in argv
