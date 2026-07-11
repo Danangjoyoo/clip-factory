@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Any
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError, CancelledError
@@ -27,7 +28,7 @@ from clip_factory.entrypoints.temporal.activities.highlight_activities import (
     reconcile_paid_call_activity,
 )
 
-PAID_ACTIVITY_OPTIONS = {
+PAID_ACTIVITY_OPTIONS: dict[str, Any] = {
     "start_to_close_timeout": timedelta(minutes=30),
     "heartbeat_timeout": timedelta(seconds=30),
     "retry_policy": RetryPolicy(maximum_attempts=1),
@@ -142,7 +143,7 @@ class AnalysisChildWorkflow:
                 )
                 self._state = "COMPLETED"
                 return AnalysisChildResult(tuple(c.title for c in paid.candidates))
-            result = await workflow.execute_activity(
+            result: HighlightResponse = await workflow.execute_activity(
                 execute_analysis_child,
                 input,
                 start_to_close_timeout=timedelta(hours=6),
@@ -195,7 +196,19 @@ class PaidCallWorkflow:
             error_type = _application_error_type(error.cause)
             if error_type == OPENAI_PRE_SEND_FAILURE:
                 self._state = "PRE_SEND_FAILURE"
-                raise
+                retry = PaidCallInput(
+                    input.project_id, input.analysis_run_id, input.request,
+                    f"{input.call_id}-retry-1", input.worst_case_microusd,
+                )
+                await workflow.execute_activity(
+                    reserve_paid_call_activity, retry,
+                    start_to_close_timeout=timedelta(seconds=30),
+                )
+                result = await workflow.execute_activity(
+                    call_openai_once_activity, retry, **PAID_ACTIVITY_OPTIONS
+                )
+                self._state = "COMPLETED"
+                return result
             self._state = "PAID_CALL_UNCERTAIN"
             await workflow.wait_condition(lambda: self._acknowledged or self._cancelled)
             if self._cancelled:
@@ -205,6 +218,7 @@ class PaidCallWorkflow:
                 reconcile_paid_call_activity,
                 input,
                 start_to_close_timeout=timedelta(minutes=2),
+                retry_policy=RetryPolicy(maximum_attempts=3),
             )
             if reconciled is not None:
                 self._state = "COMPLETED"

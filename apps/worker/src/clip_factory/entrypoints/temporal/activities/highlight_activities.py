@@ -1,4 +1,4 @@
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, Awaitable, Callable
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
@@ -12,11 +12,34 @@ from clip_factory.ports.paid_call import (
     reserve_paid_call,
 )
 
-_paid_model: Any = None
-_paid_dependencies: Any = None
+class _UnconfiguredPaidCallDependencies:
+    async def reserve(self, _request: Any) -> object:
+        raise RuntimeError("paid highlight dependencies are not configured")
+
+    async def mark_sent(self, _call_id: str, _request_hash: str) -> None:
+        raise RuntimeError("paid highlight dependencies are not configured")
+
+    async def put_json(self, _key: str, _value: dict[str, object]) -> object:
+        raise RuntimeError("paid highlight dependencies are not configured")
+
+    async def reconcile(self, _call_id: str, _request_hash: str) -> object | None:
+        raise RuntimeError("paid highlight dependencies are not configured")
+
+    async def head_json(self, _key: str) -> bool:
+        raise RuntimeError("paid highlight dependencies are not configured")
+
+    async def get_json(self, _key: str) -> object:
+        raise RuntimeError("paid highlight dependencies are not configured")
+
+    async def record_paid_call(self, _value: dict[str, object]) -> None:
+        raise RuntimeError("paid highlight dependencies are not configured")
 
 
-def configure_paid_highlight_call(model: Any, dependencies: Any) -> None:
+_paid_model: Any = _UnconfiguredPaidCallDependencies()
+_paid_dependencies: PaidCallDependencies = _UnconfiguredPaidCallDependencies()
+
+
+def configure_paid_highlight_call(model: Any, dependencies: PaidCallDependencies) -> None:
     global _paid_model, _paid_dependencies
     _paid_model, _paid_dependencies = model, dependencies
 
@@ -32,15 +55,8 @@ def build_highlight_activity(
 
 @activity.defn
 async def call_openai_once_activity(input: PaidCallInput) -> HighlightResponse:
-    if _paid_model is None or _paid_dependencies is None:
-        raise RuntimeError("paid highlight activity is not configured")
     try:
-        return await call_openai_once(
-            cast(Any, _paid_model),
-            cast(PaidCallDependencies, _paid_dependencies),
-            input,
-            reserved=input.reservation_prepared,
-        )
+        return await call_openai_once(_paid_model, _paid_dependencies, input, reserved=input.reservation_prepared)
     except Exception as exc:
         error_type = getattr(exc, "error_type", "OPENAI_OUTCOME_UNCERTAIN")
         raise ApplicationError(str(exc), type=error_type, non_retryable=True) from exc
@@ -48,17 +64,11 @@ async def call_openai_once_activity(input: PaidCallInput) -> HighlightResponse:
 
 @activity.defn
 async def reserve_paid_call_activity(input: PaidCallInput) -> None:
-    if _paid_dependencies is None:
-        raise RuntimeError("paid highlight activity is not configured")
-    await reserve_paid_call(cast(PaidCallDependencies, _paid_dependencies), input)
+    await reserve_paid_call(_paid_dependencies, input)
 
 
 @activity.defn
 async def reconcile_paid_call_activity(
     input: PaidCallInput,
 ) -> HighlightResponse | None:
-    if _paid_dependencies is None:
-        raise RuntimeError("paid highlight activity is not configured")
-    return await reconcile_paid_call(
-        cast(PaidCallDependencies, _paid_dependencies), input
-    )
+    return await reconcile_paid_call(_paid_dependencies, input)
