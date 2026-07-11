@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "sample": { "minDurationMs": 1800000, "maxDurationMs": 3600000 },
+  "maxSource": { "maxDurationMs": 10800000, "maxBytes": 10737418240 },
+  "formats": ["mp4", "mov", "mkv", "webm"],
+  "output": { "width": 1080, "height": 1920, "video": "h264", "audio": "aac" },
+  "presets": ["shorts", "reels", "tiktok"],
+  "criteria": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  "qualitativeThreshold": 3,
+  "ports": [3000, 5432, 6379, 7233, 9000],
+  "mlx": {
+    "revision": "49e6aa286ad60c14352c404340ded53710378a11",
+    "weightsSha256": "05ff791ce3630fae47e7c51004e9666204d786246ec07cac6110af768099b40d"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "catalogVersion": "2026-07-11.1",
+  "models": [
+    {
+      "id": "gpt-5.6-sol",
+      "provider": "OPENAI",
+      "reasoning": [
+        { "effort": "none", "maxGeneratedTokens": 4096 },
+        { "effort": "low", "maxGeneratedTokens": 16384 },
+        { "effort": "medium", "maxGeneratedTokens": 24576 },
+        { "effort": "high", "maxGeneratedTokens": 32768 },
+        { "effort": "xhigh", "maxGeneratedTokens": 49152 },
+        { "effort": "max", "maxGeneratedTokens": 65536 }
+      ],
+      "defaultReasoning": "high",
+      "structuredOutputs": true,
+      "providerMaxOutputTokens": 128000,
+      "availabilityHint": "ENTITLEMENT_REQUIRED",
+      "promptCachePolicy": "EXPLICIT_DISABLED",
+      "longContextThresholdTokens": 272000
+    },
+    {
+      "id": "gpt-5.5",
+      "provider": "OPENAI",
+      "reasoning": [
+        { "effort": "none", "maxGeneratedTokens": 4096 },
+        { "effort": "low", "maxGeneratedTokens": 16384 },
+        { "effort": "medium", "maxGeneratedTokens": 24576 },
+        { "effort": "high", "maxGeneratedTokens": 32768 },
+        { "effort": "xhigh", "maxGeneratedTokens": 49152 }
+      ],
+      "defaultReasoning": "high",
+      "structuredOutputs": true,
+      "providerMaxOutputTokens": 128000,
+      "availabilityHint": "STANDARD",
+      "promptCachePolicy": "LEGACY_AUTOMATIC_NO_WRITE_FEE",
+      "longContextThresholdTokens": 272000
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"""Temporal entrypoint package boundary."""

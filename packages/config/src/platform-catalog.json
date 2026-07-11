@@ -1,0 +1,20 @@
+{
+  "catalogVersion": "2026-07-11.1",
+  "presets": [
+    {
+      "id": "YOUTUBE_SHORTS",
+      "canvas": { "width": 1080, "height": 1920 },
+      "safeArea": { "top": 0.08, "right": 0.06, "bottom": 0.2, "left": 0.06 }
+    },
+    {
+      "id": "INSTAGRAM_REELS",
+      "canvas": { "width": 1080, "height": 1920 },
+      "safeArea": { "top": 0.08, "right": 0.08, "bottom": 0.22, "left": 0.08 }
+    },
+    {
+      "id": "TIKTOK",
+      "canvas": { "width": 1080, "height": 1920 },
+      "safeArea": { "top": 0.1, "right": 0.1, "bottom": 0.24, "left": 0.08 }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/WorkerHealth/1.0.0",
+  "title": "WorkerHealth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workerId",
+    "status",
+    "hardware",
+    "ffmpegVersion",
+    "transcriber",
+    "openAiConfigured",
+    "openAiModelAccess",
+    "heartbeatAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "workerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "enum": ["ONLINE", "DEGRADED", "OFFLINE"]
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["architecture", "chip", "memoryBytes"],
+      "properties": {
+        "architecture": {
+          "const": "arm64"
+        },
+        "chip": {
+          "type": "string",
+          "minLength": 1
+        },
+        "memoryBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ffmpegVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "transcriber": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend",
+        "model",
+        "revision",
+        "weightsSha256",
+        "cacheStatus"
+      ],
+      "properties": {
+        "backend": {
+          "enum": ["MLX_WHISPER", "FAKE"]
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "weightsSha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cacheStatus": {
+          "enum": ["READY", "MISSING", "INVALID", "NOT_APPLICABLE"]
+        }
+      }
+    },
+    "openAiConfigured": {
+      "type": "boolean"
+    },
+    "openAiModelAccess": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["modelId", "status", "checkedAt"],
+        "properties": {
+          "modelId": {
+            "enum": ["gpt-5.6-sol", "gpt-5.5"]
+          },
+          "status": {
+            "enum": ["AVAILABLE", "NOT_ENTITLED", "NOT_FOUND", "UNKNOWN"]
+          },
+          "checkedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "heartbeatAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

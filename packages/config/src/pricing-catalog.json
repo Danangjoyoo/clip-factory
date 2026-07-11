@@ -1,0 +1,31 @@
+{
+  "catalogVersion": "openai-2026-07-11.1",
+  "currency": "USD",
+  "unit": "MICRO_USD_PER_MILLION_TOKENS",
+  "rules": [
+    {
+      "modelId": "gpt-5.6-sol",
+      "tier": "STANDARD",
+      "effectiveFrom": "2026-07-11T00:00:00Z",
+      "inputMicrousdPerMillion": 5000000,
+      "cachedInputMicrousdPerMillion": 500000,
+      "cacheWriteMicrousdPerMillion": 6250000,
+      "outputMicrousdPerMillion": 30000000,
+      "longContextThresholdTokens": 272000,
+      "longContextInputMultiplier": { "numerator": 2, "denominator": 1 },
+      "longContextOutputMultiplier": { "numerator": 3, "denominator": 2 }
+    },
+    {
+      "modelId": "gpt-5.5",
+      "tier": "STANDARD",
+      "effectiveFrom": "2026-07-11T00:00:00Z",
+      "inputMicrousdPerMillion": 5000000,
+      "cachedInputMicrousdPerMillion": 500000,
+      "cacheWriteMicrousdPerMillion": 5000000,
+      "outputMicrousdPerMillion": 30000000,
+      "longContextThresholdTokens": 272000,
+      "longContextInputMultiplier": { "numerator": 2, "denominator": 1 },
+      "longContextOutputMultiplier": { "numerator": 3, "denominator": 2 }
+    }
+  ]
+}

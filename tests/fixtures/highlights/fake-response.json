@@ -1,0 +1,21 @@
+{
+  "candidates": [
+    {
+      "startMs": 0,
+      "endMs": 30000,
+      "title": "Fixture highlight",
+      "rationale": "Deterministic fixture",
+      "rank": 1,
+      "overallScore": 900000,
+      "scores": {
+        "hook": 900000,
+        "coherence": 900000,
+        "payoff": 900000,
+        "novelty": 800000,
+        "energy": 800000,
+        "instructionFit": 900000,
+        "boundaryQuality": 900000
+      }
+    }
+  ]
+}
