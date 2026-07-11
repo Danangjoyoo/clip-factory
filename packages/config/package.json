@@ -5,6 +5,7 @@
   "exports": "./src/index.ts",
   "scripts": {
     "lint": "eslint scripts",
+    "generate:cost-conformance": "node scripts/generate-cost-conformance.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
