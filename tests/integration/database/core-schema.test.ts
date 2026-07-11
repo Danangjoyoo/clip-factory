@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { Prisma } from '../../../apps/web/src/generated/prisma/client';
 import {
   makePrismaTestClient,
   resetDatabase,
@@ -248,5 +249,295 @@ describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
         'idempotency_receipts_key_key',
       ]),
     );
+  });
+
+  it('rejects duplicate values for every declared unique index', async () => {
+    const expectP2002 = async (operation: () => Promise<unknown>) => {
+      try {
+        await operation();
+      } catch (error) {
+        expect(error).toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
+        expect(error).toMatchObject({ code: 'P2002' });
+        return;
+      }
+      throw new Error('Expected a unique constraint violation');
+    };
+
+    const project = await prisma.project.create({
+      data: { ...projectData, name: 'Unique constraints' },
+    });
+    const source = await prisma.sourceAsset.create({
+      data: {
+        projectId: project.id,
+        kind: 'LOCAL_FILE',
+        displayPath: '/tmp/unique.mp4',
+      },
+    });
+    await expectP2002(() =>
+      prisma.sourceAsset.create({
+        data: {
+          projectId: project.id,
+          kind: 'LOCAL_FILE',
+          displayPath: '/tmp/duplicate.mp4',
+        },
+      }),
+    );
+
+    const transcript = await prisma.transcript.create({
+      data: {
+        projectId: project.id,
+        sourceAssetId: source.id,
+        backend: 'whisper',
+        model: 'large-v3',
+        modelRevision: 'r1',
+        languageTag: 'en',
+        objectKey: 'transcripts/unique.json',
+        objectSha256: sha,
+        durationMs: 1_000,
+        wordCount: 1,
+        runtimeMs: 10,
+      },
+    });
+    const otherProject = await prisma.project.create({
+      data: { ...projectData, name: 'Unique constraints other' },
+    });
+    await expectP2002(() =>
+      prisma.transcript.create({
+        data: {
+          projectId: otherProject.id,
+          sourceAssetId: source.id,
+          backend: 'whisper',
+          model: 'large-v3',
+          modelRevision: 'r1',
+          languageTag: 'en',
+          objectKey: 'transcripts/duplicate-source.json',
+          objectSha256: sha,
+          durationMs: 1_000,
+          wordCount: 1,
+          runtimeMs: 10,
+        },
+      }),
+    );
+    const transcriptSource = await prisma.sourceAsset.create({
+      data: {
+        projectId: otherProject.id,
+        kind: 'LOCAL_FILE',
+        displayPath: '/tmp/other.mp4',
+      },
+    });
+    await expectP2002(() =>
+      prisma.transcript.create({
+        data: {
+          projectId: project.id,
+          sourceAssetId: transcriptSource.id,
+          backend: 'whisper',
+          model: 'large-v3',
+          modelRevision: 'r1',
+          languageTag: 'en',
+          objectKey: 'transcripts/duplicate-project.json',
+          objectSha256: sha,
+          durationMs: 1_000,
+          wordCount: 1,
+          runtimeMs: 10,
+        },
+      }),
+    );
+
+    const run = await prisma.analysisRun.create({
+      data: {
+        projectId: project.id,
+        modelId: 'gpt',
+        reasoning: 'NONE',
+        promptVersion: 'p1',
+        schemaVersion: '1',
+        pricingVersion: 'v1',
+        budgetMicrousd: 1n,
+        coverageStartMs: 0,
+        coverageEndMs: 1_000,
+        estimatedMaxMicrousd: 1n,
+      },
+    });
+    const clip = await prisma.clip.create({
+      data: {
+        projectId: project.id,
+        analysisRunId: run.id,
+        origin: 'MANUAL',
+        startMs: 0,
+        endMs: 1,
+        captionJson: {},
+        styleJson: {},
+        frameJson: {},
+      },
+    });
+    const usage = await prisma.aIUsageEvent.create({
+      data: {
+        projectId: project.id,
+        analysisRunId: run.id,
+        providerResponseId: 'unique-provider-response',
+        requestHash: sha,
+        purpose: 'HIGHLIGHT_WINDOW',
+        modelId: 'gpt',
+        reasoning: 'NONE',
+        promptVersion: 'p1',
+        schemaVersion: '1',
+        pricingVersion: 'v1',
+        inputTokens: 1,
+        cachedInputTokens: 0,
+        cacheWriteInputTokens: 0,
+        outputTokens: 1,
+        reasoningTokens: 0,
+        pricingTier: 'STANDARD',
+        costMicrousd: 1n,
+        occurredAt: new Date(),
+      },
+    });
+    await expectP2002(() =>
+      prisma.aIUsageEvent.create({
+        data: {
+          projectId: project.id,
+          analysisRunId: run.id,
+          providerResponseId: 'unique-provider-response',
+          requestHash: sha,
+          purpose: 'HIGHLIGHT_WINDOW',
+          modelId: 'gpt',
+          reasoning: 'NONE',
+          promptVersion: 'p1',
+          schemaVersion: '1',
+          pricingVersion: 'v1',
+          inputTokens: 1,
+          cachedInputTokens: 0,
+          cacheWriteInputTokens: 0,
+          outputTokens: 1,
+          reasoningTokens: 0,
+          pricingTier: 'STANDARD',
+          costMicrousd: 1n,
+          occurredAt: new Date(),
+        },
+      }),
+    );
+
+    const reservation = await prisma.paidCallReservation.create({
+      data: {
+        projectId: project.id,
+        analysisRunId: run.id,
+        callId: '00000000-0000-4000-8000-000000000001',
+        requestHash: sha,
+        worstCaseMicrousd: 1n,
+        providerResponseId: 'unique-paid-response',
+        usageEventId: usage.id,
+      },
+    });
+    await expectP2002(() =>
+      prisma.paidCallReservation.create({
+        data: {
+          projectId: project.id,
+          analysisRunId: run.id,
+          callId: reservation.callId,
+          requestHash: sha,
+          worstCaseMicrousd: 1n,
+        },
+      }),
+    );
+    await expectP2002(() =>
+      prisma.paidCallReservation.create({
+        data: {
+          projectId: project.id,
+          analysisRunId: run.id,
+          callId: '00000000-0000-4000-8000-000000000002',
+          requestHash: sha,
+          worstCaseMicrousd: 1n,
+          providerResponseId: reservation.providerResponseId,
+        },
+      }),
+    );
+    await expectP2002(() =>
+      prisma.paidCallReservation.create({
+        data: {
+          projectId: project.id,
+          analysisRunId: run.id,
+          callId: '00000000-0000-4000-8000-000000000003',
+          requestHash: sha,
+          worstCaseMicrousd: 1n,
+          usageEventId: usage.id,
+        },
+      }),
+    );
+
+    await prisma.costAllocation.create({
+      data: { analysisRunId: run.id, clipId: clip.id, amountMicrousd: 1n },
+    });
+    await expectP2002(() =>
+      prisma.costAllocation.create({
+        data: { analysisRunId: run.id, clipId: clip.id, amountMicrousd: 2n },
+      }),
+    );
+
+    await prisma.jobProjection.create({
+      data: {
+        projectId: project.id,
+        workflowId: '00000000-0000-4000-8000-000000000010',
+        runId: 'unique-run',
+        status: 'QUEUED',
+        stage: 'queued',
+        progressBasisPoints: 0,
+      },
+    });
+    await expectP2002(() =>
+      prisma.jobProjection.create({
+        data: {
+          projectId: project.id,
+          workflowId: '00000000-0000-4000-8000-000000000010',
+          runId: 'unique-run',
+          status: 'QUEUED',
+          stage: 'queued',
+          progressBasisPoints: 0,
+        },
+      }),
+    );
+
+    await prisma.uploadSession.create({
+      data: {
+        projectId: project.id,
+        objectKey: 'uploads/unique',
+        uploadId: 'unique-upload',
+        sizeBytes: 1n,
+        completedPartsJson: [],
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    await expectP2002(() =>
+      prisma.uploadSession.create({
+        data: {
+          projectId: project.id,
+          objectKey: 'uploads/duplicate',
+          uploadId: 'unique-upload',
+          sizeBytes: 1n,
+          completedPartsJson: [],
+          expiresAt: new Date(Date.now() + 60_000),
+        },
+      }),
+    );
+
+    const idempotencyKey = '00000000-0000-4000-8000-000000000020';
+    await prisma.idempotencyReceipt.create({
+      data: {
+        key: idempotencyKey,
+        scope: 'test',
+        requestHash: sha,
+        status: 'DONE',
+      },
+    });
+    await expectP2002(() =>
+      prisma.idempotencyReceipt.create({
+        data: {
+          key: idempotencyKey,
+          scope: 'test',
+          requestHash: sha,
+          status: 'DONE',
+        },
+      }),
+    );
+
+    expect(transcript.id).toBeTruthy();
   });
 });
