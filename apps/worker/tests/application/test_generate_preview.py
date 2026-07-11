@@ -2,51 +2,30 @@ import asyncio
 from pathlib import Path
 
 from clip_factory.application.generate_preview import GeneratePreview, PreviewCommand
+from clip_factory.domain.media import MediaProbe
 from clip_factory.domain.render_spec import RenderSpec
-from clip_factory.ports.preview_renderer import PreviewMedia
 from clip_factory.ports.source_preprocessor import ObjectReference
 
 
 class Renderer:
-    def __init__(self):
-        self.specs = []
-
-    async def render(self, spec, destination, width=360, height=640):
-        self.specs.append(spec)
-        destination.write_bytes(b"preview")
-        return PreviewMedia(destination)
+    async def render(self, spec, destination, width=360, height=640, progress=None):
+        assert spec.render_id == "render"
+        destination.write_bytes(b"video")
+        return MediaProbe(1000, 5, "mp4", "h264", width, height, 30, 1, "aac", 48000)
 
     async def thumbnail(self, preview, destination, time_ms=0):
-        destination.write_bytes(b"thumb")
-        return destination
+        assert preview.exists() and time_ms == 0
+        destination.write_bytes(b"image")
 
 
 class Store:
-    def put_file(self, path: Path, key: str, content_type: str = ""):
-        return ObjectReference("bucket", key, "v1", "hash")
+    async def put_file(self, key: str, path: Path) -> ObjectReference:
+        return ObjectReference("bucket", key, "v1", path.read_bytes().hex())
 
 
-def test_preview_is_scoped_and_uses_the_shared_spec():
-    renderer, spec = (
-        Renderer(),
-        RenderSpec(
-            "1.0.0",
-            "r",
-            "c",
-            {"kind": "LOCAL_FILE"},
-            (1080, 1920),
-            (0, 1000),
-            (),
-            (),
-            {},
-            None,
-            {},
-            "TIKTOK",
-        ),
-    )
-    result = asyncio.run(
-        GeneratePreview(renderer, Store()).execute(PreviewCommand("p", "c", spec))
-    )
-    assert renderer.specs == [spec]
-    assert result.preview.key == "projects/p/clips/c/preview.mp4"
-    assert result.thumbnail.key == "projects/p/clips/c/thumbnail.jpg"
+def test_preview_artifacts_are_project_scoped() -> None:
+    spec = RenderSpec("1.0.0", "render", "clip", {"path": "/tmp/source.mp4"}, (360, 640), (0, 1000), (), (), {}, None, {}, "shorts")
+    result = asyncio.run(GeneratePreview(Renderer(), Store()).execute(PreviewCommand("project", "clip", spec)))
+    assert result.preview.key == "projects/project/clips/clip/preview.mp4"
+    assert result.thumbnail.key == "projects/project/clips/clip/thumbnail.jpg"
+    assert (result.probe.width, result.probe.height) == (360, 640)

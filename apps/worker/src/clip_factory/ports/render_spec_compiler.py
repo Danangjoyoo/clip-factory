@@ -1,23 +1,17 @@
 from dataclasses import dataclass
-from enum import Enum
-from typing import Protocol
+from typing import Literal, Protocol
 
 from clip_factory.domain.render_spec import RenderSpec
 
 
-class RenderProfile(str, Enum):
-    PREVIEW = "PREVIEW"
-    THUMBNAIL = "THUMBNAIL"
-    FINAL = "FINAL"
+RenderProfile = Literal["preview", "thumbnail"]
 
 
 @dataclass(frozen=True)
 class CompiledRenderSpec:
-    filters: tuple[str, ...] = ()
-    encoders: tuple[str, ...] = ()
+    filter_args: tuple[str, ...]
+    encoder_args: tuple[str, ...]
 
 
 class RenderSpecCompiler(Protocol):
-    def compile(
-        self, spec: RenderSpec, profile: RenderProfile
-    ) -> CompiledRenderSpec: ...
+    def compile(self, spec: RenderSpec, profile: RenderProfile) -> CompiledRenderSpec: ...
