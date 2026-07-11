@@ -1,0 +1,8 @@
+{
+  "postgres": "postgres:17.5-bookworm@sha256:fbcea1bd13b6a882cd6caa6b58db3ae5c102efe50ec625b3e2a5cbc50db5bfe4",
+  "redis": "redis:8.0.5-bookworm@sha256:dbd4be0dd40f16bd91486087680fc2d25666e807b937774906dc111a621ce556",
+  "minio": "minio/minio:RELEASE.2025-04-22T22-12-26Z@sha256:a1ea29fa28355559ef137d71fc570e508a214ec84ff8083e39bc5428980b015e",
+  "minio-init": "minio/mc:RELEASE.2025-04-16T18-13-26Z@sha256:aead63c77f9db9107f1696fb08ecb0faeda23729cde94b0f663edf4fe09728e3",
+  "temporal": "temporalio/auto-setup:1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f",
+  "temporal-ui": "temporalio/ui:2.42.1@sha256:64e8d7d3cb24072373034186cd2be41338b75c02cdaba8fec68de9d76ed3b60a"
+}
