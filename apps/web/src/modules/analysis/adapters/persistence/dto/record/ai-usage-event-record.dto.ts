@@ -1,0 +1,22 @@
+export type AIUsageEventRecordDto = {
+  id: string;
+  projectId: string;
+  analysisRunId: string;
+  clipId: string | null;
+  providerResponseId: string;
+  requestHash: string;
+  purpose: string;
+  modelId: string;
+  reasoning: string;
+  promptVersion: string;
+  schemaVersion: string;
+  pricingVersion: string;
+  inputTokens: bigint;
+  cachedInputTokens: bigint;
+  cacheWriteInputTokens: bigint;
+  outputTokens: bigint;
+  reasoningTokens: bigint;
+  pricingTier: string;
+  costMicrousd: bigint;
+  occurredAt: Date;
+};
