@@ -16,7 +16,8 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
-        command: 'pnpm --filter @clip-factory/web dev',
+        command:
+          'CLIP_FACTORY_TEST_CONTROL=true pnpm --filter @clip-factory/web dev',
         url: 'http://127.0.0.1:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
