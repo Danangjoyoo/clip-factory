@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
       - run: pnpm install --frozen-lockfile --config.minimum-release-age=0
@@ -51,7 +51,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
       - run: pnpm install --frozen-lockfile --config.minimum-release-age=0 && pnpm test:architecture && pnpm test:contracts
@@ -74,7 +74,7 @@ jobs:
       }
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile --config.minimum-release-age=0
       - run: pnpm prisma:generate && pnpm exec prisma validate && pnpm db:migrate:deploy
@@ -85,7 +85,7 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile --config.minimum-release-age=0
       - run: node scripts/ci-integration.mjs -- pnpm test:integration
@@ -112,7 +112,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile --config.minimum-release-age=0 && pnpm exec playwright install --with-deps chromium
       - run: node scripts/ci-e2e.mjs -- pnpm test:e2e
