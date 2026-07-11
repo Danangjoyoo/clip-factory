@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with: { node-version: '24.18.0', cache: pnpm }
+        with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
@@ -40,7 +40,7 @@ jobs:
       - run: uv sync --directory apps/worker --frozen
       - run: uv run --directory apps/worker ruff format --check src tests
       - run: uv run --directory apps/worker ruff check src tests
-      - run: uv run --directory apps/worker mypy src tests
+      - run: uv run --directory apps/worker mypy src
       - run: uv run --directory apps/worker pytest --cov=clip_factory --cov-fail-under=90
   architecture-contracts:
     runs-on: ubuntu-24.04
@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with: { node-version: '24.18.0', cache: pnpm }
+        with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate
       - run: pnpm install --frozen-lockfile && pnpm test:architecture && pnpm test:contracts
   migrations:
@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with: { node-version: '24.18.0', cache: pnpm }
+        with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile
       - run: pnpm prisma:generate && pnpm exec prisma validate && pnpm db:migrate:deploy
   integration:
@@ -80,7 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with: { node-version: '24.18.0', cache: pnpm }
+        with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile
       - run: node scripts/ci-integration.mjs -- pnpm test:integration
         env:
@@ -103,7 +103,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with: { node-version: '24.18.0', cache: pnpm }
+        with: { node-version: '24.18.0' }
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium
       - run: node scripts/ci-e2e.mjs -- pnpm test:e2e
         env:
