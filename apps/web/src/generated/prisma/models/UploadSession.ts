@@ -313,6 +313,7 @@ export type UploadSessionWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"UploadSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UploadSession"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
+  sourceAsset?: Prisma.XOR<Prisma.SourceAssetScalarRelationFilter, Prisma.SourceAssetWhereInput>
 }
 
 export type UploadSessionOrderByWithRelationInput = {
@@ -334,6 +335,7 @@ export type UploadSessionOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   project?: Prisma.ProjectOrderByWithRelationInput
+  sourceAsset?: Prisma.SourceAssetOrderByWithRelationInput
 }
 
 export type UploadSessionWhereUniqueInput = Prisma.AtLeast<{
@@ -358,6 +360,7 @@ export type UploadSessionWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"UploadSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UploadSession"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
+  sourceAsset?: Prisma.XOR<Prisma.SourceAssetScalarRelationFilter, Prisma.SourceAssetWhereInput>
 }, "id" | "uploadId">
 
 export type UploadSessionOrderByWithAggregationInput = {
@@ -410,7 +413,6 @@ export type UploadSessionScalarWhereWithAggregatesInput = {
 
 export type UploadSessionCreateInput = {
   id?: string
-  sourceAssetId: string
   fileName: string
   contentType: string
   totalParts: number
@@ -426,6 +428,7 @@ export type UploadSessionCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutUploadSessionsInput
+  sourceAsset: Prisma.SourceAssetCreateNestedOneWithoutUploadSessionsInput
 }
 
 export type UploadSessionUncheckedCreateInput = {
@@ -450,7 +453,6 @@ export type UploadSessionUncheckedCreateInput = {
 
 export type UploadSessionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   contentType?: Prisma.StringFieldUpdateOperationsInput | string
   totalParts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -466,6 +468,7 @@ export type UploadSessionUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutUploadSessionsNestedInput
+  sourceAsset?: Prisma.SourceAssetUpdateOneRequiredWithoutUploadSessionsNestedInput
 }
 
 export type UploadSessionUncheckedUpdateInput = {
@@ -510,7 +513,6 @@ export type UploadSessionCreateManyInput = {
 
 export type UploadSessionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   contentType?: Prisma.StringFieldUpdateOperationsInput | string
   totalParts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -667,13 +669,54 @@ export type UploadSessionUncheckedUpdateManyWithoutProjectNestedInput = {
   deleteMany?: Prisma.UploadSessionScalarWhereInput | Prisma.UploadSessionScalarWhereInput[]
 }
 
+export type UploadSessionCreateNestedManyWithoutSourceAssetInput = {
+  create?: Prisma.XOR<Prisma.UploadSessionCreateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput> | Prisma.UploadSessionCreateWithoutSourceAssetInput[] | Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput[]
+  connectOrCreate?: Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput | Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput[]
+  createMany?: Prisma.UploadSessionCreateManySourceAssetInputEnvelope
+  connect?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+}
+
+export type UploadSessionUncheckedCreateNestedManyWithoutSourceAssetInput = {
+  create?: Prisma.XOR<Prisma.UploadSessionCreateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput> | Prisma.UploadSessionCreateWithoutSourceAssetInput[] | Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput[]
+  connectOrCreate?: Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput | Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput[]
+  createMany?: Prisma.UploadSessionCreateManySourceAssetInputEnvelope
+  connect?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+}
+
+export type UploadSessionUpdateManyWithoutSourceAssetNestedInput = {
+  create?: Prisma.XOR<Prisma.UploadSessionCreateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput> | Prisma.UploadSessionCreateWithoutSourceAssetInput[] | Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput[]
+  connectOrCreate?: Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput | Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput[]
+  upsert?: Prisma.UploadSessionUpsertWithWhereUniqueWithoutSourceAssetInput | Prisma.UploadSessionUpsertWithWhereUniqueWithoutSourceAssetInput[]
+  createMany?: Prisma.UploadSessionCreateManySourceAssetInputEnvelope
+  set?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  disconnect?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  delete?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  connect?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  update?: Prisma.UploadSessionUpdateWithWhereUniqueWithoutSourceAssetInput | Prisma.UploadSessionUpdateWithWhereUniqueWithoutSourceAssetInput[]
+  updateMany?: Prisma.UploadSessionUpdateManyWithWhereWithoutSourceAssetInput | Prisma.UploadSessionUpdateManyWithWhereWithoutSourceAssetInput[]
+  deleteMany?: Prisma.UploadSessionScalarWhereInput | Prisma.UploadSessionScalarWhereInput[]
+}
+
+export type UploadSessionUncheckedUpdateManyWithoutSourceAssetNestedInput = {
+  create?: Prisma.XOR<Prisma.UploadSessionCreateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput> | Prisma.UploadSessionCreateWithoutSourceAssetInput[] | Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput[]
+  connectOrCreate?: Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput | Prisma.UploadSessionCreateOrConnectWithoutSourceAssetInput[]
+  upsert?: Prisma.UploadSessionUpsertWithWhereUniqueWithoutSourceAssetInput | Prisma.UploadSessionUpsertWithWhereUniqueWithoutSourceAssetInput[]
+  createMany?: Prisma.UploadSessionCreateManySourceAssetInputEnvelope
+  set?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  disconnect?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  delete?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  connect?: Prisma.UploadSessionWhereUniqueInput | Prisma.UploadSessionWhereUniqueInput[]
+  update?: Prisma.UploadSessionUpdateWithWhereUniqueWithoutSourceAssetInput | Prisma.UploadSessionUpdateWithWhereUniqueWithoutSourceAssetInput[]
+  updateMany?: Prisma.UploadSessionUpdateManyWithWhereWithoutSourceAssetInput | Prisma.UploadSessionUpdateManyWithWhereWithoutSourceAssetInput[]
+  deleteMany?: Prisma.UploadSessionScalarWhereInput | Prisma.UploadSessionScalarWhereInput[]
+}
+
 export type EnumUploadStatusRecordFieldUpdateOperationsInput = {
   set?: $Enums.UploadStatusRecord
 }
 
 export type UploadSessionCreateWithoutProjectInput = {
   id?: string
-  sourceAssetId: string
   fileName: string
   contentType: string
   totalParts: number
@@ -688,6 +731,7 @@ export type UploadSessionCreateWithoutProjectInput = {
   expiresAt: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  sourceAsset: Prisma.SourceAssetCreateNestedOneWithoutUploadSessionsInput
 }
 
 export type UploadSessionUncheckedCreateWithoutProjectInput = {
@@ -758,6 +802,70 @@ export type UploadSessionScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"UploadSession"> | Date | string
 }
 
+export type UploadSessionCreateWithoutSourceAssetInput = {
+  id?: string
+  fileName: string
+  contentType: string
+  totalParts: number
+  objectKey: string
+  uploadId: string
+  sizeBytes: bigint | number
+  completedPartsJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  completionPartsHash?: string | null
+  objectVersionId?: string | null
+  objectSha256?: string | null
+  status?: $Enums.UploadStatusRecord
+  expiresAt: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  project: Prisma.ProjectCreateNestedOneWithoutUploadSessionsInput
+}
+
+export type UploadSessionUncheckedCreateWithoutSourceAssetInput = {
+  id?: string
+  projectId: string
+  fileName: string
+  contentType: string
+  totalParts: number
+  objectKey: string
+  uploadId: string
+  sizeBytes: bigint | number
+  completedPartsJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  completionPartsHash?: string | null
+  objectVersionId?: string | null
+  objectSha256?: string | null
+  status?: $Enums.UploadStatusRecord
+  expiresAt: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type UploadSessionCreateOrConnectWithoutSourceAssetInput = {
+  where: Prisma.UploadSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.UploadSessionCreateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput>
+}
+
+export type UploadSessionCreateManySourceAssetInputEnvelope = {
+  data: Prisma.UploadSessionCreateManySourceAssetInput | Prisma.UploadSessionCreateManySourceAssetInput[]
+  skipDuplicates?: boolean
+}
+
+export type UploadSessionUpsertWithWhereUniqueWithoutSourceAssetInput = {
+  where: Prisma.UploadSessionWhereUniqueInput
+  update: Prisma.XOR<Prisma.UploadSessionUpdateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedUpdateWithoutSourceAssetInput>
+  create: Prisma.XOR<Prisma.UploadSessionCreateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedCreateWithoutSourceAssetInput>
+}
+
+export type UploadSessionUpdateWithWhereUniqueWithoutSourceAssetInput = {
+  where: Prisma.UploadSessionWhereUniqueInput
+  data: Prisma.XOR<Prisma.UploadSessionUpdateWithoutSourceAssetInput, Prisma.UploadSessionUncheckedUpdateWithoutSourceAssetInput>
+}
+
+export type UploadSessionUpdateManyWithWhereWithoutSourceAssetInput = {
+  where: Prisma.UploadSessionScalarWhereInput
+  data: Prisma.XOR<Prisma.UploadSessionUpdateManyMutationInput, Prisma.UploadSessionUncheckedUpdateManyWithoutSourceAssetInput>
+}
+
 export type UploadSessionCreateManyProjectInput = {
   id?: string
   sourceAssetId: string
@@ -779,7 +887,6 @@ export type UploadSessionCreateManyProjectInput = {
 
 export type UploadSessionUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sourceAssetId?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   contentType?: Prisma.StringFieldUpdateOperationsInput | string
   totalParts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -794,6 +901,7 @@ export type UploadSessionUpdateWithoutProjectInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sourceAsset?: Prisma.SourceAssetUpdateOneRequiredWithoutUploadSessionsNestedInput
 }
 
 export type UploadSessionUncheckedUpdateWithoutProjectInput = {
@@ -834,6 +942,82 @@ export type UploadSessionUncheckedUpdateManyWithoutProjectInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type UploadSessionCreateManySourceAssetInput = {
+  id?: string
+  projectId: string
+  fileName: string
+  contentType: string
+  totalParts: number
+  objectKey: string
+  uploadId: string
+  sizeBytes: bigint | number
+  completedPartsJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  completionPartsHash?: string | null
+  objectVersionId?: string | null
+  objectSha256?: string | null
+  status?: $Enums.UploadStatusRecord
+  expiresAt: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type UploadSessionUpdateWithoutSourceAssetInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
+  objectKey?: Prisma.StringFieldUpdateOperationsInput | string
+  uploadId?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  completedPartsJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  completionPartsHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumUploadStatusRecordFieldUpdateOperationsInput | $Enums.UploadStatusRecord
+  expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  project?: Prisma.ProjectUpdateOneRequiredWithoutUploadSessionsNestedInput
+}
+
+export type UploadSessionUncheckedUpdateWithoutSourceAssetInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
+  objectKey?: Prisma.StringFieldUpdateOperationsInput | string
+  uploadId?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  completedPartsJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  completionPartsHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumUploadStatusRecordFieldUpdateOperationsInput | $Enums.UploadStatusRecord
+  expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type UploadSessionUncheckedUpdateManyWithoutSourceAssetInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  totalParts?: Prisma.IntFieldUpdateOperationsInput | number
+  objectKey?: Prisma.StringFieldUpdateOperationsInput | string
+  uploadId?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  completedPartsJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  completionPartsHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumUploadStatusRecordFieldUpdateOperationsInput | $Enums.UploadStatusRecord
+  expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 
 
 export type UploadSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -855,6 +1039,7 @@ export type UploadSessionSelect<ExtArgs extends runtime.Types.Extensions.Interna
   createdAt?: boolean
   updatedAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  sourceAsset?: boolean | Prisma.SourceAssetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["uploadSession"]>
 
 export type UploadSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -876,6 +1061,7 @@ export type UploadSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   createdAt?: boolean
   updatedAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  sourceAsset?: boolean | Prisma.SourceAssetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["uploadSession"]>
 
 export type UploadSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -897,6 +1083,7 @@ export type UploadSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   createdAt?: boolean
   updatedAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  sourceAsset?: boolean | Prisma.SourceAssetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["uploadSession"]>
 
 export type UploadSessionSelectScalar = {
@@ -922,18 +1109,22 @@ export type UploadSessionSelectScalar = {
 export type UploadSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "sourceAssetId" | "fileName" | "contentType" | "totalParts" | "objectKey" | "uploadId" | "sizeBytes" | "completedPartsJson" | "completionPartsHash" | "objectVersionId" | "objectSha256" | "status" | "expiresAt" | "createdAt" | "updatedAt", ExtArgs["result"]["uploadSession"]>
 export type UploadSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  sourceAsset?: boolean | Prisma.SourceAssetDefaultArgs<ExtArgs>
 }
 export type UploadSessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  sourceAsset?: boolean | Prisma.SourceAssetDefaultArgs<ExtArgs>
 }
 export type UploadSessionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  sourceAsset?: boolean | Prisma.SourceAssetDefaultArgs<ExtArgs>
 }
 
 export type $UploadSessionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "UploadSession"
   objects: {
     project: Prisma.$ProjectPayload<ExtArgs>
+    sourceAsset: Prisma.$SourceAssetPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1348,6 +1539,7 @@ readonly fields: UploadSessionFieldRefs;
 export interface Prisma__UploadSessionClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  sourceAsset<T extends Prisma.SourceAssetDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SourceAssetDefaultArgs<ExtArgs>>): Prisma.Prisma__SourceAssetClient<runtime.Types.Result.GetResult<Prisma.$SourceAssetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

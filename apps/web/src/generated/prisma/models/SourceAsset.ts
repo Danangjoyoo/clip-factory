@@ -294,6 +294,7 @@ export type SourceAssetWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"SourceAsset"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   transcript?: Prisma.XOR<Prisma.TranscriptNullableScalarRelationFilter, Prisma.TranscriptWhereInput> | null
+  uploadSessions?: Prisma.UploadSessionListRelationFilter
 }
 
 export type SourceAssetOrderByWithRelationInput = {
@@ -314,6 +315,7 @@ export type SourceAssetOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   project?: Prisma.ProjectOrderByWithRelationInput
   transcript?: Prisma.TranscriptOrderByWithRelationInput
+  uploadSessions?: Prisma.UploadSessionOrderByRelationAggregateInput
 }
 
 export type SourceAssetWhereUniqueInput = Prisma.AtLeast<{
@@ -337,6 +339,7 @@ export type SourceAssetWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"SourceAsset"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   transcript?: Prisma.XOR<Prisma.TranscriptNullableScalarRelationFilter, Prisma.TranscriptWhereInput> | null
+  uploadSessions?: Prisma.UploadSessionListRelationFilter
 }, "id" | "projectId">
 
 export type SourceAssetOrderByWithAggregationInput = {
@@ -400,6 +403,7 @@ export type SourceAssetCreateInput = {
   updatedAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutSourceAssetInput
   transcript?: Prisma.TranscriptCreateNestedOneWithoutSourceAssetInput
+  uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutSourceAssetInput
 }
 
 export type SourceAssetUncheckedCreateInput = {
@@ -419,6 +423,7 @@ export type SourceAssetUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   transcript?: Prisma.TranscriptUncheckedCreateNestedOneWithoutSourceAssetInput
+  uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutSourceAssetInput
 }
 
 export type SourceAssetUpdateInput = {
@@ -438,6 +443,7 @@ export type SourceAssetUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutSourceAssetNestedInput
   transcript?: Prisma.TranscriptUpdateOneWithoutSourceAssetNestedInput
+  uploadSessions?: Prisma.UploadSessionUpdateManyWithoutSourceAssetNestedInput
 }
 
 export type SourceAssetUncheckedUpdateInput = {
@@ -457,6 +463,7 @@ export type SourceAssetUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transcript?: Prisma.TranscriptUncheckedUpdateOneWithoutSourceAssetNestedInput
+  uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutSourceAssetNestedInput
 }
 
 export type SourceAssetCreateManyInput = {
@@ -648,6 +655,20 @@ export type SourceAssetUpdateOneRequiredWithoutTranscriptNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.SourceAssetUpdateToOneWithWhereWithoutTranscriptInput, Prisma.SourceAssetUpdateWithoutTranscriptInput>, Prisma.SourceAssetUncheckedUpdateWithoutTranscriptInput>
 }
 
+export type SourceAssetCreateNestedOneWithoutUploadSessionsInput = {
+  create?: Prisma.XOR<Prisma.SourceAssetCreateWithoutUploadSessionsInput, Prisma.SourceAssetUncheckedCreateWithoutUploadSessionsInput>
+  connectOrCreate?: Prisma.SourceAssetCreateOrConnectWithoutUploadSessionsInput
+  connect?: Prisma.SourceAssetWhereUniqueInput
+}
+
+export type SourceAssetUpdateOneRequiredWithoutUploadSessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.SourceAssetCreateWithoutUploadSessionsInput, Prisma.SourceAssetUncheckedCreateWithoutUploadSessionsInput>
+  connectOrCreate?: Prisma.SourceAssetCreateOrConnectWithoutUploadSessionsInput
+  upsert?: Prisma.SourceAssetUpsertWithoutUploadSessionsInput
+  connect?: Prisma.SourceAssetWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SourceAssetUpdateToOneWithWhereWithoutUploadSessionsInput, Prisma.SourceAssetUpdateWithoutUploadSessionsInput>, Prisma.SourceAssetUncheckedUpdateWithoutUploadSessionsInput>
+}
+
 export type SourceAssetCreateWithoutProjectInput = {
   id?: string
   kind: $Enums.SourceKindRecord
@@ -664,6 +685,7 @@ export type SourceAssetCreateWithoutProjectInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   transcript?: Prisma.TranscriptCreateNestedOneWithoutSourceAssetInput
+  uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutSourceAssetInput
 }
 
 export type SourceAssetUncheckedCreateWithoutProjectInput = {
@@ -682,6 +704,7 @@ export type SourceAssetUncheckedCreateWithoutProjectInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   transcript?: Prisma.TranscriptUncheckedCreateNestedOneWithoutSourceAssetInput
+  uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutSourceAssetInput
 }
 
 export type SourceAssetCreateOrConnectWithoutProjectInput = {
@@ -716,6 +739,7 @@ export type SourceAssetUpdateWithoutProjectInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transcript?: Prisma.TranscriptUpdateOneWithoutSourceAssetNestedInput
+  uploadSessions?: Prisma.UploadSessionUpdateManyWithoutSourceAssetNestedInput
 }
 
 export type SourceAssetUncheckedUpdateWithoutProjectInput = {
@@ -734,6 +758,7 @@ export type SourceAssetUncheckedUpdateWithoutProjectInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transcript?: Prisma.TranscriptUncheckedUpdateOneWithoutSourceAssetNestedInput
+  uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutSourceAssetNestedInput
 }
 
 export type SourceAssetCreateWithoutTranscriptInput = {
@@ -752,6 +777,7 @@ export type SourceAssetCreateWithoutTranscriptInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutSourceAssetInput
+  uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutSourceAssetInput
 }
 
 export type SourceAssetUncheckedCreateWithoutTranscriptInput = {
@@ -770,6 +796,7 @@ export type SourceAssetUncheckedCreateWithoutTranscriptInput = {
   health?: $Enums.SourceHealthRecord
   createdAt?: Date | string
   updatedAt?: Date | string
+  uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutSourceAssetInput
 }
 
 export type SourceAssetCreateOrConnectWithoutTranscriptInput = {
@@ -804,6 +831,7 @@ export type SourceAssetUpdateWithoutTranscriptInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutSourceAssetNestedInput
+  uploadSessions?: Prisma.UploadSessionUpdateManyWithoutSourceAssetNestedInput
 }
 
 export type SourceAssetUncheckedUpdateWithoutTranscriptInput = {
@@ -822,8 +850,130 @@ export type SourceAssetUncheckedUpdateWithoutTranscriptInput = {
   health?: Prisma.EnumSourceHealthRecordFieldUpdateOperationsInput | $Enums.SourceHealthRecord
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutSourceAssetNestedInput
 }
 
+export type SourceAssetCreateWithoutUploadSessionsInput = {
+  id?: string
+  kind: $Enums.SourceKindRecord
+  displayPath: string
+  resolvedPath?: string | null
+  objectKey?: string | null
+  objectVersionId?: string | null
+  objectSha256?: string | null
+  sizeBytes?: bigint | number | null
+  modifiedAt?: Date | string | null
+  fingerprint?: string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  health?: $Enums.SourceHealthRecord
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  project: Prisma.ProjectCreateNestedOneWithoutSourceAssetInput
+  transcript?: Prisma.TranscriptCreateNestedOneWithoutSourceAssetInput
+}
+
+export type SourceAssetUncheckedCreateWithoutUploadSessionsInput = {
+  id?: string
+  projectId: string
+  kind: $Enums.SourceKindRecord
+  displayPath: string
+  resolvedPath?: string | null
+  objectKey?: string | null
+  objectVersionId?: string | null
+  objectSha256?: string | null
+  sizeBytes?: bigint | number | null
+  modifiedAt?: Date | string | null
+  fingerprint?: string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  health?: $Enums.SourceHealthRecord
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  transcript?: Prisma.TranscriptUncheckedCreateNestedOneWithoutSourceAssetInput
+}
+
+export type SourceAssetCreateOrConnectWithoutUploadSessionsInput = {
+  where: Prisma.SourceAssetWhereUniqueInput
+  create: Prisma.XOR<Prisma.SourceAssetCreateWithoutUploadSessionsInput, Prisma.SourceAssetUncheckedCreateWithoutUploadSessionsInput>
+}
+
+export type SourceAssetUpsertWithoutUploadSessionsInput = {
+  update: Prisma.XOR<Prisma.SourceAssetUpdateWithoutUploadSessionsInput, Prisma.SourceAssetUncheckedUpdateWithoutUploadSessionsInput>
+  create: Prisma.XOR<Prisma.SourceAssetCreateWithoutUploadSessionsInput, Prisma.SourceAssetUncheckedCreateWithoutUploadSessionsInput>
+  where?: Prisma.SourceAssetWhereInput
+}
+
+export type SourceAssetUpdateToOneWithWhereWithoutUploadSessionsInput = {
+  where?: Prisma.SourceAssetWhereInput
+  data: Prisma.XOR<Prisma.SourceAssetUpdateWithoutUploadSessionsInput, Prisma.SourceAssetUncheckedUpdateWithoutUploadSessionsInput>
+}
+
+export type SourceAssetUpdateWithoutUploadSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumSourceKindRecordFieldUpdateOperationsInput | $Enums.SourceKindRecord
+  displayPath?: Prisma.StringFieldUpdateOperationsInput | string
+  resolvedPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  modifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fingerprint?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  health?: Prisma.EnumSourceHealthRecordFieldUpdateOperationsInput | $Enums.SourceHealthRecord
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  project?: Prisma.ProjectUpdateOneRequiredWithoutSourceAssetNestedInput
+  transcript?: Prisma.TranscriptUpdateOneWithoutSourceAssetNestedInput
+}
+
+export type SourceAssetUncheckedUpdateWithoutUploadSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumSourceKindRecordFieldUpdateOperationsInput | $Enums.SourceKindRecord
+  displayPath?: Prisma.StringFieldUpdateOperationsInput | string
+  resolvedPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  objectSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  modifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fingerprint?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  health?: Prisma.EnumSourceHealthRecordFieldUpdateOperationsInput | $Enums.SourceHealthRecord
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transcript?: Prisma.TranscriptUncheckedUpdateOneWithoutSourceAssetNestedInput
+}
+
+
+/**
+ * Count Type SourceAssetCountOutputType
+ */
+
+export type SourceAssetCountOutputType = {
+  uploadSessions: number
+}
+
+export type SourceAssetCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  uploadSessions?: boolean | SourceAssetCountOutputTypeCountUploadSessionsArgs
+}
+
+/**
+ * SourceAssetCountOutputType without action
+ */
+export type SourceAssetCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SourceAssetCountOutputType
+   */
+  select?: Prisma.SourceAssetCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * SourceAssetCountOutputType without action
+ */
+export type SourceAssetCountOutputTypeCountUploadSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UploadSessionWhereInput
+}
 
 
 export type SourceAssetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -844,6 +994,8 @@ export type SourceAssetSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   updatedAt?: boolean
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   transcript?: boolean | Prisma.SourceAsset$transcriptArgs<ExtArgs>
+  uploadSessions?: boolean | Prisma.SourceAsset$uploadSessionsArgs<ExtArgs>
+  _count?: boolean | Prisma.SourceAssetCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["sourceAsset"]>
 
 export type SourceAssetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -906,6 +1058,8 @@ export type SourceAssetOmit<ExtArgs extends runtime.Types.Extensions.InternalArg
 export type SourceAssetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   transcript?: boolean | Prisma.SourceAsset$transcriptArgs<ExtArgs>
+  uploadSessions?: boolean | Prisma.SourceAsset$uploadSessionsArgs<ExtArgs>
+  _count?: boolean | Prisma.SourceAssetCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type SourceAssetIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
@@ -919,6 +1073,7 @@ export type $SourceAssetPayload<ExtArgs extends runtime.Types.Extensions.Interna
   objects: {
     project: Prisma.$ProjectPayload<ExtArgs>
     transcript: Prisma.$TranscriptPayload<ExtArgs> | null
+    uploadSessions: Prisma.$UploadSessionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1332,6 +1487,7 @@ export interface Prisma__SourceAssetClient<T, Null = never, ExtArgs extends runt
   readonly [Symbol.toStringTag]: "PrismaPromise"
   project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   transcript<T extends Prisma.SourceAsset$transcriptArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SourceAsset$transcriptArgs<ExtArgs>>): Prisma.Prisma__TranscriptClient<runtime.Types.Result.GetResult<Prisma.$TranscriptPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  uploadSessions<T extends Prisma.SourceAsset$uploadSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SourceAsset$uploadSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UploadSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1788,6 +1944,30 @@ export type SourceAsset$transcriptArgs<ExtArgs extends runtime.Types.Extensions.
    */
   include?: Prisma.TranscriptInclude<ExtArgs> | null
   where?: Prisma.TranscriptWhereInput
+}
+
+/**
+ * SourceAsset.uploadSessions
+ */
+export type SourceAsset$uploadSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UploadSession
+   */
+  select?: Prisma.UploadSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UploadSession
+   */
+  omit?: Prisma.UploadSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UploadSessionInclude<ExtArgs> | null
+  where?: Prisma.UploadSessionWhereInput
+  orderBy?: Prisma.UploadSessionOrderByWithRelationInput | Prisma.UploadSessionOrderByWithRelationInput[]
+  cursor?: Prisma.UploadSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UploadSessionScalarFieldEnum | Prisma.UploadSessionScalarFieldEnum[]
 }
 
 /**
