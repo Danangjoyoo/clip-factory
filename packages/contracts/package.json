@@ -5,8 +5,16 @@
   "exports": "./src/index.ts",
   "scripts": {
     "generate": "node scripts/generate.mjs",
-    "lint": "eslint src scripts",
+    "check:compatibility": "node scripts/check-compatibility.mjs",
+    "lint": "eslint scripts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run && node scripts/check-compatibility.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "15.0.4"
   }
 }

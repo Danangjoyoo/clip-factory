@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/RenderSpec/1.0.0",
+  "title": "RenderSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "renderId",
+    "clipId",
+    "source",
+    "canvas",
+    "range",
+    "cropTrack",
+    "captions",
+    "style",
+    "title",
+    "encoder",
+    "platformPreset"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "renderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "clipId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "sourceAssetId",
+            "fingerprint",
+            "sizeBytes",
+            "modifiedAt"
+          ],
+          "properties": {
+            "kind": {
+              "const": "LOCAL_FILE"
+            },
+            "sourceAssetId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "fingerprint": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "modifiedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sourceAssetId", "object"],
+          "properties": {
+            "kind": {
+              "const": "BROWSER_UPLOAD"
+            },
+            "sourceAssetId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "object": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["bucket", "key", "versionId", "sha256"],
+              "properties": {
+                "bucket": {
+                  "const": "clip-factory"
+                },
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "versionId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": {
+          "const": 1080
+        },
+        "height": {
+          "const": 1920
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startMs", "endMs"],
+      "properties": {
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cropTrack": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "timeMs",
+          "centerXMicros",
+          "centerYMicros",
+          "confidenceMicros",
+          "source"
+        ],
+        "properties": {
+          "timeMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "centerXMicros": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "centerYMicros": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "confidenceMicros": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "source": {
+            "enum": ["SUBJECT_TRACK", "CENTER_FALLBACK", "MANUAL_FOCAL_POINT"]
+          }
+        }
+      }
+    },
+    "captions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "startMs", "endMs", "words"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["text", "startMs", "endMs"],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "startMs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "endMs": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fontFamily",
+        "fontSizePx",
+        "textColor",
+        "outlineColor",
+        "backgroundColor",
+        "activeWordColor",
+        "verticalPositionMicros",
+        "maxWordsPerLine",
+        "activeWordEmphasis"
+      ],
+      "properties": {
+        "fontFamily": {
+          "enum": ["Inter", "Arial", "Helvetica Neue"]
+        },
+        "fontSizePx": {
+          "type": "integer",
+          "minimum": 24,
+          "maximum": 160
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "outlineColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "backgroundColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "activeWordColor": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{8}$"
+        },
+        "verticalPositionMicros": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "maxWordsPerLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "activeWordEmphasis": {
+          "type": "boolean"
+        }
+      }
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 120
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "encoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "videoCodec", "audioCodec", "pixelFormat"],
+      "properties": {
+        "strategy": {
+          "enum": ["VIDEOTOOLBOX", "SOFTWARE"]
+        },
+        "videoCodec": {
+          "const": "h264"
+        },
+        "audioCodec": {
+          "const": "aac"
+        },
+        "pixelFormat": {
+          "const": "yuv420p"
+        }
+      }
+    },
+    "platformPreset": {
+      "enum": ["YOUTUBE_SHORTS", "INSTAGRAM_REELS", "TIKTOK"]
+    }
+  }
+}

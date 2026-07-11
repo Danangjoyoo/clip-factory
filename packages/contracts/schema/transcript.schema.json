@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/Transcript/1.0.0",
+  "title": "Transcript",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "transcriptId",
+    "languageTag",
+    "text",
+    "segments",
+    "words",
+    "backend",
+    "model",
+    "modelRevision",
+    "weightsSha256",
+    "durationMs"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "transcriptId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "languageTag": {
+      "type": "string",
+      "minLength": 1
+    },
+    "text": {
+      "type": "string"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "startMs",
+          "endMs",
+          "wordStartIndex",
+          "wordEndIndex"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "startMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "wordStartIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "wordEndIndex": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "words": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text", "startMs", "endMs", "confidenceMicros"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "startMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "confidenceMicros": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "backend": {
+      "enum": ["MLX_WHISPER", "FAKE"]
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "modelRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "weightsSha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
