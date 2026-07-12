@@ -1,1 +1,1 @@
-"""YouTube publishing application boundary."""
+"""YouTube publishing use cases."""

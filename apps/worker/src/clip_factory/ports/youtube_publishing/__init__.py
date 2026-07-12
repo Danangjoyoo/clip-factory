@@ -1,1 +1,1 @@
-"""YouTube publishing port boundary."""
+"""Application-owned YouTube OAuth ports."""

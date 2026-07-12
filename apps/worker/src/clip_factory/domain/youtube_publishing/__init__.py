@@ -1,1 +1,1 @@
-"""YouTube publishing domain boundary."""
+"""Pure YouTube publishing policy."""
