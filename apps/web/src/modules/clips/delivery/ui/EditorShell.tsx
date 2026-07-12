@@ -70,8 +70,12 @@ export function EditorShell({
           <VerticalPreview {...(selected ? { clip: selected } : {})} />
           {selected?.previewState === 'UPDATING' && (
             <ClipUpdateOverlay
-              percent={selected.previewPercent}
-              etaLabel={selected.previewEtaLabel}
+              {...(selected.previewPercent !== undefined
+                ? { percent: selected.previewPercent }
+                : {})}
+              {...(selected.previewEtaLabel !== undefined
+                ? { etaLabel: selected.previewEtaLabel }
+                : {})}
             />
           )}
         </section>
@@ -133,22 +137,23 @@ export function EditorShell({
               ) : (
                 <MetadataInspector
                   metadata={{
-                    origin:
-                      selected?.origin === 'AI_HIGHLIGHT'
-                        ? 'AI_HIGHLIGHT'
-                        : selected?.origin === 'MANUAL'
-                          ? 'MANUAL'
-                          : undefined,
-                    model: selected?.model,
-                    reasoning: selected?.reasoning,
-                    costMicrousd: selected?.costMicrousd,
-                    rank: selected?.rank,
-                    score: selected?.score,
-                    rangeLabel: selected
-                      ? `${selected.startMs}–${selected.endMs} ms`
-                      : undefined,
-                    language: selected?.language,
-                    inheritedFrame: selected?.inheritedFrame,
+                    ...(selected?.origin === 'AI_HIGHLIGHT' || selected?.origin === 'MANUAL'
+                      ? { origin: selected.origin }
+                      : {}),
+                    ...(selected?.model !== undefined ? { model: selected.model } : {}),
+                    ...(selected?.reasoning !== undefined ? { reasoning: selected.reasoning } : {}),
+                    ...(selected?.costMicrousd !== undefined
+                      ? { costMicrousd: selected.costMicrousd }
+                      : {}),
+                    ...(selected?.rank !== undefined ? { rank: selected.rank } : {}),
+                    ...(selected?.score !== undefined ? { score: selected.score } : {}),
+                    ...(selected
+                      ? { rangeLabel: `${selected.startMs}–${selected.endMs} ms` }
+                      : {}),
+                    ...(selected?.language !== undefined ? { language: selected.language } : {}),
+                    ...(selected?.inheritedFrame !== undefined
+                      ? { inheritedFrame: selected.inheritedFrame }
+                      : {}),
                   }}
                 />
               )}

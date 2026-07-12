@@ -186,6 +186,23 @@ describe('EditorShell', () => {
     expect(screen.getByText('Output frame: Not available')).toBeVisible();
   });
 
+  it('renders updating and metadata views without optional clip fields', async () => {
+    const user = userEvent.setup();
+    render(
+      <EditorShell
+        clips={[{ ...clip, previewState: 'UPDATING' }]}
+        onSelect={vi.fn()}
+        onAddClip={vi.fn()}
+        onRenderSelected={vi.fn()}
+        onRenderAll={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('status', { name: 'Clip updating' })).toBeVisible();
+    await user.click(screen.getByRole('tab', { name: 'Metadata' }));
+    expect(screen.getAllByText('Not available')).toHaveLength(2);
+  });
+
   it('wires selection, trim, add and render actions', async () => {
     const onTrimChange = vi.fn();
     const user = userEvent.setup();
