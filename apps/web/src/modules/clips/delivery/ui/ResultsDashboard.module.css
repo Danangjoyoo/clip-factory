@@ -1,0 +1,48 @@
+.dashboard {
+  max-width: 72rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.header,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid #d4d4d8;
+  border-radius: 0.75rem;
+}
+
+.poster {
+  aspect-ratio: 9 / 16;
+  background: linear-gradient(135deg, #18181b, #52525b);
+}
+
+.content {
+  padding: 1rem;
+}
+
+.content p {
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 640px) {
+  .header,
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
