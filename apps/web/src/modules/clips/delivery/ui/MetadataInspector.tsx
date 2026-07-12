@@ -1,8 +1,8 @@
 export type ClipMetadata = {
-  origin: 'AI_HIGHLIGHT' | 'MANUAL';
+  origin?: 'AI_HIGHLIGHT' | 'MANUAL';
   model?: string;
   reasoning?: string;
-  costMicrousd: bigint;
+  costMicrousd?: bigint;
   rank?: number | null;
   score?: number | null;
   algorithmVersion?: string;
@@ -13,11 +13,11 @@ export type ClipMetadata = {
 export function MetadataInspector({
   metadata,
 }: Readonly<{ metadata: ClipMetadata }>) {
-  const cost = Number(metadata.costMicrousd) / 1_000_000;
+  const cost = metadata.costMicrousd == null ? null : Number(metadata.costMicrousd) / 1_000_000;
   return (
     <dl>
       <dt>Origin</dt>
-      <dd>{metadata.origin}</dd>
+      <dd>{metadata.origin ?? 'Not available'}</dd>
       {metadata.model && (
         <>
           <dt>Model</dt>
@@ -61,10 +61,7 @@ export function MetadataInspector({
         </>
       )}
       <dt>Selection cost</dt>
-      <dd>
-        ${cost.toFixed(2)}{' '}
-        {metadata.origin === 'MANUAL' ? 'manual clip' : 'OpenAI selection cost'}
-      </dd>
+      <dd>{cost == null ? 'Not available' : `$${cost.toFixed(2)}`}</dd>
       {metadata.algorithmVersion && (
         <>
           <dt>Algorithm version</dt>

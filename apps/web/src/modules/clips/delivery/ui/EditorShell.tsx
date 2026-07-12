@@ -121,11 +121,20 @@ export function EditorShell({
               ) : (
                 <MetadataInspector
                   metadata={{
-                    origin: selected?.origin === 'AI_HIGHLIGHT' ? 'AI_HIGHLIGHT' : 'MANUAL',
-                    costMicrousd: 0n,
+                    origin:
+                      selected?.origin === 'AI_HIGHLIGHT'
+                        ? 'AI_HIGHLIGHT'
+                        : selected?.origin === 'MANUAL'
+                          ? 'MANUAL'
+                          : undefined,
+                    model: selected?.model,
+                    reasoning: selected?.reasoning,
+                    costMicrousd: selected?.costMicrousd,
                     rank: selected?.rank,
+                    score: selected?.score,
                     rangeLabel: selected ? `${selected.startMs}–${selected.endMs} ms` : undefined,
-                    inheritedFrame: focalPoint ? 'Manual focal point' : 'Automatic focal point',
+                    language: selected?.language,
+                    inheritedFrame: selected?.inheritedFrame,
                   }}
                 />
               )}

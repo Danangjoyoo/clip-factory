@@ -92,6 +92,39 @@ describe('EditorShell', () => {
     unmount();
   });
 
+  it('displays selected clip provenance in the metadata inspector', async () => {
+    const user = userEvent.setup();
+    render(
+      <EditorShell
+        clips={[
+          {
+            ...clip,
+            origin: 'AI_HIGHLIGHT',
+            model: 'gpt-5.2',
+            reasoning: 'Strong opening hook',
+            score: 0.92,
+            costMicrousd: 2_500_000n,
+            language: 'en-US',
+            inheritedFrame: '9:16 · 1080×1920',
+          },
+        ]}
+        onSelect={vi.fn()}
+        onAddClip={vi.fn()}
+        onRenderSelected={vi.fn()}
+        onRenderAll={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('tab', { name: 'Metadata' }));
+    expect(screen.getByText('gpt-5.2')).toBeVisible();
+    expect(screen.getByText('Strong opening hook')).toBeVisible();
+    expect(screen.getByText('0.92')).toBeVisible();
+    expect(screen.getByText(/\$2\.50/)).toBeVisible();
+    expect(screen.getByText('1000–5000 ms')).toBeVisible();
+    expect(screen.getByText('en-US')).toBeVisible();
+    expect(screen.getAllByText('9:16 · 1080×1920')).toHaveLength(2);
+  });
+
   it('wires selection, trim, add and render actions', async () => {
     const onTrimChange = vi.fn();
     const user = userEvent.setup();
