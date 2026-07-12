@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { AnalysisSettings } from './AnalysisSettings';
 import { SourceMethodFields } from './SourceMethodFields';
 import {
@@ -24,11 +25,13 @@ export function NewProjectForm({
   onSubmit?: (value: unknown) => void;
 }) {
   const form = useNewProjectForm();
+  const [sourceError, setSourceError] = useState(sourceValidationError);
+  useEffect(() => setSourceError(sourceValidationError), [sourceValidationError]);
   const unavailableMode =
     form.value.aiMode === 'ADVANCED' || form.value.aiMode === 'COMPLETE';
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.valid || sourceValidationError || unavailableMode) return;
+    if (!form.valid || sourceError || unavailableMode) return;
     const value = { ...form.value, mode: projectModeFor(form.value.aiMode) };
     onEstimate?.(value);
     onSubmit?.(value);
@@ -56,8 +59,11 @@ export function NewProjectForm({
         />
         <SourceValidationPanel
           title={form.value.name}
-          error={sourceValidationError}
-          onReplace={() => form.update({ sourceMethod: 'FILEPATH' })}
+          error={sourceError}
+          onReplace={() => {
+            setSourceError(undefined);
+            form.update({ sourceMethod: 'FILEPATH' });
+          }}
         />
       </div>
       <div className={styles.analysis}>
@@ -150,7 +156,7 @@ export function NewProjectForm({
       </aside>
       <button
         type="submit"
-        disabled={!form.valid || Boolean(sourceValidationError) || unavailableMode}
+        disabled={!form.valid || Boolean(sourceError) || unavailableMode}
       >
         Create project
       </button>
