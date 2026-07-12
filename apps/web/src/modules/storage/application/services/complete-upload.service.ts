@@ -23,6 +23,7 @@ export class CompleteUploadService {
     input: Readonly<{
       projectId: string;
       sessionId: string;
+      sha256: string;
       parts: readonly CompletedPart[];
     }>,
   ) {
@@ -48,7 +49,10 @@ export class CompleteUploadService {
       )
       .digest('hex');
     if (session.status === 'COMPLETED') {
-      if (session.completedPartsHash === partsHash && session.objectReference)
+      if (
+        session.completedPartsHash === partsHash &&
+        session.objectReference?.sha256 === input.sha256
+      )
         return {
           session,
           reference: session.objectReference,
@@ -73,13 +77,14 @@ export class CompleteUploadService {
       session.objectKey,
       session.uploadId,
       parts,
+      Buffer.from(input.sha256, 'hex').toString('base64'),
     );
     const head = await this.artifacts.head(session.objectKey);
     if (head.sizeBytes !== session.declaredSizeBytes) {
       await this.artifacts.deleteMany([session.objectKey]);
       throw new UploadError('UPLOAD_SIZE_MISMATCH');
     }
-    if (!head.sha256 || !/^[0-9a-f]{64}$/u.test(head.sha256)) {
+    if (head.sha256 !== input.sha256) {
       await this.artifacts.deleteMany([session.objectKey]);
       throw new UploadError('INVALID_SHA256');
     }

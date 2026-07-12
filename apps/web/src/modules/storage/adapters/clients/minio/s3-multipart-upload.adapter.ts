@@ -18,21 +18,22 @@ import {
   assertPart,
   UploadError,
 } from '../../../application/services/upload-policy';
+
+export const minioClientOptions = () => ({
+  endpoint: process.env.MINIO_ENDPOINT ?? 'http://127.0.0.1:9000',
+  forcePathStyle: true,
+  region: 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.MINIO_ACCESS_KEY ?? 'minioadmin',
+    secretAccessKey: process.env.MINIO_SECRET_KEY ?? 'minioadmin',
+  },
+});
+
 export class S3MultipartUploadAdapter
   implements MultipartUploadPort, ArtifactStorePort
 {
   private readonly bucket = 'clip-factory';
-  constructor(
-    private readonly client = new S3Client({
-      endpoint: process.env.MINIO_ENDPOINT ?? 'http://127.0.0.1:9000',
-      forcePathStyle: true,
-      region: 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.MINIO_ROOT_USER ?? 'minioadmin',
-        secretAccessKey: process.env.MINIO_ROOT_PASSWORD ?? 'minioadmin',
-      },
-    }),
-  ) {}
+  constructor(private readonly client = new S3Client(minioClientOptions())) {}
   private key(key: string) {
     if (!/^projects\/[^/]+\/sources\/[^/]+\.(?:mp4|mov|mkv|webm)$/u.test(key))
       throw new Error('INVALID_OBJECT_KEY');
@@ -105,6 +106,7 @@ export class S3MultipartUploadAdapter
     key: string,
     uploadId: string,
     parts: readonly CompletedPart[],
+    checksumSha256: string,
   ) {
     parts.forEach((p) => assertPart(p.partNumber));
     const r = await this.safe(() =>
@@ -119,6 +121,7 @@ export class S3MultipartUploadAdapter
               ETag: p.etag,
             })),
           },
+          ChecksumSHA256: checksumSha256,
         }),
       ),
     );
@@ -138,13 +141,19 @@ export class S3MultipartUploadAdapter
   async head(key: string) {
     const r = await this.safe(() =>
       this.client.send(
-        new HeadObjectCommand({ Bucket: this.bucket, Key: this.key(key) }),
+        new HeadObjectCommand({
+          Bucket: this.bucket,
+          Key: this.key(key),
+          ChecksumMode: 'ENABLED',
+        }),
       ),
     );
     return {
       sizeBytes: BigInt(r.ContentLength ?? 0),
       versionId: r.VersionId ?? null,
-      sha256: r.Metadata?.sha256 ?? null,
+      sha256: r.ChecksumSHA256
+        ? Buffer.from(r.ChecksumSHA256, 'base64').toString('hex')
+        : null,
     };
   }
   async deleteMany(keys: readonly string[]) {

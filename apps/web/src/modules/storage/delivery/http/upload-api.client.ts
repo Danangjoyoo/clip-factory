@@ -4,6 +4,15 @@ type UploadStart = Readonly<{ sessionId: string }>;
 type UploadPart = Readonly<{ partNumber: number; url: string }>;
 type UploadParts = Readonly<{ parts: readonly UploadPart[] }>;
 
+const sha256 = async (file: File) => {
+  const bytes = new Uint8Array(
+    await crypto.subtle.digest('SHA-256', await file.arrayBuffer()),
+  );
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join(
+    '',
+  );
+};
+
 async function json<T>(response: Response): Promise<T> {
   if (response.ok) return response.json() as Promise<T>;
   throw new Error('UPLOAD_FAILED');
@@ -14,6 +23,7 @@ export async function uploadProjectFile(
   sourceAssetId: string,
   file: File,
 ): Promise<void> {
+  const fileSha256 = await sha256(file);
   const totalParts = Math.max(1, Math.ceil(file.size / PART_BYTES));
   const start = await json<UploadStart>(
     await fetch(`/api/projects/${projectId}/uploads`, {
@@ -59,7 +69,7 @@ export async function uploadProjectFile(
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ parts }),
+        body: JSON.stringify({ sha256: fileSha256, parts }),
       },
     ),
   );

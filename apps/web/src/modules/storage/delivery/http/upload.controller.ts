@@ -30,6 +30,7 @@ export class UploadController {
     return this.complete.execute({
       projectId,
       sessionId,
+      sha256: input.sha256,
       parts: input.parts.map((part) => ({
         ...part,
         sizeBytes: BigInt(part.sizeBytes),

@@ -61,6 +61,7 @@ it('replays an identical completed request without calling storage again', async
   const result = await service.execute({
     projectId: h.projectId,
     sessionId: h.sessionId,
+    sha256: 'a'.repeat(64),
     parts,
   });
   expect(result.partsHash).toBe(partsHash);
@@ -74,10 +75,24 @@ it('rejects a completed request with changed parts', async () => {
     service.execute({
       projectId: h.projectId,
       sessionId: h.sessionId,
+      sha256: 'a'.repeat(64),
       parts: [
         ...parts.slice(0, 1),
         { partNumber: 2, etag: 'changed', sizeBytes: 8n },
       ],
+    }),
+  ).rejects.toMatchObject({ code: 'UPLOAD_ALREADY_COMPLETED_CONFLICT' });
+});
+
+it('rejects a completed replay with a different checksum', async () => {
+  const h = uploadHarness({ completed: parts });
+  const service = await completedService(h);
+  await expect(
+    service.execute({
+      projectId: h.projectId,
+      sessionId: h.sessionId,
+      sha256: 'b'.repeat(64),
+      parts,
     }),
   ).rejects.toMatchObject({ code: 'UPLOAD_ALREADY_COMPLETED_CONFLICT' });
 });

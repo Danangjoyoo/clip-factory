@@ -3,6 +3,17 @@ import { uploadProjectFile } from './upload-api.client';
 
 afterEach(() => vi.unstubAllGlobals());
 
+const file = () => {
+  const bytes = new TextEncoder().encode('video');
+  return {
+    name: 'branding.mp4',
+    size: bytes.byteLength,
+    type: 'video/mp4',
+    arrayBuffer: async () => bytes.buffer,
+    slice: () => new Blob([bytes], { type: 'video/mp4' }),
+  } as unknown as File;
+};
+
 describe('uploadProjectFile', () => {
   it('starts, uploads presigned parts, completes before resolving', async () => {
     const fetch = vi
@@ -26,11 +37,7 @@ describe('uploadProjectFile', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 200 }));
     vi.stubGlobal('fetch', fetch);
 
-    await uploadProjectFile(
-      'project-1',
-      'source-1',
-      new File(['video'], 'branding.mp4', { type: 'video/mp4' }),
-    );
+    await uploadProjectFile('project-1', 'source-1', file());
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
@@ -47,6 +54,10 @@ describe('uploadProjectFile', () => {
       '/api/projects/project-1/uploads/session-1/complete',
       expect.objectContaining({ method: 'POST' }),
     );
+    const completion = fetch.mock.calls[3]?.[1] as RequestInit;
+    expect(JSON.parse(String(completion.body))).toMatchObject({
+      sha256: expect.stringMatching(/^[a-f0-9]{64}$/u),
+    });
   });
 
   it('rejects when presigned upload lacks an ETag', async () => {
@@ -69,11 +80,7 @@ describe('uploadProjectFile', () => {
     vi.stubGlobal('fetch', fetch);
 
     await expect(
-      uploadProjectFile(
-        'project-1',
-        'source-1',
-        new File(['video'], 'branding.mp4', { type: 'video/mp4' }),
-      ),
+      uploadProjectFile('project-1', 'source-1', file()),
     ).rejects.toThrow('UPLOAD_FAILED');
     expect(fetch).toHaveBeenCalledTimes(3);
   });

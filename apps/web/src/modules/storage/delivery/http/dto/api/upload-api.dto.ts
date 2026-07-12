@@ -7,6 +7,7 @@ export const StartUploadApiSchema = z.object({
   totalParts: z.number().int().min(1).max(10000),
 });
 export const CompleteUploadApiSchema = z.object({
+  sha256: z.string().regex(/^[a-f0-9]{64}$/u),
   parts: z.array(
     z.object({
       partNumber: z.number().int(),
