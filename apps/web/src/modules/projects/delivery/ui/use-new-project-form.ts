@@ -24,7 +24,6 @@ export function useNewProjectForm(aiMode: AiAssistedMode = defaults.aiMode) {
   const [value, setValue] = useState<NewProjectFormValue>({
     ...defaults,
     aiMode,
-    sourceMethod: 'UPLOAD',
     path: '',
     file: null,
   });

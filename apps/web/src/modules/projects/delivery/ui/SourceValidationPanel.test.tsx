@@ -1,8 +1,16 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AnalysisSettings } from './AnalysisSettings';
 import { NewProjectForm } from './NewProjectForm';
 import { SourceValidationPanel } from './SourceValidationPanel';
+
+afterEach(cleanup);
 
 describe('SourceValidationPanel', () => {
   it('keeps setup values when source validation fails', () => {
@@ -40,6 +48,20 @@ describe('AnalysisSettings', () => {
 });
 
 describe('NewProjectForm', () => {
+  it('starts with local filepath selected for source intake', () => {
+    const { container } = render(<NewProjectForm />);
+    const form = within(container)
+      .getByRole('heading', {
+        name: 'New project',
+      })
+      .closest('form') as HTMLFormElement;
+
+    expect(
+      within(form).getByRole('tab', { name: 'Local filepath' }),
+    ).toHaveAttribute('aria-selected', 'true');
+    expect(within(form).getByLabelText('Video filepath')).toBeVisible();
+  });
+
   it('clears source recovery state when replacing a valid source', () => {
     render(<NewProjectForm sourceValidationError="SOURCE_NOT_FOUND" />);
 
