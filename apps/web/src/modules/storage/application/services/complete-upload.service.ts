@@ -37,6 +37,11 @@ export class CompleteUploadService {
     const unique = new Set(parts.map((part) => part.partNumber));
     if (unique.size !== parts.length) throw new UploadError('INVALID_PART');
     if (
+      parts.length !== session.totalParts ||
+      parts.some((part, index) => part.partNumber !== index + 1)
+    )
+      throw new UploadError('INVALID_PART');
+    if (
       parts.reduce((sum, part) => sum + part.sizeBytes, 0n) !==
       session.declaredSizeBytes
     )

@@ -54,9 +54,7 @@ function completedService(h: ReturnType<typeof uploadHarness>) {
 }
 
 it('replays an identical completed request without calling storage again', async () => {
-  const h = uploadHarness({
-    completed: parts,
-  });
+  const h = uploadHarness({ completed: parts, totalParts: 2 });
   const service = await completedService(h);
   const result = await service.execute({
     projectId: h.projectId,
@@ -69,7 +67,7 @@ it('replays an identical completed request without calling storage again', async
 });
 
 it('rejects a completed request with changed parts', async () => {
-  const h = uploadHarness({ completed: parts });
+  const h = uploadHarness({ completed: parts, totalParts: 2 });
   const service = await completedService(h);
   await expect(
     service.execute({
@@ -85,7 +83,7 @@ it('rejects a completed request with changed parts', async () => {
 });
 
 it('rejects a completed replay with a different checksum', async () => {
-  const h = uploadHarness({ completed: parts });
+  const h = uploadHarness({ completed: parts, totalParts: 2 });
   const service = await completedService(h);
   await expect(
     service.execute({
@@ -98,7 +96,7 @@ it('rejects a completed replay with a different checksum', async () => {
 });
 
 it('uses a server-read full-object checksum, not multipart checksum metadata', async () => {
-  const h = uploadHarness({ completed: parts });
+  const h = uploadHarness({ completed: parts, totalParts: 2 });
   const sha256 = vi.fn().mockResolvedValue('a'.repeat(64));
   const attachUploadedObject = vi.fn();
   const service = new CompleteUploadService(
@@ -128,7 +126,7 @@ it('uses a server-read full-object checksum, not multipart checksum metadata', a
 });
 
 it('deletes object when server-read full checksum differs from client claim', async () => {
-  const h = uploadHarness({ completed: parts });
+  const h = uploadHarness({ completed: parts, totalParts: 2 });
   const deleteMany = vi.fn();
   const service = new CompleteUploadService(
     h.sessions,
@@ -151,4 +149,42 @@ it('deletes object when server-read full checksum differs from client claim', as
     }),
   ).rejects.toMatchObject({ code: 'INVALID_SHA256' });
   expect(deleteMany).toHaveBeenCalledOnce();
+});
+
+it.each([
+  [
+    'a middle part is missing',
+    [
+      { partNumber: 1, etag: 'a', sizeBytes: 8n },
+      { partNumber: 3, etag: 'c', sizeBytes: 8n },
+    ],
+  ],
+  [
+    'the last part is missing',
+    [
+      { partNumber: 1, etag: 'a', sizeBytes: 8n },
+      { partNumber: 2, etag: 'b', sizeBytes: 8n },
+    ],
+  ],
+])('rejects completion when %s', async (_name, incomplete) => {
+  const h = uploadHarness({
+    completed: incomplete as readonly (typeof parts)[number][],
+    totalParts: 3,
+  });
+  const service = new CompleteUploadService(
+    h.sessions,
+    {} as never,
+    h.multipart,
+    {} as never,
+    {} as never,
+  );
+
+  await expect(
+    service.execute({
+      projectId: h.projectId,
+      sessionId: h.sessionId,
+      sha256: 'a'.repeat(64),
+      parts: incomplete as readonly (typeof parts)[number][],
+    }),
+  ).rejects.toMatchObject({ code: 'INVALID_PART' });
 });

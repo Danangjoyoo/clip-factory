@@ -7,7 +7,7 @@ import type {
 } from '../application/ports/multipart-upload.port';
 import { UploadSessionDataService } from '../application/data-services/upload-session.data-service';
 export function uploadHarness(
-  input: { completed?: readonly CompletedPart[] } = {},
+  input: { completed?: readonly CompletedPart[]; totalParts?: number } = {},
 ) {
   const projectId = randomUUID();
   const sessionId = randomUUID();
@@ -21,7 +21,7 @@ export function uploadHarness(
     fileName: 'source.mp4',
     contentType: 'video/mp4',
     declaredSizeBytes: 16n,
-    totalParts: 3,
+    totalParts: input.totalParts ?? 3,
     status: 'ACTIVE',
     completedPartsHash: null,
     objectReference: null,
