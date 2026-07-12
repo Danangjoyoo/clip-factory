@@ -7,8 +7,8 @@ it('imports exactly its repository and no service, controller, or client', async
     'apps/web/src/modules/youtube-publishing/application/data-services/youtube-connection.data-service.ts',
     'utf8',
   );
-  const imports = [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(
-    (match) => match[1],
+  const imports = [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].flatMap(
+    (match) => (typeof match[1] === 'string' ? [match[1]] : []),
   );
   expect(imports.filter((path) => path.includes('/ports/'))).toEqual([
     '../ports/youtube-connection.repository',
