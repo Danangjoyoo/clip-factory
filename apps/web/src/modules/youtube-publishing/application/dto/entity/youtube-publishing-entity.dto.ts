@@ -2,8 +2,12 @@ import type {
   AIUsageEventId,
   ClipId,
   ProjectId,
+  PublicationAttemptId,
+  PublicationId,
   RenderId,
+  PublishingMetadataDraftId,
   WorkflowId,
+  YouTubeConnectionId,
 } from '../../../../../shared/domain';
 import type { PublishingMetadata } from '../../../domain/publishing-metadata';
 import type { PublicationState as PublicationStateType } from '../../../domain/publication-state';
@@ -14,17 +18,12 @@ import type {
 
 export { PublicationState } from '../../../domain/publication-state';
 export { PublicationVisibility } from '../../../domain/publishing-schedule';
-
-export type YouTubeConnectionId = string & {
-  readonly __brand: 'YouTubeConnectionId';
-};
-export type PublishingMetadataDraftId = string & {
-  readonly __brand: 'PublishingMetadataDraftId';
-};
-export type PublicationId = string & { readonly __brand: 'PublicationId' };
-export type PublicationAttemptId = string & {
-  readonly __brand: 'PublicationAttemptId';
-};
+export type {
+  PublicationAttemptId,
+  PublicationId,
+  PublishingMetadataDraftId,
+  YouTubeConnectionId,
+} from '../../../../../shared/domain';
 
 export enum YouTubeConnectionState {
   Disconnected = 'DISCONNECTED',
