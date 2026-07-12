@@ -1,0 +1,41 @@
+create table "publishing_metadata_drafts" (
+  "id" uuid primary key,
+  "project_id" uuid not null references "projects" ("id") on delete cascade,
+  "clip_id" uuid not null references "clips" ("id") on delete cascade,
+  "version" integer not null,
+  "revision" integer not null default 1,
+  "state" text not null,
+  "source" text not null,
+  "title" text not null,
+  "description" text not null,
+  "hashtags" jsonb not null,
+  "keyword_tags" jsonb not null,
+  "category_id" text not null,
+  "default_language" text not null,
+  "made_for_kids" boolean not null,
+  "contains_synthetic_media" boolean not null,
+  "publishing_instruction" text,
+  "model_id" text,
+  "reasoning_level" text,
+  "max_cost_microusd" bigint not null default 0,
+  "estimated_cost_microusd" bigint not null default 0,
+  "actual_cost_microusd" bigint not null default 0,
+  "ai_usage_event_id" uuid references "ai_usage_events" ("id") on delete restrict,
+  "approved_at" timestamptz,
+  "superseded_at" timestamptz,
+  "created_at" timestamptz not null default now(),
+  "updated_at" timestamptz not null default now(),
+  constraint "publishing_metadata_drafts_version_check" check ("version" > 0),
+  constraint "publishing_metadata_drafts_revision_check" check ("revision" > 0),
+  constraint "publishing_metadata_drafts_state_check" check ("state" in ('METADATA_DRAFT', 'AWAITING_APPROVAL', 'APPROVED', 'SUPERSEDED')),
+  constraint "publishing_metadata_drafts_source_check" check ("source" in ('MANUAL', 'OPENAI')),
+  constraint "publishing_metadata_drafts_json_check" check (jsonb_typeof("hashtags") = 'array' and jsonb_typeof("keyword_tags") = 'array'),
+  constraint "publishing_metadata_drafts_money_check" check ("max_cost_microusd" >= 0 and "estimated_cost_microusd" >= 0 and "actual_cost_microusd" >= 0),
+  constraint "publishing_metadata_drafts_manual_cost_check" check ("source" <> 'MANUAL' or ("model_id" is null and "reasoning_level" is null and "ai_usage_event_id" is null and "actual_cost_microusd" = 0)),
+  constraint "publishing_metadata_drafts_openai_provenance_check" check ("source" <> 'OPENAI' or ("model_id" is not null and "reasoning_level" is not null)),
+  constraint "publishing_metadata_drafts_approval_check" check (("state" = 'APPROVED' and "approved_at" is not null) or ("state" <> 'APPROVED' and "approved_at" is null))
+);
+
+create unique index "publishing_metadata_drafts_clip_version_key" on "publishing_metadata_drafts" ("clip_id", "version");
+create unique index "publishing_metadata_drafts_ai_usage_event_key" on "publishing_metadata_drafts" ("ai_usage_event_id") where "ai_usage_event_id" is not null;
+create index "publishing_metadata_drafts_project_clip_created_idx" on "publishing_metadata_drafts" ("project_id", "clip_id", "created_at" desc);
