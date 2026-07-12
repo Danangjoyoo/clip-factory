@@ -430,3 +430,27 @@ model IdempotencyReceipt {
 
   @@map("idempotency_receipts")
 }
+
+model YouTubeConnection {
+  id                     String   @id @db.Uuid
+  slot                   String   @default("PRIMARY") @db.Text
+  channelId              String   @map("channel_id") @db.Text
+  channelTitle           String   @map("channel_title") @db.Text
+  channelHandle          String?  @map("channel_handle") @db.Text
+  avatarUrl              String?  @map("avatar_url") @db.Text
+  grantedScopes          Json     @map("granted_scopes") @db.JsonB
+  state                  String   @db.Text
+  oauthMode              String   @map("oauth_mode") @db.Text
+  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  healthCheckedAt        DateTime? @map("health_checked_at") @db.Timestamptz(6)
+  connectedAt            DateTime? @map("connected_at") @db.Timestamptz(6)
+  disconnectedAt         DateTime? @map("disconnected_at") @db.Timestamptz(6)
+  revocationUncertain    Boolean  @default(false) @map("revocation_uncertain")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([slot])
+  @@unique([channelId])
+  @@index([state, healthCheckedAt(sort: Desc)])
+  @@map("youtube_connections")
+}

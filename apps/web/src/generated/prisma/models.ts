@@ -20,4 +20,5 @@ export type * from './models/JobProjection';
 export type * from './models/StageTimingObservation';
 export type * from './models/UploadSession';
 export type * from './models/IdempotencyReceipt';
+export type * from './models/YouTubeConnection';
 export type * from './commonInputTypes';

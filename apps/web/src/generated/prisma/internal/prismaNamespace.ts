@@ -425,6 +425,7 @@ export const ModelName = {
   StageTimingObservation: 'StageTimingObservation',
   UploadSession: 'UploadSession',
   IdempotencyReceipt: 'IdempotencyReceipt',
+  YouTubeConnection: 'YouTubeConnection',
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -459,7 +460,8 @@ export type TypeMap<
       | 'jobProjection'
       | 'stageTimingObservation'
       | 'uploadSession'
-      | 'idempotencyReceipt';
+      | 'idempotencyReceipt'
+      | 'youTubeConnection';
     txIsolationLevel: TransactionIsolationLevel;
   };
   model: {
@@ -1451,6 +1453,82 @@ export type TypeMap<
         };
       };
     };
+    YouTubeConnection: {
+      payload: Prisma.$YouTubeConnectionPayload<ExtArgs>;
+      fields: Prisma.YouTubeConnectionFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.YouTubeConnectionFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.YouTubeConnectionFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        findFirst: {
+          args: Prisma.YouTubeConnectionFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.YouTubeConnectionFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        findMany: {
+          args: Prisma.YouTubeConnectionFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>[];
+        };
+        create: {
+          args: Prisma.YouTubeConnectionCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        createMany: {
+          args: Prisma.YouTubeConnectionCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        createManyAndReturn: {
+          args: Prisma.YouTubeConnectionCreateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>[];
+        };
+        delete: {
+          args: Prisma.YouTubeConnectionDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        update: {
+          args: Prisma.YouTubeConnectionUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        deleteMany: {
+          args: Prisma.YouTubeConnectionDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.YouTubeConnectionUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateManyAndReturn: {
+          args: Prisma.YouTubeConnectionUpdateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>[];
+        };
+        upsert: {
+          args: Prisma.YouTubeConnectionUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        aggregate: {
+          args: Prisma.YouTubeConnectionAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateYouTubeConnection>;
+        };
+        groupBy: {
+          args: Prisma.YouTubeConnectionGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.YouTubeConnectionGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.YouTubeConnectionCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.YouTubeConnectionCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
   };
 } & {
   other: {
@@ -1749,6 +1827,28 @@ export const IdempotencyReceiptScalarFieldEnum = {
 
 export type IdempotencyReceiptScalarFieldEnum =
   (typeof IdempotencyReceiptScalarFieldEnum)[keyof typeof IdempotencyReceiptScalarFieldEnum];
+
+export const YouTubeConnectionScalarFieldEnum = {
+  id: 'id',
+  slot: 'slot',
+  channelId: 'channelId',
+  channelTitle: 'channelTitle',
+  channelHandle: 'channelHandle',
+  avatarUrl: 'avatarUrl',
+  grantedScopes: 'grantedScopes',
+  state: 'state',
+  oauthMode: 'oauthMode',
+  refreshTokenExpiresAt: 'refreshTokenExpiresAt',
+  healthCheckedAt: 'healthCheckedAt',
+  connectedAt: 'connectedAt',
+  disconnectedAt: 'disconnectedAt',
+  revocationUncertain: 'revocationUncertain',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type YouTubeConnectionScalarFieldEnum =
+  (typeof YouTubeConnectionScalarFieldEnum)[keyof typeof YouTubeConnectionScalarFieldEnum];
 
 export const SortOrder = {
   asc: 'asc',
@@ -2058,6 +2158,14 @@ export type ListEnumUploadStatusRecordFieldRefInput<$PrismaModel> =
   FieldRefInputType<$PrismaModel, 'UploadStatusRecord[]'>;
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Boolean'
+>;
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<
@@ -2173,6 +2281,7 @@ export type GlobalOmitConfig = {
   stageTimingObservation?: Prisma.StageTimingObservationOmit;
   uploadSession?: Prisma.UploadSessionOmit;
   idempotencyReceipt?: Prisma.IdempotencyReceiptOmit;
+  youTubeConnection?: Prisma.YouTubeConnectionOmit;
 };
 
 /* Types for Logging */

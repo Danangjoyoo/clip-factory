@@ -67,6 +67,7 @@ export const ModelName = {
   StageTimingObservation: 'StageTimingObservation',
   UploadSession: 'UploadSession',
   IdempotencyReceipt: 'IdempotencyReceipt',
+  YouTubeConnection: 'YouTubeConnection',
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -344,6 +345,28 @@ export const IdempotencyReceiptScalarFieldEnum = {
 
 export type IdempotencyReceiptScalarFieldEnum =
   (typeof IdempotencyReceiptScalarFieldEnum)[keyof typeof IdempotencyReceiptScalarFieldEnum];
+
+export const YouTubeConnectionScalarFieldEnum = {
+  id: 'id',
+  slot: 'slot',
+  channelId: 'channelId',
+  channelTitle: 'channelTitle',
+  channelHandle: 'channelHandle',
+  avatarUrl: 'avatarUrl',
+  grantedScopes: 'grantedScopes',
+  state: 'state',
+  oauthMode: 'oauthMode',
+  refreshTokenExpiresAt: 'refreshTokenExpiresAt',
+  healthCheckedAt: 'healthCheckedAt',
+  connectedAt: 'connectedAt',
+  disconnectedAt: 'disconnectedAt',
+  revocationUncertain: 'revocationUncertain',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type YouTubeConnectionScalarFieldEnum =
+  (typeof YouTubeConnectionScalarFieldEnum)[keyof typeof YouTubeConnectionScalarFieldEnum];
 
 export const SortOrder = {
   asc: 'asc',

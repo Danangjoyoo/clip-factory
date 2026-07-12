@@ -81,3 +81,8 @@ export type UploadSession = Prisma.UploadSessionModel;
  *
  */
 export type IdempotencyReceipt = Prisma.IdempotencyReceiptModel;
+/**
+ * Model YouTubeConnection
+ *
+ */
+export type YouTubeConnection = Prisma.YouTubeConnectionModel;

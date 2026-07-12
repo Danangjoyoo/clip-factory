@@ -31,6 +31,24 @@ export enum YouTubeConnectionState {
   ReauthRequired = 'REAUTH_REQUIRED',
 }
 
+export type YouTubeConnectionEntityDto = {
+  id: YouTubeConnectionId;
+  channelId: string;
+  channelTitle: string;
+  channelHandle: string | null;
+  avatarUrl: string | null;
+  grantedScopes: readonly string[];
+  state: YouTubeConnectionState;
+  oauthMode: 'TESTING' | 'PRODUCTION' | 'UNKNOWN';
+  refreshTokenExpiresAt: Date | null;
+  healthCheckedAt: Date | null;
+  connectedAt: Date | null;
+  disconnectedAt: Date | null;
+  revocationUncertain: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export enum MetadataDraftState {
   Empty = 'METADATA_EMPTY',
   Draft = 'METADATA_DRAFT',
