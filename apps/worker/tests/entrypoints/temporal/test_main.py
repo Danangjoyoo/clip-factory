@@ -16,10 +16,18 @@ def test_run_worker_connects_and_runs_configured_queue(monkeypatch) -> None:
         async def run(self):
             captured["ran"] = True
 
+    class FakeServer:
+        def close(self):
+            captured["closed"] = True
+
+        async def wait_closed(self):
+            captured["wait_closed"] = True
+
     monkeypatch.setenv("INTERNAL_SERVICE_TOKEN", "test-token")
     monkeypatch.setenv("TEMPORAL_ADDRESS", "temporal.test:7233")
     monkeypatch.setenv("TEMPORAL_TASK_QUEUE", "test-queue")
     monkeypatch.setattr(entrypoint, "Client", FakeClient)
+    monkeypatch.setattr(entrypoint, "start_health_server", lambda _port: _server())
     monkeypatch.setattr(
         entrypoint,
         "build_worker",
@@ -29,6 +37,9 @@ def test_run_worker_connects_and_runs_configured_queue(monkeypatch) -> None:
         ),
     )
 
+    async def _server():
+        return FakeServer()
+
     asyncio.run(entrypoint.run_worker())
 
     assert captured == {
@@ -36,6 +47,8 @@ def test_run_worker_connects_and_runs_configured_queue(monkeypatch) -> None:
         "client": captured["client"],
         "task_queue": "test-queue",
         "ran": True,
+        "closed": True,
+        "wait_closed": True,
     }
 
 
