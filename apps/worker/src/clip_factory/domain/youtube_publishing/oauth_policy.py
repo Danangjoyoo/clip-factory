@@ -74,6 +74,7 @@ def validate_loopback_redirect_uri(redirect_uri: str) -> None:
         parsed.scheme != "http"
         or parsed.hostname != "127.0.0.1"
         or port is None
+        or port == 0
         or parsed.path != "/oauth2/callback"
         or parsed.query
         or parsed.fragment

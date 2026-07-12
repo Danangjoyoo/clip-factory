@@ -76,6 +76,7 @@ def test_callback_requires_exact_target_state_and_unexpired_flow() -> None:
         "https://127.0.0.1:49152/oauth2/callback",
         "http://127.0.0.1:49152/wrong",
         "http://127.0.0.1:not-a-port/oauth2/callback",
+        "http://127.0.0.1:0/oauth2/callback",
         "http://example.com:49152/oauth2/callback",
         "http://127.0.0.1/oauth2/callback",
     ),
