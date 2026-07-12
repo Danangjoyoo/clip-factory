@@ -10,15 +10,15 @@ from pydantic import BaseModel, ConfigDict, constr
 
 
 class Category(Enum):
-    RETRYABLE = "RETRYABLE"
-    NON_RETRYABLE = "NON_RETRYABLE"
-    WAITING = "WAITING"
-    CANCELLED = "CANCELLED"
+    RETRYABLE = 'RETRYABLE'
+    NON_RETRYABLE = 'NON_RETRYABLE'
+    WAITING = 'WAITING'
+    CANCELLED = 'CANCELLED'
 
 
 class Error(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     code: constr(min_length=1)
     category: Category
@@ -30,7 +30,7 @@ class Error(BaseModel):
 
 class ErrorEnvelope(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    schemaVersion: Literal["1.0.0"]
+    schemaVersion: Literal['1.0.0']
     error: Error

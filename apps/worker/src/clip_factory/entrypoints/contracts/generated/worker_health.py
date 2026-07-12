@@ -11,58 +11,58 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, conint, constr
 
 
 class Status(Enum):
-    ONLINE = "ONLINE"
-    DEGRADED = "DEGRADED"
-    OFFLINE = "OFFLINE"
+    ONLINE = 'ONLINE'
+    DEGRADED = 'DEGRADED'
+    OFFLINE = 'OFFLINE'
 
 
 class Hardware(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    architecture: Literal["arm64"]
+    architecture: Literal['arm64']
     chip: constr(min_length=1)
     memoryBytes: conint(ge=1)
 
 
 class Backend(Enum):
-    MLX_WHISPER = "MLX_WHISPER"
-    FAKE = "FAKE"
+    MLX_WHISPER = 'MLX_WHISPER'
+    FAKE = 'FAKE'
 
 
 class CacheStatus(Enum):
-    READY = "READY"
-    MISSING = "MISSING"
-    INVALID = "INVALID"
-    NOT_APPLICABLE = "NOT_APPLICABLE"
+    READY = 'READY'
+    MISSING = 'MISSING'
+    INVALID = 'INVALID'
+    NOT_APPLICABLE = 'NOT_APPLICABLE'
 
 
 class Transcriber(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     backend: Backend
     model: constr(min_length=1)
     revision: constr(min_length=1)
-    weightsSha256: Optional[constr(pattern=r"^[a-f0-9]{64}$")] = None
+    weightsSha256: Optional[constr(pattern=r'^[a-f0-9]{64}$')] = None
     cacheStatus: CacheStatus
 
 
 class ModelId(Enum):
-    gpt_5_6_sol = "gpt-5.6-sol"
-    gpt_5_5 = "gpt-5.5"
+    gpt_5_6_sol = 'gpt-5.6-sol'
+    gpt_5_5 = 'gpt-5.5'
 
 
 class Status1(Enum):
-    AVAILABLE = "AVAILABLE"
-    NOT_ENTITLED = "NOT_ENTITLED"
-    NOT_FOUND = "NOT_FOUND"
-    UNKNOWN = "UNKNOWN"
+    AVAILABLE = 'AVAILABLE'
+    NOT_ENTITLED = 'NOT_ENTITLED'
+    NOT_FOUND = 'NOT_FOUND'
+    UNKNOWN = 'UNKNOWN'
 
 
 class OpenAiModelAcces(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     modelId: ModelId
     status: Status1
@@ -71,9 +71,9 @@ class OpenAiModelAcces(BaseModel):
 
 class WorkerHealth(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    schemaVersion: Literal["1.0.0"]
+    schemaVersion: Literal['1.0.0']
     workerId: UUID
     status: Status
     hardware: Hardware

@@ -1,0 +1,680 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clip-factory.local/contracts/youtube-publishing/1.0.0",
+  "title": "Clip Factory YouTube Publishing Contracts",
+  "type": "object",
+  "additionalProperties": false,
+  "anyOf": [
+    {
+      "$ref": "#/$defs/oauthConnectionWorkflowInputV1"
+    },
+    {
+      "$ref": "#/$defs/oauthConnectionWorkflowResultV1"
+    },
+    {
+      "$ref": "#/$defs/youTubeConnectionEventV1"
+    },
+    {
+      "$ref": "#/$defs/metadataGenerationWorkflowInputV1"
+    },
+    {
+      "$ref": "#/$defs/publicationWorkflowInputV1"
+    },
+    {
+      "$ref": "#/$defs/publicationProgressEventV1"
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "objectKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "moneyMicrousd": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "nonnegativeIntegerString": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "objectReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bucket", "key", "versionId", "sha256"],
+      "properties": {
+        "bucket": {
+          "const": "clip-factory"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "versionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "requiredScopes": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "https://www.googleapis.com/auth/youtube.upload"
+        },
+        {
+          "const": "https://www.googleapis.com/auth/youtube.readonly"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "metadataSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "description",
+        "hashtags",
+        "keywordTags",
+        "categoryId",
+        "defaultLanguage",
+        "madeForKids",
+        "containsSyntheticMedia"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string"
+        },
+        "hashtags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^#[^\\s#]+$"
+          },
+          "maxItems": 59,
+          "uniqueItems": true
+        },
+        "keywordTags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "categoryId": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "defaultLanguage": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35
+        },
+        "madeForKids": {
+          "type": "boolean"
+        },
+        "containsSyntheticMedia": {
+          "type": "boolean"
+        }
+      }
+    },
+    "OAuthConnectionWorkflowInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "connectionId", "requestedScopes"],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "connectionId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "requestedScopes": {
+          "$ref": "#/$defs/requiredScopes"
+        }
+      }
+    },
+    "OAuthConnectionWorkflowResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractVersion",
+        "connectionId",
+        "status",
+        "safeReasonCode"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "connectionId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "status": {
+          "enum": ["CONNECTED", "DISCONNECTED", "REAUTH_REQUIRED"]
+        },
+        "safeReasonCode": {
+          "type": ["string", "null"],
+          "enum": [
+            "CONSENT_DENIED",
+            "STATE_MISMATCH",
+            "STATE_EXPIRED",
+            "MISSING_SCOPE",
+            "CALLBACK_TIMEOUT",
+            "GOOGLE_POLICY_DENIED",
+            "INVALID_GRANT",
+            null
+          ]
+        }
+      }
+    },
+    "oauthConnectionWorkflowInputV1": {
+      "$ref": "#/$defs/OAuthConnectionWorkflowInputV1"
+    },
+    "oauthConnectionWorkflowResultV1": {
+      "$ref": "#/$defs/OAuthConnectionWorkflowResultV1"
+    },
+    "youTubeConnectionEventV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contractVersion",
+            "type",
+            "connectionId",
+            "channelId",
+            "channelTitle",
+            "channelHandle",
+            "avatarUrl",
+            "grantedScopes",
+            "oauthMode",
+            "refreshTokenExpiresAt"
+          ],
+          "properties": {
+            "contractVersion": {
+              "const": 1
+            },
+            "type": {
+              "const": "CONNECTED"
+            },
+            "connectionId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "channelId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "channelTitle": {
+              "type": "string",
+              "minLength": 1
+            },
+            "channelHandle": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "avatarUrl": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uri"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grantedScopes": {
+              "$ref": "#/$defs/requiredScopes"
+            },
+            "oauthMode": {
+              "enum": ["TESTING", "PRODUCTION", "UNKNOWN"]
+            },
+            "refreshTokenExpiresAt": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contractVersion", "type", "connectionId", "reasonCode"],
+          "properties": {
+            "contractVersion": {
+              "const": 1
+            },
+            "type": {
+              "const": "REAUTH_REQUIRED"
+            },
+            "connectionId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "reasonCode": {
+              "const": "INVALID_GRANT"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contractVersion",
+            "type",
+            "connectionId",
+            "revocationUncertain"
+          ],
+          "properties": {
+            "contractVersion": {
+              "const": 1
+            },
+            "type": {
+              "const": "DISCONNECTED"
+            },
+            "connectionId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "revocationUncertain": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contractVersion", "type", "connectionId", "reasonCode"],
+          "properties": {
+            "contractVersion": {
+              "const": 1
+            },
+            "type": {
+              "const": "FAILED"
+            },
+            "connectionId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "reasonCode": {
+              "enum": [
+                "CONSENT_DENIED",
+                "STATE_MISMATCH",
+                "STATE_EXPIRED",
+                "MISSING_SCOPE",
+                "CALLBACK_TIMEOUT",
+                "GOOGLE_POLICY_DENIED"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "metadataGenerationWorkflowInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractVersion",
+        "projectId",
+        "clipId",
+        "draftId",
+        "callId",
+        "requestHash",
+        "transcriptObject",
+        "modelId",
+        "reasoningLevel",
+        "modelCatalogVersion",
+        "pricingVersion",
+        "maxGeneratedTokens",
+        "promptCachePolicy",
+        "maxCostMicrousd",
+        "instruction"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "projectId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "clipId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "draftId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "callId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "requestHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "transcriptObject": {
+          "$ref": "#/$defs/objectReference"
+        },
+        "modelId": {
+          "enum": ["gpt-5.6-sol", "gpt-5.5"]
+        },
+        "reasoningLevel": {
+          "enum": ["none", "low", "medium", "high", "xhigh", "max"]
+        },
+        "modelCatalogVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pricingVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maxGeneratedTokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "promptCachePolicy": {
+          "enum": ["EXPLICIT_DISABLED", "LEGACY_AUTOMATIC_NO_WRITE_FEE"]
+        },
+        "maxCostMicrousd": {
+          "$ref": "#/$defs/moneyMicrousd"
+        },
+        "instruction": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "publicationWorkflowInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractVersion",
+        "publicationId",
+        "attemptId",
+        "connectionId",
+        "clipId",
+        "renderId",
+        "renderObject",
+        "coverObject",
+        "totalBytes",
+        "metadataSnapshot",
+        "visibility",
+        "scheduleAtUtc",
+        "sourceTimezone",
+        "apiProjectVerified"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "publicationId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "attemptId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "connectionId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "clipId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "renderId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "renderObject": {
+          "$ref": "#/$defs/objectReference"
+        },
+        "coverObject": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/objectReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "metadataSnapshot": {
+          "$ref": "#/$defs/metadataSnapshotV1"
+        },
+        "visibility": {
+          "enum": ["PRIVATE_REVIEW", "SCHEDULED"]
+        },
+        "scheduleAtUtc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceTimezone": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "apiProjectVerified": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "visibility": {
+                "const": "SCHEDULED"
+              }
+            },
+            "required": ["visibility"]
+          },
+          "then": {
+            "properties": {
+              "scheduleAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "sourceTimezone": {
+                "type": "string",
+                "minLength": 1
+              },
+              "apiProjectVerified": {
+                "const": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "scheduleAtUtc": {
+                "type": "null"
+              },
+              "sourceTimezone": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "publicationUploadProgressEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractVersion",
+        "type",
+        "publicationId",
+        "attemptId",
+        "acknowledgedBytes",
+        "progressPercent"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "type": {
+          "const": "UPLOAD_PROGRESS"
+        },
+        "publicationId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "attemptId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "acknowledgedBytes": {
+          "$ref": "#/$defs/nonnegativeIntegerString"
+        },
+        "progressPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "publicationUploadOutcomeUncertainEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractVersion",
+        "type",
+        "publicationId",
+        "attemptId",
+        "finalChunkDispatchedAt",
+        "safeReasonCode",
+        "requiredAction"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "type": {
+          "const": "UPLOAD_OUTCOME_UNCERTAIN"
+        },
+        "publicationId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "attemptId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "finalChunkDispatchedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "safeReasonCode": {
+          "enum": [
+            "FINAL_UPLOAD_RESULT_UNKNOWN",
+            "SESSION_NOT_FOUND_AFTER_FINAL_DISPATCH"
+          ]
+        },
+        "requiredAction": {
+          "const": "RECONCILE_CHANNEL_THEN_ACKNOWLEDGE_DUPLICATE_RISK"
+        }
+      }
+    },
+    "publicationVideoCreatedEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractVersion",
+        "type",
+        "publicationId",
+        "attemptId",
+        "videoId",
+        "videoUrl",
+        "createdAt"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "type": {
+          "const": "VIDEO_CREATED"
+        },
+        "publicationId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "attemptId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "videoId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{6,64}$"
+        },
+        "videoUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "publicationProgressEventV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/publicationUploadProgressEventV1"
+        },
+        {
+          "$ref": "#/$defs/publicationUploadOutcomeUncertainEventV1"
+        },
+        {
+          "$ref": "#/$defs/publicationVideoCreatedEventV1"
+        }
+      ]
+    }
+  }
+}

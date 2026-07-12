@@ -14,7 +14,7 @@
     "typecheck": "pnpm -r typecheck && pnpm worker:typecheck",
     "test:unit": "vitest run --config vitest.workspace.ts --project unit && pnpm worker:test",
     "test:coverage": "vitest run --coverage && .tools/bin/uv run --directory apps/worker pytest --cov=clip_factory --cov-report=term-missing --cov-fail-under=90",
-    "test:architecture": "node --test tests/architecture/*.test.mjs && depcruise --config .dependency-cruiser.cjs apps/web/src && node scripts/check-ts-boundaries.mjs apps/web/src && pnpm worker:architecture",
+    "test:architecture": "node --test tests/architecture/*.test.mjs && node --test scripts/check-youtube-boundaries.test.mjs && depcruise --config .dependency-cruiser.cjs apps/web/src && node scripts/check-ts-boundaries.mjs apps/web/src && pnpm worker:architecture",
     "test:contracts": "pnpm --filter @clip-factory/contracts test",
     "test:integration": "vitest run --config vitest.workspace.ts --project integration",
     "test:media": ".tools/bin/uv run --directory apps/worker pytest tests/media -v",

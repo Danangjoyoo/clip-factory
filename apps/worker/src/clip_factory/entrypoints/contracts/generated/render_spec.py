@@ -12,37 +12,37 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, conint, constr
 
 class Source(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    kind: Literal["LOCAL_FILE"]
+    kind: Literal['LOCAL_FILE']
     sourceAssetId: UUID
-    fingerprint: constr(pattern=r"^[a-f0-9]{64}$")
+    fingerprint: constr(pattern=r'^[a-f0-9]{64}$')
     sizeBytes: conint(ge=1)
     modifiedAt: AwareDatetime
 
 
 class Object(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    bucket: Literal["clip-factory"]
+    bucket: Literal['clip-factory']
     key: constr(min_length=1)
     versionId: Optional[constr(min_length=1)] = None
-    sha256: constr(pattern=r"^[a-f0-9]{64}$")
+    sha256: constr(pattern=r'^[a-f0-9]{64}$')
 
 
 class Source1(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    kind: Literal["BROWSER_UPLOAD"]
+    kind: Literal['BROWSER_UPLOAD']
     sourceAssetId: UUID
     object: Object
 
 
 class Canvas(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     width: Literal[1080]
     height: Literal[1920]
@@ -50,21 +50,21 @@ class Canvas(BaseModel):
 
 class Range(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     startMs: conint(ge=0)
     endMs: conint(ge=0)
 
 
 class Source2(Enum):
-    SUBJECT_TRACK = "SUBJECT_TRACK"
-    CENTER_FALLBACK = "CENTER_FALLBACK"
-    MANUAL_FOCAL_POINT = "MANUAL_FOCAL_POINT"
+    SUBJECT_TRACK = 'SUBJECT_TRACK'
+    CENTER_FALLBACK = 'CENTER_FALLBACK'
+    MANUAL_FOCAL_POINT = 'MANUAL_FOCAL_POINT'
 
 
 class CropTrackItem(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     timeMs: conint(ge=0)
     centerXMicros: conint(ge=0, le=1000000)
@@ -75,7 +75,7 @@ class CropTrackItem(BaseModel):
 
 class Word(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     text: constr(min_length=1)
     startMs: conint(ge=0)
@@ -84,7 +84,7 @@ class Word(BaseModel):
 
 class Caption(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     id: UUID
     startMs: conint(ge=0)
@@ -93,52 +93,52 @@ class Caption(BaseModel):
 
 
 class FontFamily(Enum):
-    Inter = "Inter"
-    Arial = "Arial"
-    Helvetica_Neue = "Helvetica Neue"
+    Inter = 'Inter'
+    Arial = 'Arial'
+    Helvetica_Neue = 'Helvetica Neue'
 
 
 class Style(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     fontFamily: FontFamily
     fontSizePx: conint(ge=24, le=160)
-    textColor: constr(pattern=r"^#[A-Fa-f0-9]{8}$")
-    outlineColor: constr(pattern=r"^#[A-Fa-f0-9]{8}$")
-    backgroundColor: constr(pattern=r"^#[A-Fa-f0-9]{8}$")
-    activeWordColor: constr(pattern=r"^#[A-Fa-f0-9]{8}$")
+    textColor: constr(pattern=r'^#[A-Fa-f0-9]{8}$')
+    outlineColor: constr(pattern=r'^#[A-Fa-f0-9]{8}$')
+    backgroundColor: constr(pattern=r'^#[A-Fa-f0-9]{8}$')
+    activeWordColor: constr(pattern=r'^#[A-Fa-f0-9]{8}$')
     verticalPositionMicros: conint(ge=0, le=1000000)
     maxWordsPerLine: conint(ge=1, le=12)
     activeWordEmphasis: bool
 
 
 class Strategy(Enum):
-    VIDEOTOOLBOX = "VIDEOTOOLBOX"
-    SOFTWARE = "SOFTWARE"
+    VIDEOTOOLBOX = 'VIDEOTOOLBOX'
+    SOFTWARE = 'SOFTWARE'
 
 
 class Encoder(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     strategy: Strategy
-    videoCodec: Literal["h264"]
-    audioCodec: Literal["aac"]
-    pixelFormat: Literal["yuv420p"]
+    videoCodec: Literal['h264']
+    audioCodec: Literal['aac']
+    pixelFormat: Literal['yuv420p']
 
 
 class PlatformPreset(Enum):
-    YOUTUBE_SHORTS = "YOUTUBE_SHORTS"
-    INSTAGRAM_REELS = "INSTAGRAM_REELS"
-    TIKTOK = "TIKTOK"
+    YOUTUBE_SHORTS = 'YOUTUBE_SHORTS'
+    INSTAGRAM_REELS = 'INSTAGRAM_REELS'
+    TIKTOK = 'TIKTOK'
 
 
 class RenderSpec(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    schemaVersion: Literal["1.0.0"]
+    schemaVersion: Literal['1.0.0']
     renderId: UUID
     clipId: UUID
     source: Union[Source, Source1]

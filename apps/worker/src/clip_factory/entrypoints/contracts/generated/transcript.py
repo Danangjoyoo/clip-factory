@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, conint, constr
 
 class Segment(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     text: constr(min_length=1)
     startMs: conint(ge=0)
@@ -23,7 +23,7 @@ class Segment(BaseModel):
 
 class Word(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     text: constr(min_length=1)
     startMs: conint(ge=0)
@@ -32,15 +32,15 @@ class Word(BaseModel):
 
 
 class Backend(Enum):
-    MLX_WHISPER = "MLX_WHISPER"
-    FAKE = "FAKE"
+    MLX_WHISPER = 'MLX_WHISPER'
+    FAKE = 'FAKE'
 
 
 class Transcript(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    schemaVersion: Literal["1.0.0"]
+    schemaVersion: Literal['1.0.0']
     transcriptId: UUID
     languageTag: constr(min_length=1)
     text: str
@@ -49,5 +49,5 @@ class Transcript(BaseModel):
     backend: Backend
     model: constr(min_length=1)
     modelRevision: constr(min_length=1)
-    weightsSha256: Optional[constr(pattern=r"^[a-f0-9]{64}$")] = None
+    weightsSha256: Optional[constr(pattern=r'^[a-f0-9]{64}$')] = None
     durationMs: conint(ge=0)

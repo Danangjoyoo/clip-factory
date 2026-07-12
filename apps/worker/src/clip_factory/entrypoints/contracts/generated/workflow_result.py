@@ -11,31 +11,31 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, constr
 
 
 class Status(Enum):
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    CANCELLED = "CANCELLED"
+    COMPLETED = 'COMPLETED'
+    FAILED = 'FAILED'
+    CANCELLED = 'CANCELLED'
 
 
 class TranscriptObject(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    bucket: Literal["clip-factory"]
+    bucket: Literal['clip-factory']
     key: constr(min_length=1)
     versionId: Optional[constr(min_length=1)] = None
-    sha256: constr(pattern=r"^[a-f0-9]{64}$")
+    sha256: constr(pattern=r'^[a-f0-9]{64}$')
 
 
 class Category(Enum):
-    RETRYABLE = "RETRYABLE"
-    NON_RETRYABLE = "NON_RETRYABLE"
-    WAITING = "WAITING"
-    CANCELLED = "CANCELLED"
+    RETRYABLE = 'RETRYABLE'
+    NON_RETRYABLE = 'NON_RETRYABLE'
+    WAITING = 'WAITING'
+    CANCELLED = 'CANCELLED'
 
 
 class Error(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
     code: constr(min_length=1)
     category: Category
@@ -47,9 +47,9 @@ class Error(BaseModel):
 
 class WorkflowResult(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
+        extra='forbid',
     )
-    schemaVersion: Literal["1.0.0"]
+    schemaVersion: Literal['1.0.0']
     workflowId: UUID
     projectId: UUID
     status: Status

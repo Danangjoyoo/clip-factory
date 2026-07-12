@@ -94,6 +94,62 @@ for (const name of names) {
       { stdio: 'inherit' },
     );
   }
+  if (name === 'youtube-publishing') {
+    const generatedPath = resolve(
+      worker,
+      `src/clip_factory/entrypoints/contracts/generated/${name.replaceAll('-', '_')}.py`,
+    );
+    const generated = await readFile(generatedPath, 'utf8');
+    const withValidatorImport = generated.replace(
+      'from pydantic import (\n',
+      'from pydantic import (\n    model_validator,\n',
+    );
+    const output = withValidatorImport
+      .replace(
+        '    requestedScopes: RequiredScopes\n',
+        [
+          '    requestedScopes: RequiredScopes',
+          '',
+          "    @model_validator(mode='after')",
+          '    def validate_required_scopes(self) -> OAuthConnectionWorkflowInputV1:',
+          '        if tuple(self.requestedScopes.root) != (',
+          "            'https://www.googleapis.com/auth/youtube.upload',",
+          "            'https://www.googleapis.com/auth/youtube.readonly',",
+          '        ):',
+          "            raise ValueError('requestedScopes must contain required scopes in canonical order')",
+          '        return self',
+          '',
+        ].join('\n'),
+      )
+      .replace(
+        '    apiProjectVerified: bool\n\n\nclass PublicationUploadProgressEventV1',
+        [
+          '    apiProjectVerified: bool',
+          '',
+          "    @model_validator(mode='after')",
+          '    def validate_schedule(self) -> PublicationWorkflowInputV1:',
+          "        if self.visibility.value == 'SCHEDULED' and (",
+          '            self.scheduleAtUtc is None or',
+          '            self.sourceTimezone is None or',
+          '            not self.apiProjectVerified',
+          '        ):',
+          "            raise ValueError('scheduled publication requires scheduleAtUtc and sourceTimezone')",
+          "        if self.visibility.value == 'PRIVATE_REVIEW' and (",
+          '            self.scheduleAtUtc is not None or self.sourceTimezone is not None',
+          '        ):',
+          "            raise ValueError('private review publication must not include schedule')",
+          '        return self',
+          '',
+          'class PublicationUploadProgressEventV1',
+        ].join('\n'),
+      );
+    await writeFile(generatedPath, output, 'utf8');
+    execFileSync(
+      'uv',
+      ['run', '--directory', worker, 'ruff', 'format', generatedPath],
+      { stdio: 'inherit' },
+    );
+  }
 }
 execFileSync(
   'pnpm',

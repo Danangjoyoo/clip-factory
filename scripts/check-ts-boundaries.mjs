@@ -1,7 +1,8 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 
-const root = resolve(process.argv[2] ?? 'apps/web/src');
+const targets = process.argv.slice(2);
+const root = resolve(targets[0] ?? 'apps/web/src');
 const forbiddenProviders = {
   application: [
     '@prisma/client',
@@ -34,7 +35,14 @@ async function visit(path) {
   }
 }
 
-await visit(root);
+async function collect(path) {
+  if ((await stat(path)).isDirectory()) return visit(path);
+  if (['.ts', '.tsx'].includes(extname(path))) files.push(path);
+}
+
+for (const target of targets.length ? targets : ['apps/web/src']) {
+  await collect(resolve(target));
+}
 let failed = false;
 const sourceFiles = new Set(files);
 const edges = new Map(files.map((file) => [file, []]));
@@ -91,7 +99,9 @@ async function compilerOptions(configPath, seen = new Set()) {
   };
 }
 
-const configPath = await findConfig(root);
+const configPath = await findConfig(
+  (await stat(root)).isDirectory() ? root : dirname(root),
+);
 const options = configPath ? await compilerOptions(configPath) : {};
 const baseUrl = options.baseUrl ?? resolve(options.configDir ?? root, '.');
 const aliases = Object.entries(options.paths ?? {});
@@ -164,6 +174,36 @@ function isProviderImport(layer, specifier) {
 for (const file of files) {
   const source = await readFile(file, 'utf8');
   const specifiers = importsOf(source);
+  for (const specifier of specifiers) {
+    if (
+      specifier === 'googleapis' ||
+      specifier.startsWith('googleapis/') ||
+      specifier === 'google-auth-library' ||
+      specifier.startsWith('google-auth-library/')
+    ) {
+      process.stderr.write(`Google SDK import is adapter-only: ${file}\n`);
+      failed = true;
+    }
+  }
+  if (
+    /(?:^|\/)application\/ports(?:\/|$)/u.test(file) &&
+    /export\s+(?:interface|type)\s+\w*RepositoryPort\b/u.test(source) &&
+    /\b\w*Record(?:Dto)?\b/u.test(source)
+  ) {
+    process.stderr.write(
+      `repository ports must use application Entity DTOs: ${file}\n`,
+    );
+    failed = true;
+  }
+  if (
+    /(?:^|\/)(?:domain|application|delivery\/ui)(?:\/|$)/u.test(file) &&
+    /\b(?:access_?token|refresh_?token|authorization_?code|code_?verifier|client_?secret)\b/iu.test(
+      source,
+    )
+  ) {
+    process.stderr.write(`credential field is boundary-forbidden: ${file}\n`);
+    failed = true;
+  }
   for (const layer of Object.keys(forbiddenProviders)) {
     if (!file.includes(`/${layer}/`)) continue;
     for (const specifier of specifiers) {
