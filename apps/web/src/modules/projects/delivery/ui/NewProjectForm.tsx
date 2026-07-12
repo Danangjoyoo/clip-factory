@@ -7,6 +7,7 @@ import {
   type SourceValidationError,
 } from './SourceValidationPanel';
 import { useNewProjectForm } from './use-new-project-form';
+import type { NewProjectFormValue } from './use-new-project-form';
 import {
   defaults,
   projectModeFor,
@@ -18,11 +19,15 @@ export function NewProjectForm({
   sourceValidationError,
   onEstimate,
   onSubmit,
+  submitting = false,
+  submitError,
 }: {
   catalog?: CatalogView;
   sourceValidationError?: SourceValidationError;
   onEstimate?: (value: unknown) => void;
-  onSubmit?: (value: unknown) => void;
+  onSubmit?: (value: NewProjectFormValue) => void | Promise<void>;
+  submitting?: boolean;
+  submitError?: string;
 }) {
   const form = useNewProjectForm();
   const [sourceError, setSourceError] = useState(sourceValidationError);
@@ -37,7 +42,7 @@ export function NewProjectForm({
     if (!form.valid || sourceError || unavailableMode) return;
     const value = { ...form.value, mode: projectModeFor(form.value.aiMode) };
     onEstimate?.(value);
-    onSubmit?.(value);
+    void onSubmit?.(value);
   };
   return (
     <form className={styles.form} onSubmit={submit}>
@@ -162,10 +167,13 @@ export function NewProjectForm({
       </aside>
       <button
         type="submit"
-        disabled={!form.valid || Boolean(sourceError) || unavailableMode}
+        disabled={
+          !form.valid || Boolean(sourceError) || unavailableMode || submitting
+        }
       >
-        Create project
+        {submitting ? 'Creating project…' : 'Create project'}
       </button>
+      {submitError ? <p role="alert">{submitError}</p> : null}
     </form>
   );
 }

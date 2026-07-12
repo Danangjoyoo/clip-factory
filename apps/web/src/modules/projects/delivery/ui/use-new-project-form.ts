@@ -5,7 +5,7 @@ import {
   type AiAssistedMode,
   type ModelId,
 } from './new-project.presentation';
-type FormValue = {
+export type NewProjectFormValue = {
   name: string;
   sourceMethod: 'FILEPATH' | 'UPLOAD';
   aiMode: AiAssistedMode;
@@ -37,5 +37,12 @@ export function useNewProjectForm() {
   });
   const update = (patch: Partial<FormValue>) =>
     setValue((current) => ({ ...current, ...patch }));
-  return { value, errors, update, valid: !Object.values(errors).some(Boolean) };
+  return {
+    value,
+    errors,
+    update,
+    valid:
+      !Object.values(errors).some(Boolean) &&
+      (value.sourceMethod !== 'UPLOAD' || Boolean(value.file)),
+  };
 }

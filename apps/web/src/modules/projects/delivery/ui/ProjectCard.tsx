@@ -4,7 +4,7 @@ import styles from './ProjectCard.module.css';
 export function ProjectCard({
   project,
   onDelete,
-}: Readonly<{ project: ProjectCardView; onDelete: (id: string) => void }>) {
+}: Readonly<{ project: ProjectCardView; onDelete?: (id: string) => void }>) {
   return (
     <article className={styles.card}>
       <a href={project.href}>
@@ -30,11 +30,11 @@ export function ProjectCard({
         ) : null}
         <div>
           <dt>Candidates</dt>
-          <dd>{project.candidateCount}</dd>
+          <dd>{project.candidateCount ?? '—'}</dd>
         </div>
         <div>
           <dt>Renders</dt>
-          <dd>{project.renderCount}</dd>
+          <dd>{project.renderCount ?? '—'}</dd>
         </div>
         <div>
           <dt>Spend</dt>
@@ -48,16 +48,18 @@ export function ProjectCard({
         </div>
       </dl>
       <p className={styles.summary}>
-        {project.candidateCount} clips · {project.renderCount} render ·{' '}
-        {project.spendLabel}
+        {project.candidateCount ?? '—'} clips · {project.renderCount ?? '—'}{' '}
+        render · {project.spendLabel}
       </p>
-      <button
-        type="button"
-        onClick={() => onDelete(project.id)}
-        aria-label={`Delete ${project.name}`}
-      >
-        Delete
-      </button>
+      {onDelete ? (
+        <button
+          type="button"
+          onClick={() => onDelete(project.id)}
+          aria-label={`Delete ${project.name}`}
+        >
+          Delete
+        </button>
+      ) : null}
     </article>
   );
 }

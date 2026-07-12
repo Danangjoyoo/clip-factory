@@ -8,7 +8,7 @@ export function ProjectLibrary({
   heading = 'Projects',
 }: Readonly<{
   projects: readonly ProjectCardView[];
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
   heading?: string;
 }>) {
   return (
@@ -29,7 +29,10 @@ export function ProjectLibrary({
         <ul aria-label="Project library">
           {projects.map((project) => (
             <li key={project.id}>
-              <ProjectCard project={project} onDelete={onDelete} />
+              <ProjectCard
+                {...(onDelete ? { onDelete } : {})}
+                project={project}
+              />
             </li>
           ))}
         </ul>

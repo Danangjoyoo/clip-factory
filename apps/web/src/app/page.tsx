@@ -1,10 +1,4 @@
-import { ProjectLibrary } from '../modules/projects/delivery/ui/ProjectLibrary';
+import { ProjectLibraryPage } from '../modules/projects/delivery/ui/ProjectLibraryPage';
 export default function HomePage() {
-  return (
-    <ProjectLibrary
-      projects={[]}
-      onDelete={() => undefined}
-      heading="Clip Factory"
-    />
-  );
+  return <ProjectLibraryPage />;
 }

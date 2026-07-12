@@ -68,4 +68,30 @@ describe('NewProjectForm', () => {
       screen.getByRole('button', { name: 'Create project' }),
     ).toBeEnabled();
   });
+
+  it('requires a selected file for upload source creation', () => {
+    const { container } = render(<NewProjectForm />);
+    const form = within(container).getByRole('heading', {
+      name: 'New project',
+    }).parentElement as HTMLFormElement;
+
+    fireEvent.change(within(form).getByLabelText('Project name'), {
+      target: { value: 'Branding' },
+    });
+    fireEvent.click(within(form).getByRole('tab', { name: 'Upload file' }));
+
+    expect(
+      within(form).getByRole('button', { name: 'Create project' }),
+    ).toBeDisabled();
+
+    fireEvent.change(within(form).getByLabelText('Video file'), {
+      target: {
+        files: [new File(['video'], 'branding.mp4', { type: 'video/mp4' })],
+      },
+    });
+
+    expect(
+      within(form).getByRole('button', { name: 'Create project' }),
+    ).toBeEnabled();
+  });
 });
