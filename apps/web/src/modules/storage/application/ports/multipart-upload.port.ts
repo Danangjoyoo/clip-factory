@@ -18,7 +18,6 @@ export interface MultipartUploadPort {
     key: string,
     uploadId: string,
     parts: readonly CompletedPart[],
-    checksumSha256: string,
   ): Promise<{ versionId: string | null }>;
   abort(key: string, uploadId: string): Promise<void>;
 }

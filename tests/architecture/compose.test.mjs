@@ -36,6 +36,10 @@ test('compose is localhost-only and never receives the OpenAI key', () => {
     'postgres-data',
     'redis-data',
   ]);
+  const compose = readFileSync('infra/compose/docker-compose.yml', 'utf8');
+  assert.match(compose, /mc cors set local\/clip-factory/u);
+  assert.match(compose, /x-amz-checksum-sha256/u);
+  assert.match(compose, /ETag/u);
   const lock = JSON.parse(
     readFileSync('infra/compose/image-lock.json', 'utf8'),
   );

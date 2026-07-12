@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createHash } from 'node:crypto';
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: vi.fn().mockResolvedValue('https://upload.test'),
@@ -65,4 +66,17 @@ it('creates and signs multipart uploads with SHA-256 checksums', async () => {
   expect(command.input).toMatchObject({
     ChecksumSHA256: 'a'.repeat(43) + '=',
   });
+});
+
+it('hashes completed object bytes server-side', async () => {
+  const bytes = new TextEncoder().encode('video');
+  const adapter = new S3MultipartUploadAdapter({
+    send: async () => ({
+      Body: { transformToByteArray: async () => bytes },
+    }),
+  } as never);
+
+  await expect(
+    adapter.sha256('projects/project-1/sources/source.mp4'),
+  ).resolves.toBe(createHash('sha256').update(bytes).digest('hex'));
 });

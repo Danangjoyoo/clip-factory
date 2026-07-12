@@ -7,7 +7,9 @@ import {
   AbortMultipartUploadCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
+import { createHash } from 'node:crypto';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { ArtifactStorePort } from '../../../application/ports/artifact-store.port';
 import type {
@@ -117,7 +119,6 @@ export class S3MultipartUploadAdapter
     key: string,
     uploadId: string,
     parts: readonly CompletedPart[],
-    checksumSha256: string,
   ) {
     parts.forEach((p) => assertPart(p.partNumber));
     const r = await this.safe(() =>
@@ -132,7 +133,6 @@ export class S3MultipartUploadAdapter
               ETag: p.etag,
             })),
           },
-          ChecksumSHA256: checksumSha256,
         }),
       ),
     );
@@ -162,10 +162,21 @@ export class S3MultipartUploadAdapter
     return {
       sizeBytes: BigInt(r.ContentLength ?? 0),
       versionId: r.VersionId ?? null,
-      sha256: r.ChecksumSHA256
-        ? Buffer.from(r.ChecksumSHA256, 'base64').toString('hex')
-        : null,
     };
+  }
+  async sha256(key: string) {
+    const result = await this.safe(() =>
+      this.client.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: this.key(key) }),
+      ),
+    );
+    const body = result.Body as
+      | { transformToByteArray?: () => Promise<Uint8Array> }
+      | undefined;
+    if (!body?.transformToByteArray) throw new Error('OBJECT_STORAGE_ERROR');
+    return createHash('sha256')
+      .update(await body.transformToByteArray())
+      .digest('hex');
   }
   async deleteMany(keys: readonly string[]) {
     await Promise.all(

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { CompleteUploadService } from './complete-upload.service';
 import { uploadHarness } from '../../testing/upload-harness';
 
@@ -95,4 +95,60 @@ it('rejects a completed replay with a different checksum', async () => {
       parts,
     }),
   ).rejects.toMatchObject({ code: 'UPLOAD_ALREADY_COMPLETED_CONFLICT' });
+});
+
+it('uses a server-read full-object checksum, not multipart checksum metadata', async () => {
+  const h = uploadHarness({ completed: parts });
+  const sha256 = vi.fn().mockResolvedValue('a'.repeat(64));
+  const attachUploadedObject = vi.fn();
+  const service = new CompleteUploadService(
+    h.sessions,
+    { attachUploadedObject } as never,
+    h.multipart,
+    {
+      head: async () => ({ sizeBytes: 16n, versionId: null }),
+      sha256,
+      deleteMany: async () => {},
+    },
+    { execute: async (work) => work({} as never) },
+  );
+
+  const result = await service.execute({
+    projectId: h.projectId,
+    sessionId: h.sessionId,
+    sha256: 'a'.repeat(64),
+    parts,
+  });
+
+  expect(sha256).toHaveBeenCalledWith(
+    `projects/${h.projectId}/sources/${h.sessionId}.mp4`,
+  );
+  expect(result.reference.sha256).toBe('a'.repeat(64));
+  expect(attachUploadedObject).toHaveBeenCalledOnce();
+});
+
+it('deletes object when server-read full checksum differs from client claim', async () => {
+  const h = uploadHarness({ completed: parts });
+  const deleteMany = vi.fn();
+  const service = new CompleteUploadService(
+    h.sessions,
+    { attachUploadedObject: vi.fn() } as never,
+    h.multipart,
+    {
+      head: async () => ({ sizeBytes: 16n, versionId: null }),
+      sha256: async () => 'b'.repeat(64),
+      deleteMany,
+    },
+    { execute: async (work) => work({} as never) },
+  );
+
+  await expect(
+    service.execute({
+      projectId: h.projectId,
+      sessionId: h.sessionId,
+      sha256: 'a'.repeat(64),
+      parts,
+    }),
+  ).rejects.toMatchObject({ code: 'INVALID_SHA256' });
+  expect(deleteMany).toHaveBeenCalledOnce();
 });
