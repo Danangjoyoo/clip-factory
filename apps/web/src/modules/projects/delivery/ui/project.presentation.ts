@@ -12,3 +12,15 @@ export type ProjectCardView = Readonly<{
   spendLabel: string;
   updatedLabel: string;
 }>;
+
+export type ProjectSettingsViewModel = Readonly<{
+  projectId: string;
+  projectTitle: string;
+  instruction: string;
+  sourceHealthLabel: string;
+  sourceLabel: string;
+  outputFrameLabel: string;
+  platformLabel: string;
+  maxDurationLabel: string;
+  captionStyleLabel: string;
+}>;

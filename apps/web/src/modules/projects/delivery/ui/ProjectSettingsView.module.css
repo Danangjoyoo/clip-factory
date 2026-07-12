@@ -1,0 +1,131 @@
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+.header {
+  margin-bottom: var(--space-6);
+}
+.header a {
+  color: var(--color-text-muted);
+}
+.header h1 {
+  margin: var(--space-1) 0;
+}
+.header p {
+  color: var(--color-text-muted);
+}
+.eyebrow {
+  margin: var(--space-5) 0 0;
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.rail,
+.panel {
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+}
+.rail {
+  padding: var(--space-2);
+}
+.rail div {
+  display: grid;
+  gap: var(--space-1);
+}
+.rail button {
+  border: 0;
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.rail button[aria-selected='true'] {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  font-weight: 700;
+}
+.panel {
+  min-height: 22rem;
+  padding: var(--space-6);
+}
+.panel h2 {
+  margin-top: 0;
+}
+.panel p {
+  color: var(--color-text-muted);
+}
+.panel form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 38rem;
+}
+.panel label {
+  display: grid;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+.panel input,
+.panel textarea {
+  width: 100%;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+  color: var(--color-text);
+  background: var(--color-background);
+  font: inherit;
+}
+.panel button {
+  width: fit-content;
+  border: 0;
+  border-radius: var(--radius-control);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-background);
+  background: var(--color-accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+.details {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+.details div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-surface-raised);
+  padding-bottom: var(--space-3);
+}
+.details dt {
+  color: var(--color-text-muted);
+}
+.details dd {
+  margin: 0;
+  text-align: right;
+}
+.danger {
+  background: var(--color-danger) !important;
+}
+@media (max-width: 700px) {
+  .page {
+    padding: var(--space-4);
+  }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .rail div {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
