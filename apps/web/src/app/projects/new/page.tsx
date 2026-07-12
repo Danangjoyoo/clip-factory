@@ -1,4 +1,5 @@
-import { NewProjectPage } from '../../../modules/projects/delivery/ui/NewProjectPage';
+import { NewProjectPage as NewProjectView } from '../../../modules/projects/delivery/ui/NewProjectPage';
+
 export default function NewProjectPage() {
-  return <NewProjectPage />;
+  return <NewProjectView />;
 }

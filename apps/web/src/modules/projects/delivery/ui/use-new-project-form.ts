@@ -21,7 +21,7 @@ export type NewProjectFormValue = {
   file: File | null;
 };
 export function useNewProjectForm() {
-  const [value, setValue] = useState<FormValue>({
+  const [value, setValue] = useState<NewProjectFormValue>({
     ...defaults,
     sourceMethod: 'FILEPATH',
     path: '',
@@ -35,7 +35,7 @@ export function useNewProjectForm() {
     maximumClipSeconds: value.maximumClipSeconds,
     instruction: value.instruction,
   });
-  const update = (patch: Partial<FormValue>) =>
+  const update = (patch: Partial<NewProjectFormValue>) =>
     setValue((current) => ({ ...current, ...patch }));
   return {
     value,

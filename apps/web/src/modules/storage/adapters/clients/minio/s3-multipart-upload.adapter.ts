@@ -80,7 +80,7 @@ export class S3MultipartUploadAdapter
     uploadId: string,
     partNumber: number,
     checksumSha256: string,
-    expiresSeconds: 900,
+    expiresSeconds = 900,
   ) {
     assertPart(partNumber);
     return this.safe(() =>

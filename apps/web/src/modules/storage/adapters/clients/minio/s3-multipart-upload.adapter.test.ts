@@ -73,7 +73,7 @@ it('hashes completed object bytes server-side', async () => {
   const chunks = [
     new TextEncoder().encode('vid'),
     new TextEncoder().encode('eo'),
-  ];
+  ] as const;
   const adapter = new S3MultipartUploadAdapter({
     send: async () => ({
       Body: (async function* () {

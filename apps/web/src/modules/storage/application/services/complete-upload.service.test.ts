@@ -42,6 +42,9 @@ function completedService(h: ReturnType<typeof uploadHarness>) {
         head: async () => {
           throw new Error('must not head');
         },
+        sha256: async () => {
+          throw new Error('must not sha256');
+        },
         deleteMany: async () => {},
       },
       {

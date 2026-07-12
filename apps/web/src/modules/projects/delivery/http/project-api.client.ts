@@ -30,7 +30,9 @@ async function readJson<T>(response: Response): Promise<T> {
 export async function listProjects(
   signal?: AbortSignal,
 ): Promise<ProjectApi[]> {
-  return readJson<ProjectApi[]>(await fetch('/api/projects', { signal }));
+  const init: RequestInit = {};
+  if (signal) init.signal = signal;
+  return readJson<ProjectApi[]>(await fetch('/api/projects', init));
 }
 
 export async function createProject(
