@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { AppShell } from '../modules/settings/delivery/ui/AppShell';
+import { ThemeProvider } from '../modules/settings/delivery/ui/ThemeProvider';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
@@ -11,7 +13,11 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ThemeProvider>
+          <AppShell>{children}</AppShell>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
