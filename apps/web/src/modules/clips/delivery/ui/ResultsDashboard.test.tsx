@@ -15,12 +15,13 @@ const renderedClip = {
 };
 
 const renderingClip = {
-  ...renderedClip,
   id: 'rendering-clip',
   title: 'Rendering clip',
+  durationLabel: renderedClip.durationLabel,
   state: 'RENDERING' as const,
-  downloadHref: undefined,
-  editorHref: undefined,
+  originLabel: renderedClip.originLabel,
+  sizeLabel: renderedClip.sizeLabel,
+  formatLabel: renderedClip.formatLabel,
 };
 
 describe('ResultsDashboard', () => {

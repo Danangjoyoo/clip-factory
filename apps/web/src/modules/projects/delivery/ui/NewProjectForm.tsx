@@ -62,7 +62,7 @@ export function NewProjectForm({
         />
         <SourceValidationPanel
           title={form.value.name}
-          error={sourceError}
+          {...(sourceError ? { error: sourceError } : {})}
           onReplace={() => {
             setSourceError(undefined);
             form.update({ sourceMethod: 'FILEPATH' });
