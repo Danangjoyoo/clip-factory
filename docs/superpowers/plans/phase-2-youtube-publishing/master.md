@@ -28,6 +28,8 @@ No Phase 2 implementation task may start until all of the following are true:
 
 If any item is absent or failing, stop. Fix and re-accept Phase 1 under its own plan; do not use Phase 2 to weaken, rename, bypass, or retroactively restructure a Phase 1 boundary.
 
+> **Execution override, 2026-07-12:** User explicitly directed Phase 2 execution before checklist sign-off. This authorizes implementation against deterministic fakes only; it does not waive Phase 1 acceptance, production OAuth, or release promotion requirements.
+
 ## Global constraints
 
 - **Strict witnessed TDD:** No production line is written before its focused test is observed failing for the expected missing-behavior reason. Record the RED command/output, implement only the minimum GREEN, rerun the same command, then REFACTOR while green. A test that passes immediately or fails from syntax/setup does not witness RED.
