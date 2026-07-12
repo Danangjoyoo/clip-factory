@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from urllib.parse import urlsplit, urlunsplit
 
 from clip_factory.domain.youtube_publishing.oauth_policy import (
@@ -8,6 +8,7 @@ from clip_factory.domain.youtube_publishing.oauth_policy import (
     create_state,
     hash_state,
     validate_callback,
+    validate_loopback_redirect_uri,
     validate_scopes,
 )
 from clip_factory.ports.youtube_publishing.connection_event_sink import ConnectionEventSink
@@ -18,7 +19,13 @@ from clip_factory.ports.youtube_publishing.oauth import (
     YouTubeOAuthGateway,
 )
 from clip_factory.ports.youtube_publishing.oauth_state_store import OAuthStateStore
-from clip_factory.ports.youtube_publishing.runtime import Clock, EntropySource, LoopbackListener
+from clip_factory.ports.youtube_publishing.runtime import (
+    ActiveOAuthFlow,
+    ActiveOAuthFlowStore,
+    Clock,
+    EntropySource,
+    LoopbackListener,
+)
 from clip_factory.ports.youtube_publishing.system_browser import SystemBrowser
 
 
@@ -37,15 +44,6 @@ class DisconnectResult:
     revocation_uncertain: bool
 
 
-@dataclass(frozen=True, slots=True)
-class ActiveOAuthFlow:
-    connection_id: str
-    state: str
-    code_verifier: str
-    redirect_uri: str
-    expires_at: datetime
-
-
 class YouTubeOAuthService:
     def __init__(
         self,
@@ -57,6 +55,7 @@ class YouTubeOAuthService:
         clock: Clock,
         entropy: EntropySource,
         loopback_listener: LoopbackListener,
+        active_flows: ActiveOAuthFlowStore,
     ) -> None:
         self._gateway = gateway
         self._vault = vault
@@ -66,18 +65,19 @@ class YouTubeOAuthService:
         self._clock = clock
         self._entropy = entropy
         self._loopback_listener = loopback_listener
-        self._active_flows: dict[str, ActiveOAuthFlow] = {}
+        self._active_flows = active_flows
 
     async def begin(self, connection_id: str) -> AuthorizationRequest:
         redirect_uri = await self._loopback_listener.bind()
+        validate_loopback_redirect_uri(redirect_uri)
         now = self._clock.now()
         expires_at = now + timedelta(minutes=10)
         state = create_state(self._entropy.bytes)
         verifier, challenge = create_pkce(self._entropy.bytes)
         state_digest = hash_state(state)
-        self._active_flows[state_digest] = ActiveOAuthFlow(
+        self._active_flows.put(state_digest, ActiveOAuthFlow(
             connection_id, state, verifier, redirect_uri, expires_at
-        )
+        ))
         await self._state_store.put(state_digest, connection_id, expires_at)
         full_url = await self._gateway.create_authorization_request(
             connection_id, redirect_uri, state, challenge
@@ -92,7 +92,7 @@ class YouTubeOAuthService:
 
     async def complete(self, callback: OAuthCallback) -> SanitizedChannelConnection:
         state_digest = hash_state(callback.state)
-        active = self._active_flows.pop(state_digest, None)
+        active = self._active_flows.pop(state_digest)
         stored_connection_id = await self._state_store.consume(state_digest, self._clock.now())
         if active is None or stored_connection_id is None:
             raise OAuthSecurityError("OAuth state is missing or already consumed")

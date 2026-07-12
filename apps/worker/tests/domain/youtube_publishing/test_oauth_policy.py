@@ -9,6 +9,7 @@ from clip_factory.domain.youtube_publishing.oauth_policy import (
     create_pkce,
     create_state,
     hash_state,
+    validate_loopback_redirect_uri,
     validate_callback,
     validate_scopes,
 )
@@ -66,6 +67,26 @@ def test_callback_requires_exact_target_state_and_unexpired_flow() -> None:
             now=expires_at,
             expires_at=expires_at,
         )
+
+
+@pytest.mark.parametrize(
+    "redirect_uri",
+    (
+        "http://localhost:49152/oauth2/callback",
+        "https://127.0.0.1:49152/oauth2/callback",
+        "http://127.0.0.1:49152/wrong",
+        "http://127.0.0.1:not-a-port/oauth2/callback",
+        "http://example.com:49152/oauth2/callback",
+        "http://127.0.0.1/oauth2/callback",
+    ),
+)
+def test_loopback_redirect_uri_requires_exact_bound_callback(redirect_uri: str) -> None:
+    with pytest.raises(OAuthSecurityError, match="unexpected OAuth callback target"):
+        validate_loopback_redirect_uri(redirect_uri)
+
+
+def test_loopback_redirect_uri_accepts_bound_ipv4_callback() -> None:
+    validate_loopback_redirect_uri("http://127.0.0.1:49152/oauth2/callback")
 
 
 def test_scope_validation_requires_exact_capabilities_without_extra_scope() -> None:

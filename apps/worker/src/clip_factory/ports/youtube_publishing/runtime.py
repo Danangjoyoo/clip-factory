@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
@@ -12,3 +13,18 @@ class EntropySource(Protocol):
 
 class LoopbackListener(Protocol):
     async def bind(self) -> str: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ActiveOAuthFlow:
+    connection_id: str
+    state: str
+    code_verifier: str
+    redirect_uri: str
+    expires_at: datetime
+
+
+class ActiveOAuthFlowStore(Protocol):
+    def put(self, state_digest: str, flow: ActiveOAuthFlow) -> None: ...
+
+    def pop(self, state_digest: str) -> ActiveOAuthFlow | None: ...

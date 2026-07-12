@@ -3,6 +3,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 from clip_factory.ports.youtube_publishing.oauth import SanitizedChannelConnection
+from clip_factory.ports.youtube_publishing.runtime import ActiveOAuthFlow
 
 
 class FakeGateway:
@@ -93,8 +94,22 @@ class FakeEntropy:
 
 
 class FakeLoopbackListener:
+    def __init__(self, redirect_uri: str) -> None:
+        self.redirect_uri = redirect_uri
+
     async def bind(self) -> str:
-        return "http://127.0.0.1:49152/oauth2/callback"
+        return self.redirect_uri
+
+
+class FakeActiveOAuthFlowStore:
+    def __init__(self) -> None:
+        self.flows: dict[str, ActiveOAuthFlow] = {}
+
+    def put(self, state_digest: str, flow: ActiveOAuthFlow) -> None:
+        self.flows[state_digest] = flow
+
+    def pop(self, state_digest: str) -> ActiveOAuthFlow | None:
+        return self.flows.pop(state_digest, None)
 
 
 @dataclass(frozen=True)
@@ -106,9 +121,14 @@ class OAuthFakes:
     browser: FakeBrowser
     events: FakeEvents
     clock: FakeClock
+    active_flows: FakeActiveOAuthFlowStore
 
 
-def make_oauth_fakes(now: datetime, revoke_result: bool = True) -> OAuthFakes:
+def make_oauth_fakes(
+    now: datetime,
+    revoke_result: bool = True,
+    redirect_uri: str = "http://127.0.0.1:49152/oauth2/callback",
+) -> OAuthFakes:
     connection = SanitizedChannelConnection(
         connection_id="018f4f2c-93d7-7c75-8f0f-7f5165e8bb42",
         channel_id="channel-1",
@@ -128,6 +148,7 @@ def make_oauth_fakes(now: datetime, revoke_result: bool = True) -> OAuthFakes:
     browser = FakeBrowser()
     events = FakeEvents()
     clock = FakeClock(now)
+    active_flows = FakeActiveOAuthFlowStore()
     return OAuthFakes(
         dependencies={
             "gateway": gateway,
@@ -137,7 +158,8 @@ def make_oauth_fakes(now: datetime, revoke_result: bool = True) -> OAuthFakes:
             "events": events,
             "clock": clock,
             "entropy": FakeEntropy(),
-            "loopback_listener": FakeLoopbackListener(),
+            "loopback_listener": FakeLoopbackListener(redirect_uri),
+            "active_flows": active_flows,
         },
         gateway=gateway,
         vault=vault,
@@ -145,4 +167,5 @@ def make_oauth_fakes(now: datetime, revoke_result: bool = True) -> OAuthFakes:
         browser=browser,
         events=events,
         clock=clock,
+        active_flows=active_flows,
     )

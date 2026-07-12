@@ -3,6 +3,7 @@ from datetime import datetime
 import base64
 import hashlib
 import hmac
+from urllib.parse import urlsplit
 
 
 REQUIRED_YOUTUBE_SCOPES = (
@@ -61,3 +62,22 @@ def validate_callback(
         raise OAuthSecurityError("authorization flow expired")
     if not hmac.compare_digest(supplied_state, expected_state):
         raise OAuthSecurityError("OAuth state mismatch")
+
+
+def validate_loopback_redirect_uri(redirect_uri: str) -> None:
+    parsed = urlsplit(redirect_uri)
+    try:
+        port = parsed.port
+    except ValueError:
+        port = None
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname != "127.0.0.1"
+        or port is None
+        or parsed.path != "/oauth2/callback"
+        or parsed.query
+        or parsed.fragment
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise OAuthSecurityError("unexpected OAuth callback target")

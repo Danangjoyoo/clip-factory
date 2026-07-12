@@ -5,11 +5,28 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 
 from clip_factory.application.youtube_publishing.oauth_service import OAuthCallback, YouTubeOAuthService
+from clip_factory.application.youtube_publishing.active_oauth_flow_store import InMemoryActiveOAuthFlowStore
 from clip_factory.domain.youtube_publishing.oauth_policy import OAuthSecurityError
+from clip_factory.ports.youtube_publishing.runtime import ActiveOAuthFlow
 from tests.fakes.youtube_publishing import make_oauth_fakes
 
 
 CONNECTION_ID = "018f4f2c-93d7-7c75-8f0f-7f5165e8bb42"
+
+
+def test_process_memory_flow_store_pop_is_one_time_and_has_no_serialization_method() -> None:
+    store = InMemoryActiveOAuthFlowStore()
+    flow = ActiveOAuthFlow(
+        CONNECTION_ID,
+        "state",
+        "verifier",
+        "http://127.0.0.1:1/oauth2/callback",
+        datetime(2026, 7, 11, tzinfo=UTC),
+    )
+    store.put("digest", flow)
+    assert store.pop("digest") == flow
+    assert store.pop("digest") is None
+    assert not hasattr(store, "serialize")
 
 
 def test_begin_stores_only_digest_then_opens_system_browser() -> None:
@@ -24,6 +41,25 @@ def test_begin_stores_only_digest_then_opens_system_browser() -> None:
     assert result.authorization_display_url == "https://accounts.google.com/o/oauth2/v2/auth"
     assert "?" not in result.authorization_display_url
     assert fakes.state_store.raw_states == []
+    assert set(fakes.active_flows.flows) == {result.state_digest}
+
+
+@pytest.mark.parametrize(
+    "redirect_uri",
+    (
+        "http://localhost:49152/oauth2/callback",
+        "https://127.0.0.1:49152/oauth2/callback",
+        "http://example.com:49152/oauth2/callback",
+        "http://127.0.0.1:49152/not-callback",
+    ),
+)
+def test_begin_rejects_non_exact_loopback_callback_uri(redirect_uri: str) -> None:
+    fakes = make_oauth_fakes(now=datetime(2026, 7, 11, tzinfo=UTC), redirect_uri=redirect_uri)
+    service = YouTubeOAuthService(**fakes.dependencies)
+    with pytest.raises(OAuthSecurityError, match="unexpected OAuth callback target"):
+        asyncio.run(service.begin(CONNECTION_ID))
+    assert fakes.state_store.entries == {}
+    assert fakes.browser.opened == []
 
 
 def test_complete_consumes_state_once_validates_scope_and_reports_sanitized_connection() -> None:
