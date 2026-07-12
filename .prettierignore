@@ -5,6 +5,7 @@ pnpm-lock.yaml
 .agents/
 .windsurf/
 skills-lock.json
+apps/web/next-env.d.ts
 node_modules/
 apps/worker/.venv/
 apps/worker/.import_linter_cache/
