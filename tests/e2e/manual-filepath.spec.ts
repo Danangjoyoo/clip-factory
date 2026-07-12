@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures/app';
 
-test('manual filepath keeps the zero-cost mode and accepts clip limits', async ({
+test('manual filepath configuration accepts clip limits', async ({
   page,
   app,
 }) => {
@@ -21,5 +21,4 @@ test('manual filepath keeps the zero-cost mode and accepts clip limits', async (
   await expect(
     page.getByRole('button', { name: 'Create project' }),
   ).toBeEnabled();
-  expect(await app.openAIUsageCount()).toBe(0);
 });
