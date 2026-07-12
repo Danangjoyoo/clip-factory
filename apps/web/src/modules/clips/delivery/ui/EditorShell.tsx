@@ -137,20 +137,33 @@ export function EditorShell({
               ) : (
                 <MetadataInspector
                   metadata={{
-                    ...(selected?.origin === 'AI_HIGHLIGHT' || selected?.origin === 'MANUAL'
+                    ...(selected?.origin === 'AI_HIGHLIGHT' ||
+                    selected?.origin === 'MANUAL'
                       ? { origin: selected.origin }
                       : {}),
-                    ...(selected?.model !== undefined ? { model: selected.model } : {}),
-                    ...(selected?.reasoning !== undefined ? { reasoning: selected.reasoning } : {}),
+                    ...(selected?.model !== undefined
+                      ? { model: selected.model }
+                      : {}),
+                    ...(selected?.reasoning !== undefined
+                      ? { reasoning: selected.reasoning }
+                      : {}),
                     ...(selected?.costMicrousd !== undefined
                       ? { costMicrousd: selected.costMicrousd }
                       : {}),
-                    ...(selected?.rank !== undefined ? { rank: selected.rank } : {}),
-                    ...(selected?.score !== undefined ? { score: selected.score } : {}),
-                    ...(selected
-                      ? { rangeLabel: `${selected.startMs}–${selected.endMs} ms` }
+                    ...(selected?.rank !== undefined
+                      ? { rank: selected.rank }
                       : {}),
-                    ...(selected?.language !== undefined ? { language: selected.language } : {}),
+                    ...(selected?.score !== undefined
+                      ? { score: selected.score }
+                      : {}),
+                    ...(selected
+                      ? {
+                          rangeLabel: `${selected.startMs}–${selected.endMs} ms`,
+                        }
+                      : {}),
+                    ...(selected?.language !== undefined
+                      ? { language: selected.language }
+                      : {}),
                     ...(selected?.inheritedFrame !== undefined
                       ? { inheritedFrame: selected.inheritedFrame }
                       : {}),

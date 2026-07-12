@@ -9,7 +9,7 @@ test('compose is localhost-only and never receives the OpenAI key', () => {
     [
       'compose',
       '--env-file',
-      '.env.example',
+      'envs/.env.example',
       '-f',
       'infra/compose/docker-compose.yml',
       'config',

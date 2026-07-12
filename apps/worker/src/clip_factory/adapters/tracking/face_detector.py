@@ -22,7 +22,7 @@ class FaceDetector:
         if not frame.payload:
             raise RuntimeError("MEDIAPIPE_FRAME_PAYLOAD_REQUIRED")
         try:
-            import mediapipe as mp  # type: ignore[import-not-found]
+            import mediapipe as mp  # type: ignore[import-untyped]
         except ImportError as error:
             raise RuntimeError("MEDIAPIPE_UNAVAILABLE") from error
         # The decoder owns RGB payload construction; this adapter only performs detection.

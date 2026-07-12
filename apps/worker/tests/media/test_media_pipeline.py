@@ -73,7 +73,7 @@ def test_synthetic_source_renders_vertical_captioned_clip(tmp_path: Path) -> Non
     details = probe(output)
     video = next(item for item in details["streams"] if item["codec_type"] == "video")
     audio = next(item for item in details["streams"] if item["codec_type"] == "audio")
-    assert details["format"]["format_name"].split(",")[0] == "mp4"
+    assert "mp4" in details["format"]["format_name"].split(",")
     assert (video["width"], video["height"], video["codec_name"]) == (
         1080,
         1920,

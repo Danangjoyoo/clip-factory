@@ -62,7 +62,9 @@ describe('EditorShell', () => {
   it('accepts the largest valid hour timecode', async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
-    const { unmount } = render(<AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />);
+    const { unmount } = render(
+      <AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />,
+    );
 
     await user.clear(screen.getByLabelText('Start timecode'));
     await user.type(screen.getByLabelText('Start timecode'), '99:59:58');

@@ -14,7 +14,7 @@ Local-first video clipping: upload or reference a video, generate transcript/cap
 ## First-time setup
 
 ```bash
-cp .env.example .env   # keep the existing .env if you already configured it
+cp envs/.env.example .env   # keep the existing .env if you already configured it
 corepack enable
 corepack prepare pnpm@11.11.0 --activate
 pnpm install

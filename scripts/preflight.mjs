@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process';
 
 export function check(pathOverride) {
-  const inspectedPath = `${process.cwd()}/.tools/bin:${pathOverride ?? process.env.PATH ?? ''}`;
+  const inspectedPath =
+    pathOverride ?? `${process.cwd()}/.tools/bin:${process.env.PATH ?? ''}`;
   const checks = [
     ['Docker 29.4.0', 'docker', ['--version'], /Docker version 29\.4\.0/],
     [

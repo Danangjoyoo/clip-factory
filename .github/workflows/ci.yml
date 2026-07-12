@@ -136,4 +136,4 @@ jobs:
             push: false,
             load: false,
           }
-      - run: docker compose --env-file .env.example -f infra/compose/docker-compose.yml config --quiet
+      - run: docker compose --env-file envs/.env.example -f infra/compose/docker-compose.yml config --quiet

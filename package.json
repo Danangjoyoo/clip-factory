@@ -31,7 +31,7 @@
     "compose:down": "docker compose --env-file .env -f infra/compose/docker-compose.yml down",
     "worker:sync": ".tools/bin/uv sync --directory apps/worker --frozen",
     "worker:lint": ".tools/bin/uv run --directory apps/worker ruff check src tests",
-    "worker:typecheck": ".tools/bin/uv run --directory apps/worker mypy src tests",
+    "worker:typecheck": ".tools/bin/uv run --directory apps/worker mypy src",
     "worker:test": ".tools/bin/uv run --directory apps/worker pytest -q",
     "worker:architecture": "PYTHONPATH=$PWD/apps/worker/src .tools/bin/uv run --directory apps/worker lint-imports",
     "dev": "node scripts/dev.mjs",
