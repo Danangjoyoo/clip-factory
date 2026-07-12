@@ -1,7 +1,10 @@
+'use client';
+
 import type { UsagePresentation } from './usage.presentation';
 import { CostSummary } from './CostSummary';
 import { UsageTable } from './UsageTable';
 import type { UsageRow } from '../http/dto/api/usage-report-api.dto';
+import styles from './UsageView.module.css';
 const tables = [
   ['projects', 'Projects'],
   ['analysisRuns', 'Analysis runs'],
@@ -12,21 +15,38 @@ const tables = [
 ] as const;
 export function UsageView({ report }: { report: UsagePresentation }) {
   return (
-    <main>
-      <h1>Usage and provenance</h1>
-      <CostSummary summary={report.summary} />
-      {tables.map(([key, label]) => {
-        const rows: UsageRow[] = report[key];
-        const columns = Object.keys(rows[0] ?? { id: 'ID' }).map((id) => ({
-          id,
-          header: id,
-          cell: (row: UsageRow) => String(row[id] ?? '—'),
-          sortValue: (row: UsageRow) => String(row[id] ?? ''),
-        }));
-        return (
-          <UsageTable key={key} caption={label} rows={rows} columns={columns} />
-        );
-      })}
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>COST AND PROVENANCE</p>
+        <h1>Usage and provenance</h1>
+        <p>
+          Trace spend, allocations, render work, and model pricing metadata.
+        </p>
+      </header>
+      <div className={styles.layout}>
+        <aside className={styles.summary}>
+          <CostSummary summary={report.summary} />
+        </aside>
+        <section className={styles.tables} aria-label="Usage tables">
+          {tables.map(([key, label]) => {
+            const rows: UsageRow[] = report[key];
+            const columns = Object.keys(rows[0] ?? { id: 'ID' }).map((id) => ({
+              id,
+              header: id,
+              cell: (row: UsageRow) => String(row[id] ?? '—'),
+              sortValue: (row: UsageRow) => String(row[id] ?? ''),
+            }));
+            return (
+              <UsageTable
+                key={key}
+                caption={label}
+                rows={rows}
+                columns={columns}
+              />
+            );
+          })}
+        </section>
+      </div>
     </main>
   );
 }

@@ -60,15 +60,19 @@ export function ProjectSettingsView({
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <a href={`/projects/${value.projectId}`}>Back to project</a>
           <p className={styles.eyebrow}>Project settings</p>
-          <h1>{value.projectTitle}</h1>
-          <p>
-            Keep this project’s source, clip defaults, and local lifecycle in
-            one place.
-          </p>
+          <h1>Project settings</h1>
+          <p>Settings are scoped to {value.projectTitle}.</p>
         </div>
       </header>
+      <nav className={styles.tabs} aria-label="Project workspace">
+        <a href={`/projects/${value.projectId}/clips`}>Clips</a>
+        <span aria-disabled="true">YouTube</span>
+        <a href="/usage">Usage</a>
+        <a aria-current="page" href={`/projects/${value.projectId}/settings`}>
+          Project settings
+        </a>
+      </nav>
       <div className={styles.layout}>
         <nav className={styles.rail} aria-label="Project settings sections">
           <div role="tablist" aria-orientation="vertical">
@@ -123,22 +127,22 @@ export function ProjectSettingsView({
                 />
               </label>
               <label>
-                Instruction
+                Project instruction
                 <textarea
                   value={instruction}
                   onChange={(event) => setInstruction(event.target.value)}
                   rows={5}
                 />
               </label>
-              <button type="submit">Save general</button>
+              <button type="submit">Save changes</button>
             </form>
           ) : null}
           {section === 'source' ? (
             <div>
-              <h2>Source</h2>
+              <h2>Source video</h2>
               <p>
-                Relink the source when the local filepath moved. Existing clips
-                stay intact.
+                Relinking validates the replacement before it becomes active.
+                Existing rendered clips keep their original source snapshot.
               </p>
               <dl className={styles.details}>
                 <div>
@@ -218,8 +222,8 @@ export function ProjectSettingsView({
             <div>
               <h2>Danger zone</h2>
               <p>
-                Delete this project’s local Clip Factory record. Source files,
-                rendered files, and remote uploads are never deleted.
+                Delete this project's local Clip Factory record. Downloaded
+                files and remote YouTube videos are not deleted automatically.
               </p>
               <button
                 className={styles.danger}

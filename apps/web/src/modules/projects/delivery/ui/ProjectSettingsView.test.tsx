@@ -28,6 +28,21 @@ const handlers = {
 describe('ProjectSettingsView', () => {
   afterEach(cleanup);
 
+  it('uses the project-scoped settings shell from the approved review', () => {
+    render(<ProjectSettingsView value={settings} {...handlers} />);
+
+    expect(
+      screen.getByRole('heading', { name: 'Project settings' }),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/Settings are scoped to Episode one/i),
+    ).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'General' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Source' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Defaults' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Danger zone' })).toBeVisible();
+  });
+
   it('shows only the selected settings section', async () => {
     const user = userEvent.setup();
     render(<ProjectSettingsView value={settings} {...handlers} />);

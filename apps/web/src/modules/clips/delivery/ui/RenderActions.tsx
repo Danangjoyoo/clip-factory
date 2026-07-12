@@ -19,7 +19,7 @@ export function RenderActions({
         disabled={!hasSelection || selectedIsUpdating}
         onClick={onRenderSelected}
       >
-        Render selected
+        Render selected clip
       </button>
       <button type="button" disabled={!hasAcceptedClips} onClick={onRenderAll}>
         Render all

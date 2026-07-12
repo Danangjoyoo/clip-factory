@@ -21,6 +21,14 @@ export function ResultsDashboard({
 }>) {
   return (
     <main className={styles.dashboard} aria-label="Rendered clips">
+      <nav className={styles.tabs} aria-label="Project workspace">
+        <a aria-current="page" href="./clips">
+          Clips
+        </a>
+        <span aria-disabled="true">YouTube</span>
+        <a href="/usage">Usage</a>
+        <a href="./settings">Project settings</a>
+      </nav>
       <header className={styles.header}>
         <div>
           <h1>Clips</h1>

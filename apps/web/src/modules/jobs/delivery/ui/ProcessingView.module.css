@@ -1,20 +1,232 @@
 .runSheet {
-  max-width: 48rem;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-8);
 }
 
-.runSheet section {
+.header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.eyebrow,
+.panelTitle {
+  margin: 0 0 0.45rem;
+  color: var(--color-accent);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.35rem);
+  letter-spacing: 0;
+}
+
+.header p:not(.eyebrow) {
+  max-width: 31rem;
+  margin: 0.45rem 0 0;
+  color: var(--color-text-muted);
+}
+
+.status {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  border-radius: 999px;
+  padding: 0.45rem 0.6rem;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.85fr);
+  gap: 1rem;
+}
+
+.panel {
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  padding: 1rem;
+  background: var(--color-surface);
+}
+
+.summary {
+  display: flex;
+  align-items: end;
+  gap: 1.2rem;
+}
+
+.summary > strong {
+  font-size: clamp(2.4rem, 8vw, 3.5rem);
+  line-height: 0.9;
+  letter-spacing: 0;
+}
+
+.summary h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.summary p {
+  margin: 0.3rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+}
+
+.progress {
+  position: relative;
+  height: 0.72rem;
   margin: 1rem 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-accent), #8ee6b6);
+}
+
+.progress b {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.panel ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel li {
+  border-bottom: 1px solid var(--color-surface-raised);
+  padding: 0.72rem 0;
+  color: var(--color-text-muted);
+}
+
+.panel li:last-child {
+  border-bottom: 0;
+}
+
+.panel li[data-status='complete'],
+.panel li[data-status='running'] {
+  color: var(--color-text);
+}
+
+.estimate {
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-control);
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-canvas));
+}
+
+.estimate p,
+.panel section p,
+.offline {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.metrics {
+  display: grid;
+  gap: 0;
+  margin: 0.8rem 0;
+}
+
+.metrics div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--color-surface-raised);
+  padding: 0.65rem 0;
+}
+
+.metrics dt {
+  color: var(--color-text-muted);
+}
+
+.metrics dd {
+  margin: 0;
+  text-align: right;
+}
+
+.offline {
+  color: var(--color-warning);
 }
 
 .controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.controls button,
+.controls a {
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-control);
+  padding: 0.55rem 0.7rem;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface-raised) 70%, transparent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.controls a {
+  color: var(--color-accent-contrast);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.logs {
+  margin-top: 1rem;
+  border-radius: var(--radius-control);
+  padding: 0.75rem;
+  background: var(--color-canvas);
+  color: var(--color-text-muted);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.74rem;
 }
 @media (prefers-reduced-motion: reduce) {
   .runSheet * {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .runSheet {
+    padding: var(--space-4);
+  }
+
+  .header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
   }
 }

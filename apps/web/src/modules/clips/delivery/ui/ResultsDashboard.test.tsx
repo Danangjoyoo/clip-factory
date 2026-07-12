@@ -37,6 +37,9 @@ describe('ResultsDashboard', () => {
       screen.getByRole('link', { name: 'Download MP4: Ready clip' }),
     ).toHaveAttribute('href', renderedClip.downloadHref);
     expect(
+      screen.getByRole('navigation', { name: 'Project workspace' }),
+    ).toHaveTextContent('Project settings');
+    expect(
       screen.getByRole('button', { name: 'Download MP4: Rendering clip' }),
     ).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Open editor' })).toBeDisabled();

@@ -10,6 +10,7 @@ import { MetadataInspector } from './MetadataInspector';
 import { RenderActions } from './RenderActions';
 import { TrimTimeline } from './TrimTimeline';
 import { VerticalPreview } from './VerticalPreview';
+import { formatTimecode } from './editor.presentation';
 import styles from './EditorShell.module.css';
 
 export type EditorShellProps = {
@@ -39,9 +40,9 @@ export function EditorShell({
   onTrimChange,
 }: EditorShellProps) {
   const [addOpen, setAddOpen] = useState(false);
-  const [inspectorTab, setInspectorTab] = useState<'frame' | 'metadata'>(
-    'frame',
-  );
+  const [inspectorTab, setInspectorTab] = useState<
+    'captions' | 'frame' | 'metadata'
+  >('captions');
   const [focalPoint, setFocalPoint] = useState<{
     xMicros: number;
     yMicros: number;
@@ -58,7 +59,21 @@ export function EditorShell({
   return (
     <>
       <main className={styles.shell} aria-label="Clip editor">
+        <header className={styles.topbar}>
+          <div>
+            <span>Clip editor</span>
+            <strong>{selected?.title ?? 'No clip selected'}</strong>
+          </div>
+          <RenderActions
+            hasSelection={Boolean(selected)}
+            selectedIsUpdating={selected?.previewState === 'UPDATING'}
+            hasAcceptedClips={clips.some((clip) => clip.state !== 'FAILED')}
+            onRenderSelected={onRenderSelected}
+            onRenderAll={onRenderAll}
+          />
+        </header>
         <section className={styles.filmstrip} aria-label="Clips">
+          <span className={styles.label}>CANDIDATES</span>
           <ClipFilmstrip
             clips={clips}
             {...(selected ? { selectedClipId: selected.id } : {})}
@@ -67,6 +82,16 @@ export function EditorShell({
           />
         </section>
         <section className={styles.preview} aria-label="Preview">
+          <div className={styles.stagehead}>
+            <span>{selected?.title ?? 'Select a clip'}</span>
+            <span>
+              {selected
+                ? `${formatTimecode(selected.startMs)} - ${formatTimecode(
+                    selected.endMs,
+                  )}`
+                : 'No range selected'}
+            </span>
+          </div>
           <VerticalPreview {...(selected ? { clip: selected } : {})} />
           {selected?.previewState === 'UPDATING' && (
             <ClipUpdateOverlay
@@ -95,10 +120,9 @@ export function EditorShell({
         <aside className={styles.inspector} aria-label="Inspector">
           {inspector ?? (
             <>
-              <h2>Inspector</h2>
               {selected && (
-                <>
-                  <p>{selected.title ?? 'Untitled clip'}</p>
+                <div className={styles.provenanceSummary}>
+                  <strong>{selected.title ?? 'Untitled clip'}</strong>
                   <p>
                     Output frame:{' '}
                     {selected.outputFrame ??
@@ -108,9 +132,21 @@ export function EditorShell({
                   <p>
                     Source range: {selected.startMs}–{selected.endMs} ms
                   </p>
-                </>
+                </div>
               )}
-              <div role="tablist" aria-label="Inspector tabs">
+              <div
+                className={styles.tabs}
+                role="tablist"
+                aria-label="Inspector tabs"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={inspectorTab === 'captions'}
+                  onClick={() => setInspectorTab('captions')}
+                >
+                  Captions
+                </button>
                 <button
                   type="button"
                   role="tab"
@@ -128,13 +164,45 @@ export function EditorShell({
                   Metadata
                 </button>
               </div>
+              {inspectorTab === 'captions' ? (
+                <section
+                  className={styles.captionPanel}
+                  aria-label="Caption inspector"
+                >
+                  <span className={styles.label}>CAPTION STYLE</span>
+                  <label>
+                    Font
+                    <select aria-label="Caption font" defaultValue="Inter">
+                      <option>Inter</option>
+                      <option>System</option>
+                    </select>
+                  </label>
+                  <label>
+                    Words per line
+                    <input
+                      aria-label="Words per line"
+                      type="number"
+                      min="1"
+                      max="8"
+                      defaultValue="4"
+                    />
+                  </label>
+                  <div className={styles.chips} aria-label="Active-word color">
+                    <button type="button" aria-pressed="true">
+                      Cyan
+                    </button>
+                    <button type="button">Yellow</button>
+                    <button type="button">White</button>
+                  </div>
+                </section>
+              ) : null}
               {inspectorTab === 'frame' ? (
                 <FrameInspector
                   value={focalPoint}
                   onChange={setFocalPoint}
                   onReset={() => setFocalPoint(null)}
                 />
-              ) : (
+              ) : inspectorTab === 'metadata' ? (
                 <MetadataInspector
                   metadata={{
                     ...(selected?.origin === 'AI_HIGHLIGHT' ||
@@ -169,19 +237,10 @@ export function EditorShell({
                       : {}),
                   }}
                 />
-              )}
+              ) : null}
             </>
           )}
         </aside>
-        <div className={styles.actions}>
-          <RenderActions
-            hasSelection={Boolean(selected)}
-            selectedIsUpdating={selected?.previewState === 'UPDATING'}
-            hasAcceptedClips={clips.some((clip) => clip.state !== 'FAILED')}
-            onRenderSelected={onRenderSelected}
-            onRenderAll={onRenderAll}
-          />
-        </div>
       </main>
       <AddClipDialog
         open={addOpen}

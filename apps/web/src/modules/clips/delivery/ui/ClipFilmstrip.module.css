@@ -6,9 +6,18 @@
 .list button {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-control);
   text-align: left;
-  padding: 0.75rem;
+  padding: 0.65rem;
+  color: var(--color-text);
+  background: var(--color-canvas);
+}
+.list button span {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
 }
 .selected {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--color-accent);
 }

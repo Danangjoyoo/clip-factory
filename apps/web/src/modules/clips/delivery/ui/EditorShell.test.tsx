@@ -15,6 +15,35 @@ const clip = {
 
 describe('EditorShell', () => {
   afterEach(cleanup);
+
+  it('uses the approved editor workbench structure', () => {
+    render(
+      <EditorShell
+        clips={[
+          {
+            ...clip,
+            rank: 1,
+            score: 0.92,
+            title: 'The decision that changed our team',
+          },
+        ]}
+        onSelect={vi.fn()}
+        onAddClip={vi.fn()}
+        onRenderSelected={vi.fn()}
+        onRenderAll={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('main', { name: 'Clip editor' })).toBeVisible();
+    expect(screen.getByText('CANDIDATES')).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Captions' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Frame' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Metadata' })).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Render selected clip' }),
+    ).toBeVisible();
+  });
+
   it('allows selecting a ready filmstrip clip while the current clip updates', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
@@ -117,6 +146,7 @@ describe('EditorShell', () => {
     expect(timeline.compareDocumentPosition(inspector)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+    await user.click(screen.getByRole('tab', { name: 'Frame' }));
     expect(
       screen.getByRole('button', { name: 'Center focal point' }),
     ).toBeVisible();
@@ -222,7 +252,9 @@ describe('EditorShell', () => {
     );
     expect(screen.getByRole('main', { name: 'Clip editor' })).toBeVisible();
     expect(screen.getByRole('region', { name: 'Trim timeline' })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Render selected' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Render selected clip' }),
+    );
     expect(onRenderSelected).toHaveBeenCalledOnce();
     await user.click(screen.getByRole('button', { name: 'Add Clip' }));
     expect(screen.getByLabelText('Start timecode')).toBeVisible();

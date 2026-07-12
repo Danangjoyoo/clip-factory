@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import styles from './SettingsOpenAIForm.module.css';
 
 type SettingsResponse = {
   allowedRoots: string[];
@@ -38,9 +39,14 @@ export function SettingsOpenAIForm() {
   };
 
   return (
-    <section id="openai" aria-label="OpenAI settings">
+    <section className={styles.form} id="openai" aria-label="OpenAI settings">
       <h2>OpenAI</h2>
-      <p role={settings?.openAiApiKeyConfigured ? undefined : 'alert'}>
+      <p
+        className={
+          settings?.openAiApiKeyConfigured ? styles.status : styles.warning
+        }
+        role={settings?.openAiApiKeyConfigured ? undefined : 'alert'}
+      >
         {settings?.openAiApiKeyConfigured
           ? 'OpenAI API key saved'
           : status || missingKeyMessage}
