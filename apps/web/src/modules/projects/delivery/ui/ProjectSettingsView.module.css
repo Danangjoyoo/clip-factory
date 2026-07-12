@@ -1,7 +1,7 @@
 .page {
   max-width: 72rem;
   margin: 0 auto;
-  padding: var(--space-6);
+  padding: var(--space-8);
 }
 .header {
   margin-bottom: var(--space-6);
@@ -84,7 +84,7 @@
   border-radius: var(--radius-control);
   padding: var(--space-3);
   color: var(--color-text);
-  background: var(--color-background);
+  background: var(--color-canvas);
   font: inherit;
 }
 .panel button {
@@ -92,7 +92,7 @@
   border: 0;
   border-radius: var(--radius-control);
   padding: var(--space-3) var(--space-4);
-  color: var(--color-background);
+  color: var(--color-accent-contrast);
   background: var(--color-accent);
   font-weight: 700;
   cursor: pointer;

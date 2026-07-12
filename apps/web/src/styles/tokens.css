@@ -1,6 +1,7 @@
 :root {
   color-scheme: dark;
   --color-canvas: #101827;
+  --color-background: var(--color-canvas);
   --color-surface: #172437;
   --color-surface-raised: #24354b;
   --color-text: #e7fbff;

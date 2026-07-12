@@ -23,7 +23,7 @@ export type NewProjectFormValue = {
 export function useNewProjectForm() {
   const [value, setValue] = useState<NewProjectFormValue>({
     ...defaults,
-    sourceMethod: 'FILEPATH',
+    sourceMethod: 'UPLOAD',
     path: '',
     file: null,
   });

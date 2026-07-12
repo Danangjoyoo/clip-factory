@@ -7,6 +7,11 @@ test('manual filepath configuration accepts clip limits', async ({
   await app.seedLocalSource('talking-head.mp4');
   await page.goto('/projects/new');
   await page.getByLabel('Project name').fill('Manual interview');
+  const localPathTab = page.getByRole('tab', { name: 'Local filepath' });
+  await expect(async () => {
+    await localPathTab.click();
+    await expect(localPathTab).toHaveAttribute('aria-selected', 'true');
+  }).toPass();
   await page
     .getByLabel('Video filepath')
     .fill(app.localSourcePath('talking-head.mp4'));

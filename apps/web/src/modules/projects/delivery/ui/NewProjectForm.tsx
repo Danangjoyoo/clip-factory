@@ -46,17 +46,25 @@ export function NewProjectForm({
   };
   return (
     <form className={styles.form} onSubmit={submit}>
-      <h1>New project</h1>
-      <label className={styles.project}>
-        Project name
-        <input
-          aria-label="Project name"
-          required
-          value={form.value.name}
-          onChange={(e) => form.update({ name: e.target.value })}
-        />
-      </label>
-      <div className={styles.source}>
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>New project</p>
+        <h1>New project</h1>
+        <h2>Name it, then bring in your source.</h2>
+        <p>
+          Create a review-ready clip project without losing control of the final
+          frame, quality, or spend.
+        </p>
+      </header>
+      <section className={`${styles.panel} ${styles.source}`}>
+        <label className={styles.project}>
+          <span>Project title</span>
+          <input
+            aria-label="Project name"
+            required
+            value={form.value.name}
+            onChange={(e) => form.update({ name: e.target.value })}
+          />
+        </label>
         <SourceMethodFields
           method={form.value.sourceMethod}
           path={form.value.path}
@@ -73,8 +81,9 @@ export function NewProjectForm({
             form.update({ sourceMethod: 'FILEPATH' });
           }}
         />
-      </div>
-      <div className={styles.analysis}>
+      </section>
+      <section className={`${styles.panel} ${styles.analysis}`}>
+        <span className={styles.panelLabel}>Analysis plan</span>
         <AnalysisSettings
           mode={form.value.aiMode}
           model={form.value.model}
@@ -86,93 +95,102 @@ export function NewProjectForm({
           }
           onReasoning={(reasoning) => form.update({ reasoning })}
         />
-      </div>
-      <div className={styles.controls}>
-        <label className={styles.control}>
-          Language
-          <select
-            aria-label="Language"
-            value={form.value.language}
-            onChange={(e) => form.update({ language: e.target.value })}
-          >
-            <option value="en">English</option>
-            <option value="es">Spanish</option>
-            <option value="ja">Japanese</option>
-          </select>
-        </label>
-        <label className={styles.control}>
-          Maximum spend (USD)
-          <input
-            aria-label="Maximum spend (USD)"
-            value={form.value.maximumSpendUsd}
-            onChange={(e) => form.update({ maximumSpendUsd: e.target.value })}
-          />
-        </label>
-        <label className={styles.control}>
-          Maximum clips
-          <input
-            aria-label="Maximum clips"
-            type="number"
-            value={form.value.maximumClips}
-            onChange={(e) =>
-              form.update({ maximumClips: Number(e.target.value) })
-            }
-          />
-        </label>
-        <label className={styles.control}>
-          Maximum clip length (seconds)
-          <input
-            aria-label="Maximum clip length (seconds)"
-            type="number"
-            value={form.value.maximumClipSeconds}
-            onChange={(e) =>
-              form.update({ maximumClipSeconds: Number(e.target.value) })
-            }
-          />
-        </label>
-        <label className={styles.control}>
-          Platform guide
-          <select
-            aria-label="Platform guide"
-            value={form.value.platform}
-            onChange={(e) => form.update({ platform: e.target.value })}
-          >
-            <option value="YOUTUBE_SHORTS">YouTube Shorts</option>
-            <option value="INSTAGRAM_REELS">Instagram Reels</option>
-            <option value="TIKTOK">TikTok</option>
-          </select>
-        </label>
-        <label className={styles.control}>
-          Output frame
-          <input readOnly value="Vertical 9:16 · 1080×1920" />
-        </label>
-        <label className={styles.control}>
-          Instruction
-          <textarea
-            aria-label="Instruction"
-            value={form.value.instruction}
-            onChange={(e) => form.update({ instruction: e.target.value })}
-          />
-        </label>
-      </div>
-      <aside className={styles.cost} aria-label="Cost and reserve">
-        <strong>Cost reserve</strong>
-        <p>Up to ${form.value.maximumSpendUsd} reserved before AI analysis.</p>
-        {unavailableMode ? (
+        <div className={styles.controls}>
+          <label className={styles.control}>
+            Language
+            <select
+              aria-label="Language"
+              value={form.value.language}
+              onChange={(e) => form.update({ language: e.target.value })}
+            >
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="ja">Japanese</option>
+            </select>
+          </label>
+          <label className={styles.control}>
+            Maximum spend (USD)
+            <input
+              aria-label="Maximum spend (USD)"
+              value={form.value.maximumSpendUsd}
+              onChange={(e) => form.update({ maximumSpendUsd: e.target.value })}
+            />
+          </label>
+          <label className={styles.control}>
+            Maximum clips
+            <input
+              aria-label="Maximum clips"
+              type="number"
+              value={form.value.maximumClips}
+              onChange={(e) =>
+                form.update({ maximumClips: Number(e.target.value) })
+              }
+            />
+          </label>
+          <label className={styles.control}>
+            Maximum clip length (seconds)
+            <input
+              aria-label="Maximum clip length (seconds)"
+              type="number"
+              value={form.value.maximumClipSeconds}
+              onChange={(e) =>
+                form.update({ maximumClipSeconds: Number(e.target.value) })
+              }
+            />
+          </label>
+          <label className={styles.control}>
+            Platform guide
+            <select
+              aria-label="Platform guide"
+              value={form.value.platform}
+              onChange={(e) => form.update({ platform: e.target.value })}
+            >
+              <option value="YOUTUBE_SHORTS">YouTube Shorts</option>
+              <option value="INSTAGRAM_REELS">Instagram Reels</option>
+              <option value="TIKTOK">TikTok</option>
+            </select>
+          </label>
+          <label className={styles.control}>
+            Output frame
+            <input readOnly value="Vertical 9:16 · 1080×1920" />
+          </label>
+          <label className={styles.control}>
+            Instruction
+            <textarea
+              aria-label="Instruction"
+              value={form.value.instruction}
+              onChange={(e) => form.update({ instruction: e.target.value })}
+            />
+          </label>
+        </div>
+        <aside className={styles.cost} aria-label="Cost and reserve">
+          <strong>Every clip inherits Vertical 9:16 · 1080×1920.</strong>
           <p>
-            Advanced and Complete publishing are presentation-only until Phase 2
-            is connected.
+            Up to ${form.value.maximumSpendUsd} is reserved before AI analysis.
+            Per-clip crop and focal point are editable later.
           </p>
-        ) : null}
-      </aside>
-      <button
-        type="submit"
-        disabled={
-          !form.valid || Boolean(sourceError) || unavailableMode || submitting
-        }
-      >
-        {submitting ? 'Creating project…' : 'Create project'}
-      </button>
+          {unavailableMode ? (
+            <p>
+              Advanced and Complete publishing are presentation-only until Phase
+              2 is connected.
+            </p>
+          ) : null}
+        </aside>
+      </section>
+      <footer className={styles.footer}>
+        <span>
+          You can edit clip boundaries, captions, and per-clip framing before
+          rendering.
+        </span>
+        <button
+          type="submit"
+          disabled={
+            !form.valid || Boolean(sourceError) || unavailableMode || submitting
+          }
+        >
+          {submitting ? 'Creating project…' : 'Create project'}
+        </button>
+      </footer>
       {submitError ? <p role="alert">{submitError}</p> : null}
     </form>
   );

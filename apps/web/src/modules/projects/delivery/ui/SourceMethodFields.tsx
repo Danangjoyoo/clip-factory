@@ -22,18 +22,18 @@ export function SourceMethodFields({
         <button
           type="button"
           role="tab"
-          aria-selected={method === 'FILEPATH'}
-          onClick={() => onMethod('FILEPATH')}
-        >
-          Local filepath
-        </button>
-        <button
-          type="button"
-          role="tab"
           aria-selected={method === 'UPLOAD'}
           onClick={() => onMethod('UPLOAD')}
         >
           Upload file
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={method === 'FILEPATH'}
+          onClick={() => onMethod('FILEPATH')}
+        >
+          Local filepath
         </button>
       </div>
       {method === 'FILEPATH' ? (

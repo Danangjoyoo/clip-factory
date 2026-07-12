@@ -13,4 +13,4 @@ COPY apps/web apps/web
 COPY packages/config packages/config
 COPY packages/contracts packages/contracts
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@clip-factory/web", "exec", "next", "dev", "-H", "0.0.0.0"]
+CMD ["pnpm", "--filter", "@clip-factory/web", "exec", "next", "dev", "--webpack", "-H", "0.0.0.0"]

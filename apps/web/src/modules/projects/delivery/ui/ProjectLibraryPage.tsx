@@ -65,7 +65,7 @@ export function ProjectLibraryPage() {
       {error ? (
         <p role="alert">Unable to load projects. Refresh to retry.</p>
       ) : null}
-      <ProjectLibrary heading="Clip Factory" projects={projects} />
+      <ProjectLibrary heading="Work in motion." projects={projects} />
     </>
   );
 }

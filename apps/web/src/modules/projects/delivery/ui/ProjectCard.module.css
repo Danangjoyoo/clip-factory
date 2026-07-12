@@ -1,19 +1,48 @@
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-surface-raised);
-  border-radius: var(--radius-panel);
-  padding: var(--space-6);
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  border: 1px solid var(--color-surface-raised);
+  border-radius: 0.65rem;
+  padding: 0.75rem;
+}
+.thumb {
+  height: 3.1rem;
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(135deg, rgba(152, 240, 255, 0.38), transparent 60%),
+    var(--color-surface-raised);
+}
+.body {
+  min-width: 0;
+}
+.body a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+.body h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+}
+.body a:hover h2 {
+  color: var(--color-accent);
 }
 .source {
-  margin: 0;
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
 }
 .metrics {
+  grid-column: 2 / 4;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  max-height: 0;
   margin: 0;
+  overflow: hidden;
 }
 .metrics div {
   display: grid;
@@ -21,7 +50,7 @@
 }
 .metrics dt {
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.72rem;
 }
 .metrics dd {
   margin: 0;
@@ -29,4 +58,49 @@
 .summary {
   margin: 0;
   color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+.status {
+  align-self: start;
+  border-radius: 999px;
+  padding: 0.35rem 0.5rem;
+  color: #aef0d3;
+  background: rgba(71, 192, 134, 0.12);
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.warning {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+}
+.neutral {
+  color: #aef0d3;
+}
+.danger {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+}
+.delete {
+  grid-column: 3;
+  width: fit-content;
+  justify-self: end;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-control);
+  padding: 0.4rem 0.6rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+@media (max-width: 640px) {
+  .card {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+  }
+  .status {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .metrics {
+    grid-column: 1 / -1;
+  }
 }

@@ -46,6 +46,7 @@ describe('NewProjectForm', () => {
     fireEvent.change(screen.getByLabelText('Project name'), {
       target: { value: 'Branding' },
     });
+    fireEvent.click(screen.getByRole('tab', { name: 'Local filepath' }));
     fireEvent.change(screen.getByLabelText('Video filepath'), {
       target: { value: '/videos/branding.mp4' },
     });
@@ -71,9 +72,11 @@ describe('NewProjectForm', () => {
 
   it('requires a selected file for upload source creation', () => {
     const { container } = render(<NewProjectForm />);
-    const form = within(container).getByRole('heading', {
-      name: 'New project',
-    }).parentElement as HTMLFormElement;
+    const form = within(container)
+      .getByRole('heading', {
+        name: 'New project',
+      })
+      .closest('form') as HTMLFormElement;
 
     fireEvent.change(within(form).getByLabelText('Project name'), {
       target: { value: 'Branding' },

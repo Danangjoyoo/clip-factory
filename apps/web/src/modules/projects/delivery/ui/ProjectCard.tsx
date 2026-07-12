@@ -7,12 +7,22 @@ export function ProjectCard({
 }: Readonly<{ project: ProjectCardView; onDelete?: (id: string) => void }>) {
   return (
     <article className={styles.card}>
-      <a href={project.href}>
-        <h2>{project.name}</h2>
-      </a>
-      <p className={styles.source}>
-        <span aria-hidden="true">●</span> {project.sourceHealthLabel}
-      </p>
+      <div className={styles.thumb} aria-hidden="true" />
+      <div className={styles.body}>
+        <a href={project.href}>
+          <h2>{project.name}</h2>
+        </a>
+        <p className={styles.summary}>
+          {project.candidateCount ?? '—'} clips · {project.renderCount ?? '—'}{' '}
+          render · {project.spendLabel}
+        </p>
+        <p className={styles.source}>
+          <span aria-hidden="true">●</span> {project.sourceHealthLabel}
+        </p>
+      </div>
+      <span className={`${styles.status} ${styles[project.sourceHealthTone]}`}>
+        {project.progressLabel}
+      </span>
       <dl className={styles.metrics}>
         <div>
           <dt>Mode</dt>
@@ -47,12 +57,9 @@ export function ProjectCard({
           </dd>
         </div>
       </dl>
-      <p className={styles.summary}>
-        {project.candidateCount ?? '—'} clips · {project.renderCount ?? '—'}{' '}
-        render · {project.spendLabel}
-      </p>
       {onDelete ? (
         <button
+          className={styles.delete}
           type="button"
           onClick={() => onDelete(project.id)}
           aria-label={`Delete ${project.name}`}

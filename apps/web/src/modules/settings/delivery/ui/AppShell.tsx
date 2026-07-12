@@ -23,7 +23,7 @@ export function AppShell({ children, workerStatus = 'ready' }: AppShellProps) {
     <div className={styles.shell}>
       <header className={styles.header}>
         <a className={styles.brand} href="/">
-          Clip Factory
+          CLIP FACTORY
         </a>
         <nav aria-label="Studio" className={styles.navigation}>
           <a href="/">Projects</a>
@@ -31,7 +31,10 @@ export function AppShell({ children, workerStatus = 'ready' }: AppShellProps) {
           <a href="/settings">Settings</a>
         </nav>
         <div className={styles.controls}>
-          <span className={styles.workerStatus}>Worker {workerStatus}</span>
+          <span className={styles.workerStatus}>
+            <span aria-hidden="true" />
+            Worker {workerStatus}
+          </span>
           <label className={styles.theme}>
             <span>Theme</span>
             <select

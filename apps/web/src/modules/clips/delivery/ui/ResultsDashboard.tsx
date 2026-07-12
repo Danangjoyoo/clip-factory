@@ -42,15 +42,19 @@ export function ResultsDashboard({
                 className={styles.poster}
                 role="img"
                 aria-label={`Poster for ${clip.title}`}
-              />
+              >
+                <span className={styles.state}>{clip.state}</span>
+                <span className={styles.duration}>{clip.durationLabel}</span>
+              </div>
               <div className={styles.content}>
                 <div>
                   <h2>{clip.title}</h2>
-                  <p>{clip.durationLabel}</p>
                 </div>
-                <p>{clip.originLabel}</p>
-                <p>{clip.sizeLabel}</p>
-                <p>{clip.formatLabel}</p>
+                <p className={styles.meta}>
+                  <span>{clip.originLabel}</span>
+                  <span>{clip.sizeLabel}</span>
+                </p>
+                <p className={styles.info}>{clip.formatLabel}</p>
                 <div className={styles.actions}>
                   {clip.editorHref ? (
                     <a href={clip.editorHref}>Open editor</a>
