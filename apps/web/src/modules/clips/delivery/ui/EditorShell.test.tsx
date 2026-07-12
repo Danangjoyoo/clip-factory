@@ -106,6 +106,7 @@ describe('EditorShell', () => {
             costMicrousd: 2_500_000n,
             language: 'en-US',
             inheritedFrame: '9:16 · 1080×1920',
+            outputFrame: '9:16 · 1080×1920',
           },
         ]}
         onSelect={vi.fn()}
@@ -122,7 +123,36 @@ describe('EditorShell', () => {
     expect(screen.getByText(/\$2\.50/)).toBeVisible();
     expect(screen.getByText('1000–5000 ms')).toBeVisible();
     expect(screen.getByText('en-US')).toBeVisible();
-    expect(screen.getAllByText('9:16 · 1080×1920')).toHaveLength(2);
+    expect(screen.getByText('Output frame: 9:16 · 1080×1920')).toBeVisible();
+  });
+
+  it('shows selected output-frame provenance instead of a fixed frame', () => {
+    render(
+      <EditorShell
+        clips={[{ ...clip, outputFrame: '4:5 · 1080×1350' }]}
+        projectOutputFrame="9:16 · 1080×1920"
+        onSelect={vi.fn()}
+        onAddClip={vi.fn()}
+        onRenderSelected={vi.fn()}
+        onRenderAll={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Output frame: 4:5 · 1080×1350')).toBeVisible();
+  });
+
+  it('shows an unavailable output frame when provenance is absent', () => {
+    render(
+      <EditorShell
+        clips={[clip]}
+        onSelect={vi.fn()}
+        onAddClip={vi.fn()}
+        onRenderSelected={vi.fn()}
+        onRenderAll={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Output frame: Not available')).toBeVisible();
   });
 
   it('wires selection, trim, add and render actions', async () => {

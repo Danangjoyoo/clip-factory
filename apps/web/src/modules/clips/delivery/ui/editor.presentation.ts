@@ -12,6 +12,7 @@ export type EditorClip = {
   costMicrousd?: bigint;
   language?: string;
   inheritedFrame?: string;
+  outputFrame?: string;
   state?: string;
   previewState?: 'READY' | 'UPDATING' | 'FAILED';
   previewPercent?: number;

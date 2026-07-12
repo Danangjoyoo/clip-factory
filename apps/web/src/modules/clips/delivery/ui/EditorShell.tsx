@@ -19,6 +19,7 @@ export type EditorShellProps = {
   onAddClip: (startMs?: number, endMs?: number) => void;
   onRenderSelected: () => void;
   onRenderAll: () => void;
+  projectOutputFrame?: string;
   inspector?: React.ReactNode;
   onTrimChange?: (
     id: string,
@@ -33,6 +34,7 @@ export function EditorShell({
   onAddClip,
   onRenderSelected,
   onRenderAll,
+  projectOutputFrame,
   inspector,
   onTrimChange,
 }: EditorShellProps) {
@@ -88,7 +90,7 @@ export function EditorShell({
               {selected && (
                 <>
                   <p>{selected.title ?? 'Untitled clip'}</p>
-                  <p>9:16 · 1080×1920</p>
+                  <p>Output frame: {selected.outputFrame ?? projectOutputFrame ?? 'Not available'}</p>
                   <p>
                     Source range: {selected.startMs}–{selected.endMs} ms
                   </p>
