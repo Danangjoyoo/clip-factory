@@ -7,6 +7,9 @@ export type EditorClip = {
   origin?: string;
   rank?: number | null;
   state?: string;
+  previewState?: 'READY' | 'UPDATING' | 'FAILED';
+  previewPercent?: number;
+  previewEtaLabel?: string;
   previewUrl?: string;
 };
 

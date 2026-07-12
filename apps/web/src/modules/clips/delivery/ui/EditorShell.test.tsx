@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { AddClipDialog } from './AddClipDialog';
 import { EditorShell } from './EditorShell';
 
 const clip = {
@@ -13,6 +14,43 @@ const clip = {
 };
 
 describe('EditorShell', () => {
+  it('allows selecting a ready filmstrip clip while the current clip updates', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { unmount } = render(
+      <EditorShell
+        clips={[
+          { ...clip, id: 'updating', title: 'Updating clip', previewState: 'UPDATING' },
+          { ...clip, id: 'ready', title: 'Ready clip', previewState: 'READY' },
+        ]}
+        selectedClipId="updating"
+        onSelect={onSelect}
+        onAddClip={vi.fn()}
+        onRenderSelected={vi.fn()}
+        onRenderAll={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /ready clip/i }));
+    expect(onSelect).toHaveBeenCalledWith('ready');
+    unmount();
+  });
+
+  it('submits manual source timecodes as milliseconds', async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    const { unmount } = render(<AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />);
+
+    await user.clear(screen.getByLabelText('Start timecode'));
+    await user.type(screen.getByLabelText('Start timecode'), '00:32:14');
+    await user.clear(screen.getByLabelText('End timecode'));
+    await user.type(screen.getByLabelText('End timecode'), '00:33:02');
+    await user.click(screen.getByRole('button', { name: 'Add clip' }));
+
+    expect(onAdd).toHaveBeenCalledWith(1_934_000, 1_982_000);
+    unmount();
+  });
+
   it('wires selection, trim, add and render actions', async () => {
     const onTrimChange = vi.fn();
     const user = userEvent.setup();
@@ -33,8 +71,8 @@ describe('EditorShell', () => {
     await user.click(screen.getByRole('button', { name: 'Render selected' }));
     expect(onRenderSelected).toHaveBeenCalledOnce();
     await user.click(screen.getByRole('button', { name: 'Add Clip' }));
-    expect(screen.getByDisplayValue('0')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: /^Add$/ }));
+    expect(screen.getByLabelText('Start timecode')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Add clip' }));
     expect(onAddClip).toHaveBeenCalledWith(0, 10000);
   });
 });

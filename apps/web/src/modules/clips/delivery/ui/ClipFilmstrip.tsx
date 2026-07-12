@@ -24,7 +24,7 @@ export function ClipFilmstrip({
         >
           <strong>{c.title ?? `Clip ${c.rank ?? ''}`}</strong>
           <span>
-            {c.origin ?? 'MANUAL'} · {c.state ?? 'READY'}
+            {c.origin ?? 'MANUAL'} · {c.previewState ?? c.state ?? 'READY'}
           </span>
         </button>
       ))}

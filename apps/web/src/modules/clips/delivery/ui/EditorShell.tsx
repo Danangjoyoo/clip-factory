@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { EditorClip } from './editor.presentation';
 import { AddClipDialog } from './AddClipDialog';
 import { ClipFilmstrip } from './ClipFilmstrip';
+import { ClipUpdateOverlay } from './ClipUpdateOverlay';
 import { RenderActions } from './RenderActions';
 import { TrimTimeline } from './TrimTimeline';
 import { VerticalPreview } from './VerticalPreview';
@@ -56,12 +57,26 @@ export function EditorShell({
         </section>
         <section className={styles.preview} aria-label="Preview">
           <VerticalPreview {...(selected ? { clip: selected } : {})} />
+          {selected?.previewState === 'UPDATING' && (
+            <ClipUpdateOverlay
+              percent={selected.previewPercent}
+              etaLabel={selected.previewEtaLabel}
+            />
+          )}
         </section>
         <aside className={styles.inspector} aria-label="Inspector">
           {inspector ?? (
             <>
               <h2>Inspector</h2>
-              {selected && <p>{selected.title ?? 'Untitled clip'}</p>}
+              {selected && (
+                <>
+                  <p>{selected.title ?? 'Untitled clip'}</p>
+                  <p>9:16 · 1080×1920</p>
+                  <p>
+                    Source range: {selected.startMs}–{selected.endMs} ms
+                  </p>
+                </>
+              )}
             </>
           )}
         </aside>
@@ -81,6 +96,7 @@ export function EditorShell({
         <div className={styles.actions}>
           <RenderActions
             hasSelection={Boolean(selected)}
+            selectedIsUpdating={selected?.previewState === 'UPDATING'}
             hasAcceptedClips={clips.some((clip) => clip.state !== 'FAILED')}
             onRenderSelected={onRenderSelected}
             onRenderAll={onRenderAll}

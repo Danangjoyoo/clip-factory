@@ -6,6 +6,9 @@ export type ClipMetadata = {
   rank?: number | null;
   score?: number | null;
   algorithmVersion?: string;
+  rangeLabel?: string;
+  language?: string;
+  inheritedFrame?: string;
 };
 export function MetadataInspector({
   metadata,
@@ -37,6 +40,24 @@ export function MetadataInspector({
         <>
           <dt>Score</dt>
           <dd>{metadata.score}</dd>
+        </>
+      )}
+      {metadata.rangeLabel && (
+        <>
+          <dt>Range</dt>
+          <dd>{metadata.rangeLabel}</dd>
+        </>
+      )}
+      {metadata.language && (
+        <>
+          <dt>Language</dt>
+          <dd>{metadata.language}</dd>
+        </>
+      )}
+      {metadata.inheritedFrame && (
+        <>
+          <dt>Inherited frame</dt>
+          <dd>{metadata.inheritedFrame}</dd>
         </>
       )}
       <dt>Selection cost</dt>
