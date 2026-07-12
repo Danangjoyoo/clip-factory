@@ -13,7 +13,9 @@ export function AddClipDialog({
   const [end, setEnd] = useState('00:00:10');
   const toMilliseconds = (timecode: string) => {
     if (!/^\d{2}:\d{2}:\d{2}$/.test(timecode)) return NaN;
-    const [hours, minutes, seconds] = timecode.split(':').map(Number);
+    const hours = Number(timecode.slice(0, 2));
+    const minutes = Number(timecode.slice(3, 5));
+    const seconds = Number(timecode.slice(6, 8));
     return minutes < 60 && seconds < 60
       ? ((hours * 60 + minutes) * 60 + seconds) * 1000
       : NaN;

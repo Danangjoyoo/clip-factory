@@ -59,6 +59,21 @@ describe('EditorShell', () => {
     unmount();
   });
 
+  it('accepts the largest valid hour timecode', async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    const { unmount } = render(<AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />);
+
+    await user.clear(screen.getByLabelText('Start timecode'));
+    await user.type(screen.getByLabelText('Start timecode'), '99:59:58');
+    await user.clear(screen.getByLabelText('End timecode'));
+    await user.type(screen.getByLabelText('End timecode'), '99:59:59');
+    await user.click(screen.getByRole('button', { name: 'Add clip' }));
+
+    expect(onAdd).toHaveBeenCalledWith(359_998_000, 359_999_000);
+    unmount();
+  });
+
   it('focuses the start timecode when the dialog opens', () => {
     render(<AddClipDialog open onCancel={vi.fn()} onAdd={vi.fn()} />);
 
