@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { PrismaYouTubeConnectionRepository } from '../../../apps/web/src/modules/youtube-publishing/adapters/persistence/repositories/prisma-youtube-connection.repository';
+import type { PrismaYouTubeConnectionRepository } from '../../../apps/web/src/modules/youtube-publishing/adapters/persistence/repositories/prisma-youtube-connection.repository';
 import { YouTubeConnectionState } from '../../../apps/web/src/modules/youtube-publishing/application/dto/entity/youtube-publishing-entity.dto';
 import {
   makePrismaTestClient,
@@ -18,6 +18,8 @@ describe.skipIf(!integrationEnabled)(
       prisma = await makePrismaTestClient();
       await resetDatabase();
       await prisma.youTubeConnection.deleteMany();
+      const { PrismaYouTubeConnectionRepository } =
+        await import('../../../apps/web/src/modules/youtube-publishing/adapters/persistence/repositories/prisma-youtube-connection.repository');
       repository = new PrismaYouTubeConnectionRepository(prisma);
     });
     afterAll(() => prisma.$disconnect());
