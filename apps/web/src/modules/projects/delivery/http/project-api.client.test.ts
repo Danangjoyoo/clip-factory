@@ -17,13 +17,11 @@ describe('project API client', () => {
   });
 
   it('sends only supplied create payload and surfaces API error code', async () => {
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ code: 'INVALID_PROJECT' }), {
-          status: 400,
-        }),
-      );
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ code: 'INVALID_PROJECT' }), {
+        status: 400,
+      }),
+    );
     vi.stubGlobal('fetch', fetch);
     const input = {
       name: 'Branding',

@@ -106,3 +106,41 @@ export type PublicationEntityDto = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export enum PublicationAttemptStage {
+  Starting = 'STARTING',
+  Uploading = 'UPLOADING',
+  OutcomeUncertain = 'OUTCOME_UNCERTAIN',
+  Reconciling = 'RECONCILING',
+  Polling = 'POLLING',
+  Thumbnail = 'THUMBNAIL',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Cancelled = 'CANCELLED',
+}
+
+export type PublicationAttemptEntityDto = {
+  id: PublicationAttemptId;
+  publicationId: PublicationId;
+  attemptNumber: number;
+  idempotencyKey: string;
+  resumableSessionReference: string | null;
+  acknowledgedBytes: bigint;
+  totalBytes: bigint;
+  stage: PublicationAttemptStage;
+  progressPercent: number;
+  finalChunkDispatchStartedAt: Date | null;
+  outcomeUncertainAt: Date | null;
+  reconciliationCheckedAt: Date | null;
+  reconciliationResult:
+    | 'VIDEO_FOUND'
+    | 'NO_MATCH_FOUND'
+    | 'INCONCLUSIVE'
+    | null;
+  duplicateRiskAcknowledgedAt: Date | null;
+  sanitizedErrorCode: string | null;
+  sanitizedErrorMessage: string | null;
+  startedAt: Date;
+  completedAt: Date | null;
+  updatedAt: Date;
+};

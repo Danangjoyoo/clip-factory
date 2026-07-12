@@ -70,7 +70,9 @@ describe('PrismaYouTubeConnectionRepository stale connection events', () => {
     };
     const repository = new PrismaYouTubeConnectionRepository(database as never);
 
-    await expect(repository.disconnect('stale-id' as never, true)).resolves.toBeNull();
+    await expect(
+      repository.disconnect('stale-id' as never, true),
+    ).resolves.toBeNull();
     expect(database.youTubeConnection.findUnique).not.toHaveBeenCalled();
   });
 });

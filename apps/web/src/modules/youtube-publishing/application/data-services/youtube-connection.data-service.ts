@@ -16,17 +16,19 @@ export class YouTubeConnectionNotFoundDataError extends Error {
 
 export interface YouTubeConnectionDataServiceContract {
   getPrimary(): Promise<YouTubeConnectionEntityDto | null>;
-  saveConnected(input: ConnectedChannelInput): Promise<YouTubeConnectionEntityDto>;
-  markReauthRequired(id: YouTubeConnectionId): Promise<YouTubeConnectionEntityDto>;
+  saveConnected(
+    input: ConnectedChannelInput,
+  ): Promise<YouTubeConnectionEntityDto>;
+  markReauthRequired(
+    id: YouTubeConnectionId,
+  ): Promise<YouTubeConnectionEntityDto>;
   disconnect(
     id: YouTubeConnectionId,
     revocationUncertain: boolean,
   ): Promise<YouTubeConnectionEntityDto>;
 }
 
-export class YouTubeConnectionDataService
-  implements YouTubeConnectionDataServiceContract
-{
+export class YouTubeConnectionDataService implements YouTubeConnectionDataServiceContract {
   constructor(
     private readonly repository: Pick<
       YouTubeConnectionRepositoryPort,
