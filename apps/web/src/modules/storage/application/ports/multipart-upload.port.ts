@@ -2,6 +2,7 @@ export type CompletedPart = Readonly<{
   partNumber: number;
   etag: string;
   sizeBytes: bigint;
+  checksumSha256?: string;
 }>;
 
 export interface MultipartUploadPort {

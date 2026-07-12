@@ -1,7 +1,10 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createHash } from 'node:crypto';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  CompleteMultipartUploadCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: vi.fn().mockResolvedValue('https://upload.test'),
@@ -66,6 +69,38 @@ it('creates and signs multipart uploads with SHA-256 checksums', async () => {
   };
   expect(command.input).toMatchObject({
     ChecksumSHA256: 'a'.repeat(43) + '=',
+  });
+});
+
+it('completes multipart uploads with each part SHA-256 checksum', async () => {
+  const sent: unknown[] = [];
+  const adapter = new S3MultipartUploadAdapter({
+    send: async (command: unknown) => {
+      sent.push(command);
+      return {};
+    },
+  } as never);
+
+  await adapter.complete('projects/project-1/sources/source.mp4', 'upload-1', [
+    {
+      partNumber: 1,
+      etag: 'etag-1',
+      sizeBytes: 5n,
+      checksumSha256: 'a'.repeat(43) + '=',
+    } as never,
+  ]);
+
+  expect(sent[0]).toBeInstanceOf(CompleteMultipartUploadCommand);
+  expect((sent[0] as { input: unknown }).input).toMatchObject({
+    MultipartUpload: {
+      Parts: [
+        {
+          PartNumber: 1,
+          ETag: 'etag-1',
+          ChecksumSHA256: 'a'.repeat(43) + '=',
+        },
+      ],
+    },
   });
 });
 

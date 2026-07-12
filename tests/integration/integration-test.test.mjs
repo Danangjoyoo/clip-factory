@@ -10,6 +10,7 @@ import {
   assertTerminalState,
   parseArgs,
   redactReport,
+  run,
   validateSample,
 } from '../../scripts/integration-test.js';
 
@@ -93,4 +94,42 @@ test('requires fake audit without media path retention', () => {
       ]),
     /media path/u,
   );
+});
+
+test('runs browser UI checks as part of the integration gate', async () => {
+  const sample = join(tmpdir(), `clip-factory-ui-${Date.now()}.mp4`);
+  await writeFile(sample, 'fixture');
+  const project = {
+    id: 'project-1',
+    status: 'DRAFT',
+    source: { kind: 'LOCAL_FILE' },
+  };
+  const http = async (_baseUrl, path, init = {}) => {
+    if (path === '/api/health') return { status: 'HEALTHY' };
+    if (path === '/api/test-control' && init.method === 'POST') {
+      const body = JSON.parse(init.body);
+      if (body.action === 'highlight')
+        return { model: 'fake-highlights-v1', candidates: [] };
+      return {};
+    }
+    if (path === '/api/test-control') return { audit: [{}] };
+    if (path === '/api/projects' && init.method === 'POST') return project;
+    if (path === '/api/projects') return [project];
+    throw new Error(`unexpected request ${path}`);
+  };
+  const ui = async ({ baseUrl, sample: uiSample }) => {
+    assert.equal(baseUrl, 'http://127.0.0.1:3000');
+    assert.equal(uiSample, sample);
+    return ['ui-new-project-localpath', 'ui-new-project-upload'];
+  };
+
+  const report = await run(parseArgs(['--sample', sample]), process.env, {
+    request: http,
+    uiChecks: ui,
+  });
+
+  assert.deepEqual(report.checks.slice(-2), [
+    'ui-new-project-localpath',
+    'ui-new-project-upload',
+  ]);
 });

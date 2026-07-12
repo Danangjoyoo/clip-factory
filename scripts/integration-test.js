@@ -8,6 +8,7 @@ const defaultSample =
   process.env.CLIP_FACTORY_ACCEPTANCE_SAMPLE ??
   '/Users/mac/dev/projects/clipper/clip-factory/samples/what-is-branding.mp4';
 const terminalStates = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
+const browserConsoleTypes = new Set(['error', 'warning']);
 
 export function parseArgs(argv) {
   const options = {
@@ -108,23 +109,103 @@ async function request(baseUrl, path, init) {
   return body;
 }
 
+async function launchChromium() {
+  const { chromium } = await import('@playwright/test');
+  return chromium.launch();
+}
+
+function assertBrowserClean(issues) {
+  if (issues.length)
+    throw new Error(
+      `browser UI check failed: ${issues.slice(0, 5).join('; ')}`,
+    );
+}
+
+function watchBrowser(page, baseUrl, issues) {
+  const appOrigin = new URL(baseUrl).origin;
+  page.on('console', (message) => {
+    if (browserConsoleTypes.has(message.type()))
+      issues.push(`${message.type()}: ${message.text()}`);
+  });
+  page.on('requestfailed', (request) => {
+    if (request.url().includes(':9000/')) return;
+    issues.push(
+      `request failed: ${request.url()} ${request.failure()?.errorText ?? ''}`,
+    );
+  });
+  page.on('response', (response) => {
+    const url = response.url();
+    const isAppApi =
+      url.startsWith(appOrigin) && new URL(url).pathname.startsWith('/api/');
+    const isObjectStore = url.includes(':9000/');
+    if ((isAppApi || isObjectStore) && response.status() >= 400)
+      issues.push(`HTTP ${response.status()}: ${url}`);
+  });
+}
+
+export async function runUiChecks(options, launchBrowser = launchChromium) {
+  const browser = await launchBrowser();
+  const issues = [];
+  try {
+    const page = await browser.newPage();
+    watchBrowser(page, options.baseUrl, issues);
+    await page.goto(new URL('/projects/new', options.baseUrl).href, {
+      waitUntil: 'networkidle',
+    });
+    if (
+      (await page
+        .getByRole('tab', { name: 'Local filepath' })
+        .getAttribute('aria-selected')) !== 'true'
+    )
+      throw new Error('local filepath tab is not selected by default');
+    await page.getByLabel('Project name').fill('integration-ui-localpath');
+    await page.getByLabel('Video filepath').fill(options.sample);
+    if (
+      !(await page.getByRole('button', { name: 'Create project' }).isEnabled())
+    )
+      throw new Error('local filepath create button is disabled');
+    await page.getByRole('button', { name: 'Create project' }).click();
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/processing/u);
+
+    await page.goto(new URL('/projects/new', options.baseUrl).href, {
+      waitUntil: 'networkidle',
+    });
+    await page.getByRole('tab', { name: 'Upload file' }).click();
+    await page.getByLabel('Project name').fill('integration-ui-upload');
+    await page.getByLabel('Video file').setInputFiles(options.sample);
+    if (
+      !(await page.getByRole('button', { name: 'Create project' }).isEnabled())
+    )
+      throw new Error('upload create button is disabled');
+    await page.getByRole('button', { name: 'Create project' }).click();
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/processing/u);
+    assertBrowserClean(issues);
+    return ['ui-new-project-localpath', 'ui-new-project-upload'];
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function run(
   options = parseArgs(process.argv.slice(2)),
   env = process.env,
+  dependencies = {},
 ) {
+  const http = dependencies.request ?? request;
+  const uiChecks = dependencies.uiChecks ?? runUiChecks;
   assertFakeMode(env, options.mode);
   await validateSample(options.sample);
   const report = { mode: 'fake', sample: basename(options.sample), checks: [] };
-  const health = await request(options.baseUrl, '/api/health');
+  const health = await http(options.baseUrl, '/api/health');
   if (health.status !== 'HEALTHY')
     throw new Error('service health is not HEALTHY');
   report.checks.push('service-health');
-  await request(options.baseUrl, '/api/test-control', {
+  await http(options.baseUrl, '/api/test-control', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ action: 'reset' }),
   });
-  const highlight = await request(options.baseUrl, '/api/test-control', {
+  const highlight = await http(options.baseUrl, '/api/test-control', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -142,10 +223,10 @@ export async function run(
   )
     throw new Error('fake highlight contract failed');
   report.checks.push('fake-highlights');
-  const control = await request(options.baseUrl, '/api/test-control');
+  const control = await http(options.baseUrl, '/api/test-control');
   assertFakeAudit(control.audit);
   report.checks.push('fake-audit');
-  const project = await request(options.baseUrl, '/api/projects', {
+  const project = await http(options.baseUrl, '/api/projects', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -159,13 +240,14 @@ export async function run(
   });
   assertProjectAccepted(project);
   report.checks.push('project-submission');
-  const projects = await request(options.baseUrl, '/api/projects');
+  const projects = await http(options.baseUrl, '/api/projects');
   if (
     !Array.isArray(projects) ||
     !projects.some((item) => item.id === project.id)
   )
     throw new Error('submitted project did not appear in project list');
   report.checks.push('project-list');
+  report.checks.push(...(await uiChecks(options)));
   const safe = redactReport({
     projectId: project.id,
     model: highlight.model,

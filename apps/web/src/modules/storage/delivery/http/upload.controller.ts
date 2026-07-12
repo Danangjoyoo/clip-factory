@@ -34,15 +34,17 @@ export class UploadController {
   async completeUpload(projectId: string, sessionId: string, body: unknown) {
     if (!this.complete) throw new Error('UPLOAD_COMPLETE_UNAVAILABLE');
     const input = CompleteUploadApiSchema.parse(body);
-    return this.complete.execute({
+    await this.complete.execute({
       projectId,
       sessionId,
       sha256: input.sha256,
-      parts: input.parts.map((part) => ({
+      parts: input.parts.map(({ checksumSha256, sizeBytes, ...part }) => ({
         ...part,
-        sizeBytes: BigInt(part.sizeBytes),
+        sizeBytes: BigInt(sizeBytes),
+        ...(checksumSha256 ? { checksumSha256 } : {}),
       })),
     });
+    return { ok: true };
   }
   static error(error: unknown) {
     if (error instanceof UploadError)

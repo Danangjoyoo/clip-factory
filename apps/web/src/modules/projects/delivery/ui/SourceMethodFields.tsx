@@ -40,6 +40,7 @@ export function SourceMethodFields({
         <label>
           Video filepath
           <input
+            key="filepath"
             aria-label="Video filepath"
             value={path}
             onChange={(e) => onPath(e.target.value)}
@@ -50,6 +51,7 @@ export function SourceMethodFields({
         <label>
           Video file
           <input
+            key="upload"
             aria-label="Video file"
             type="file"
             accept="video/*"

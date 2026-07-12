@@ -91,6 +91,7 @@ export async function uploadProjectFile(
         partNumber: part.partNumber,
         etag,
         sizeBytes: String(Math.min(PART_BYTES, file.size - startByte)),
+        checksumSha256: checksumByPart.get(part.partNumber) as string,
       };
     }),
   );

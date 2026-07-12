@@ -66,6 +66,13 @@ describe('uploadProjectFile', () => {
     const completion = fetch.mock.calls[3]?.[1] as RequestInit;
     expect(JSON.parse(String(completion.body))).toMatchObject({
       sha256: expect.stringMatching(/^[a-f0-9]{64}$/u),
+      parts: [
+        {
+          partNumber: 1,
+          etag: 'etag-1',
+          checksumSha256: expect.stringMatching(/^[A-Za-z0-9+/]{43}=$/u),
+        },
+      ],
     });
   });
 

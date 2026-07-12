@@ -131,6 +131,7 @@ export class S3MultipartUploadAdapter
             Parts: parts.map((p) => ({
               PartNumber: p.partNumber,
               ETag: p.etag,
+              ...(p.checksumSha256 ? { ChecksumSHA256: p.checksumSha256 } : {}),
             })),
           },
         }),

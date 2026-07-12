@@ -10,7 +10,10 @@ import { AnalysisSettings } from './AnalysisSettings';
 import { NewProjectForm } from './NewProjectForm';
 import { SourceValidationPanel } from './SourceValidationPanel';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe('SourceValidationPanel', () => {
   it('keeps setup values when source validation fails', () => {
@@ -118,6 +121,24 @@ describe('NewProjectForm', () => {
     expect(
       within(form).getByRole('button', { name: 'Create project' }),
     ).toBeEnabled();
+  });
+
+  it('switches to upload without changing controlled inputs to uncontrolled', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { container } = render(<NewProjectForm />);
+    const form = within(container)
+      .getByRole('heading', {
+        name: 'New project',
+      })
+      .closest('form') as HTMLFormElement;
+
+    fireEvent.click(within(form).getByRole('tab', { name: 'Upload file' }));
+
+    expect(
+      error.mock.calls.some((call) =>
+        call.join(' ').includes('controlled input'),
+      ),
+    ).toBe(false);
   });
 
   it('disables AI-assisted modes when OpenAI API key is missing', () => {

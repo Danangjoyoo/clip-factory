@@ -13,6 +13,10 @@ export const CompleteUploadApiSchema = z.object({
       partNumber: z.number().int(),
       etag: z.string(),
       sizeBytes: z.string().regex(/^\d+$/u),
+      checksumSha256: z
+        .string()
+        .regex(/^[A-Za-z0-9+/]{43}=$/u)
+        .optional(),
     }),
   ),
 });
