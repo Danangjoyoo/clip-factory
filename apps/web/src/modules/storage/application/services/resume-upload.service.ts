@@ -11,6 +11,7 @@ export class ResumeUploadService {
       projectId: string;
       sessionId: string;
       totalParts: number;
+      checksums: readonly { partNumber: number; checksumSha256: string }[];
     }>,
   ) {
     const session = await this.sessions.requireOwned(
@@ -21,6 +22,16 @@ export class ResumeUploadService {
     if (
       !Number.isInteger(input.totalParts) ||
       input.totalParts !== session.totalParts
+    )
+      throw new UploadError('INVALID_PART');
+    const checksumByPart = new Map(
+      input.checksums.map((part) => [part.partNumber, part.checksumSha256]),
+    );
+    if (
+      checksumByPart.size !== session.totalParts ||
+      [...checksumByPart.keys()].some(
+        (partNumber) => partNumber < 1 || partNumber > session.totalParts,
+      )
     )
       throw new UploadError('INVALID_PART');
     const completed = await this.multipart.listParts(
@@ -41,6 +52,7 @@ export class ResumeUploadService {
             session.objectKey,
             session.uploadId,
             partNumber,
+            checksumByPart.get(partNumber) as string,
             900,
           ),
           expiresSeconds: 900,

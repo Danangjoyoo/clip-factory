@@ -10,7 +10,7 @@ const file = () => {
     size: bytes.byteLength,
     type: 'video/mp4',
     arrayBuffer: async () => bytes.buffer,
-    slice: () => new Blob([bytes], { type: 'video/mp4' }),
+    slice: () => ({ arrayBuffer: async () => bytes.buffer }),
   } as unknown as File;
 };
 
@@ -45,10 +45,19 @@ describe('uploadProjectFile', () => {
       expect.objectContaining({ method: 'POST' }),
     );
     expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/projects/project-1/uploads/session-1/parts',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
       3,
       'https://upload.test/1',
       expect.objectContaining({ method: 'PUT' }),
     );
+    const upload = fetch.mock.calls[2]?.[1] as RequestInit;
+    expect(upload.headers).toMatchObject({
+      'x-amz-checksum-sha256': expect.stringMatching(/^[A-Za-z0-9+/]{43}=$/u),
+    });
     expect(fetch).toHaveBeenNthCalledWith(
       4,
       '/api/projects/project-1/uploads/session-1/complete',

@@ -16,3 +16,12 @@ export const CompleteUploadApiSchema = z.object({
     }),
   ),
 });
+export const PresignUploadPartsApiSchema = z.object({
+  totalParts: z.number().int().min(1).max(10000),
+  parts: z.array(
+    z.object({
+      partNumber: z.number().int().min(1).max(10000),
+      checksumSha256: z.string().regex(/^[A-Za-z0-9+/]{43}=$/u),
+    }),
+  ),
+});

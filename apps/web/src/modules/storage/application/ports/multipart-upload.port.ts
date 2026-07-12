@@ -10,6 +10,7 @@ export interface MultipartUploadPort {
     key: string,
     uploadId: string,
     partNumber: number,
+    checksumSha256: string,
     expiresSeconds: 900,
   ): Promise<string>;
   listParts(key: string, uploadId: string): Promise<readonly CompletedPart[]>;

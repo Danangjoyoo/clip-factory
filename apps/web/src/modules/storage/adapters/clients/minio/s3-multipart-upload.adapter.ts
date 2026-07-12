@@ -66,6 +66,7 @@ export class S3MultipartUploadAdapter
           Bucket: this.bucket,
           Key: this.key(key),
           ContentType: contentType,
+          ChecksumAlgorithm: 'SHA256',
         }),
       ),
     );
@@ -76,6 +77,7 @@ export class S3MultipartUploadAdapter
     key: string,
     uploadId: string,
     partNumber: number,
+    checksumSha256: string,
     expiresSeconds: 900,
   ) {
     assertPart(partNumber);
@@ -87,6 +89,7 @@ export class S3MultipartUploadAdapter
           Key: this.key(key),
           UploadId: this.upload(uploadId),
           PartNumber: partNumber,
+          ChecksumSHA256: checksumSha256,
         }),
         { expiresIn: expiresSeconds },
       ),

@@ -1,4 +1,9 @@
 import { afterEach, expect, it, vi } from 'vitest';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+vi.mock('@aws-sdk/s3-request-presigner', () => ({
+  getSignedUrl: vi.fn().mockResolvedValue('https://upload.test'),
+}));
 import {
   minioClientOptions,
   minioPublicClientOptions,
@@ -35,4 +40,29 @@ it('rejects unscoped object keys and unsafe upload ids', async () => {
   await expect(
     adapter.listParts('projects/p/sources/x.mp4', '../upload'),
   ).rejects.toThrow('INVALID_UPLOAD_ID');
+});
+
+it('creates and signs multipart uploads with SHA-256 checksums', async () => {
+  const sent: unknown[] = [];
+  const internal = {
+    send: async (command: unknown) => {
+      sent.push(command);
+      return { UploadId: 'upload-1' };
+    },
+  };
+  const adapter = new S3MultipartUploadAdapter(internal as never, {} as never);
+  const key = 'projects/project-1/sources/source.mp4';
+
+  await adapter.create(key, 'video/mp4');
+  await adapter.presignPart(key, 'upload-1', 1, 'a'.repeat(43) + '=');
+
+  expect((sent[0] as { input: unknown }).input).toMatchObject({
+    ChecksumAlgorithm: 'SHA256',
+  });
+  const command = vi.mocked(getSignedUrl).mock.calls[0]?.[1] as {
+    input: unknown;
+  };
+  expect(command.input).toMatchObject({
+    ChecksumSHA256: 'a'.repeat(43) + '=',
+  });
 });

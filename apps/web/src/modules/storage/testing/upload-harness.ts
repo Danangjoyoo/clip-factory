@@ -51,11 +51,13 @@ export function uploadHarness(
   };
   const multipart = {
     presigned: [] as number[],
+    checksums: [] as string[],
     async create() {
       return { uploadId: 'upload' };
     },
-    async presignPart(_k: string, _u: string, n: number) {
+    async presignPart(_k: string, _u: string, n: number, checksum: string) {
       multipart.presigned.push(n);
+      multipart.checksums.push(checksum);
       return `url-${n}`;
     },
     async listParts() {
@@ -65,7 +67,7 @@ export function uploadHarness(
       return { versionId: null };
     },
     async abort() {},
-  } as MultipartUploadPort & { presigned: number[] };
+  } as MultipartUploadPort & { presigned: number[]; checksums: string[] };
   return {
     projectId,
     sessionId,
