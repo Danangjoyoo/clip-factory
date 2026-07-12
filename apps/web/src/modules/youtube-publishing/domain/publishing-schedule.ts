@@ -6,7 +6,13 @@ export type PublishingSchedule = {
   publishAtUtc: string;
 };
 
-export type PublicationVisibility = 'PRIVATE_REVIEW' | 'SCHEDULED';
+export const PublicationVisibility = {
+  PrivateReview: 'PRIVATE_REVIEW',
+  Scheduled: 'SCHEDULED',
+} as const;
+
+export type PublicationVisibility =
+  (typeof PublicationVisibility)[keyof typeof PublicationVisibility];
 
 export function normalizePublishingSchedule(
   sourceLocalDateTime: string,
@@ -63,20 +69,20 @@ export function decidePublicationVisibility(input: {
       throw new Error('unverified API projects support private review only');
     if (!input.schedule)
       throw new Error('scheduled publication requires a schedule');
-    return 'SCHEDULED';
+    return PublicationVisibility.Scheduled;
   }
   if (input.schedule)
     throw new Error('private review cannot include publishAt');
-  return 'PRIVATE_REVIEW';
+  return PublicationVisibility.PrivateReview;
 }
 
 export function visibilityRequiresSchedule(
   value: PublicationVisibility,
 ): boolean {
   switch (value) {
-    case 'PRIVATE_REVIEW':
+    case PublicationVisibility.PrivateReview:
       return false;
-    case 'SCHEDULED':
+    case PublicationVisibility.Scheduled:
       return true;
     /* v8 ignore next -- TypeScript proves this switch exhaustive. */
     default:

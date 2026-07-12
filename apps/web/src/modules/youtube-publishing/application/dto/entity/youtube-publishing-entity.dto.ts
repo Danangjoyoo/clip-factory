@@ -5,6 +5,15 @@ import type {
   RenderId,
   WorkflowId,
 } from '../../../../../shared/domain';
+import type { PublishingMetadata } from '../../../domain/publishing-metadata';
+import type { PublicationState as PublicationStateType } from '../../../domain/publication-state';
+import type {
+  PublicationVisibility as PublicationVisibilityType,
+  PublishingSchedule,
+} from '../../../domain/publishing-schedule';
+
+export { PublicationState } from '../../../domain/publication-state';
+export { PublicationVisibility } from '../../../domain/publishing-schedule';
 
 export type YouTubeConnectionId = string & {
   readonly __brand: 'YouTubeConnectionId';
@@ -31,39 +40,8 @@ export enum MetadataDraftState {
   Superseded = 'SUPERSEDED',
 }
 
-export enum PublicationState {
-  ReadyToUpload = 'READY_TO_UPLOAD',
-  Uploading = 'UPLOADING',
-  UploadOutcomeUncertain = 'UPLOAD_OUTCOME_UNCERTAIN',
-  YouTubeProcessing = 'YOUTUBE_PROCESSING',
-  PrivateReview = 'PRIVATE_REVIEW',
-  Scheduled = 'SCHEDULED',
-  Published = 'PUBLISHED',
-  Failed = 'FAILED',
-  Cancelled = 'CANCELLED',
-}
-
-export enum PublicationVisibility {
-  PrivateReview = 'PRIVATE_REVIEW',
-  Scheduled = 'SCHEDULED',
-}
-
-export type PublishingMetadataEntityDto = {
-  title: string;
-  description: string;
-  hashtags: readonly string[];
-  keywordTags: readonly string[];
-  categoryId: string;
-  defaultLanguage: string;
-  madeForKids: boolean;
-  containsSyntheticMedia: boolean;
-};
-
-export type PublishingScheduleEntityDto = {
-  sourceLocalDateTime: string;
-  sourceTimezone: string;
-  publishAtUtc: string;
-};
+export type PublishingMetadataEntityDto = PublishingMetadata;
+export type PublishingScheduleEntityDto = PublishingSchedule;
 
 export type PublishingMetadataDraftEntityDto = {
   id: PublishingMetadataDraftId;
@@ -98,10 +76,10 @@ export type PublicationEntityDto = {
   intentKey: string;
   idempotencyKey: string;
   metadataSnapshot: PublishingMetadataEntityDto;
-  visibility: PublicationVisibility;
+  visibility: PublicationVisibilityType;
   apiProjectVerifiedSnapshot: boolean;
   schedule: PublishingScheduleEntityDto | null;
-  state: PublicationState;
+  state: PublicationStateType;
   youtubeVideoId: string | null;
   youtubeUrl: string | null;
   remoteVideoCreatedAt: Date | null;
