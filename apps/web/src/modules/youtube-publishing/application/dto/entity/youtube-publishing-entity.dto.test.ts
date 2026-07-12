@@ -16,7 +16,7 @@ it('reuses publication state value object from domain policy', () => {
 
 it('reexports shared YouTube identifiers without local brands', () => {
   const source = readFileSync(
-    'src/modules/youtube-publishing/application/dto/entity/youtube-publishing-entity.dto.ts',
+    'apps/web/src/modules/youtube-publishing/application/dto/entity/youtube-publishing-entity.dto.ts',
     'utf8',
   );
   expect(source).toContain('YouTubeConnectionId');

@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 
 it('imports exactly its repository and no service, controller, or client', async () => {
   const source = await readFile(
-    'src/modules/youtube-publishing/application/data-services/youtube-connection.data-service.ts',
+    'apps/web/src/modules/youtube-publishing/application/data-services/youtube-connection.data-service.ts',
     'utf8',
   );
   const imports = [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(

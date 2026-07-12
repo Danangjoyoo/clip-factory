@@ -1,5 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 
+vi.hoisted(() => {
+  process.env.DATABASE_URL ??= 'postgresql://test:test@localhost:5432/test';
+  process.env.REDIS_URL ??= 'redis://localhost:6379';
+  process.env.MINIO_ENDPOINT ??= 'http://localhost:9000';
+  process.env.MINIO_PUBLIC_ENDPOINT ??= 'http://localhost:9000';
+  process.env.MINIO_ACCESS_KEY ??= 'test';
+  process.env.MINIO_SECRET_KEY ??= 'test';
+  process.env.TEMPORAL_ADDRESS ??= 'localhost:7233';
+  process.env.INTERNAL_SERVICE_TOKEN ??= 'test';
+});
+
 import { makeYouTubeConnectionRecord } from '../../../../../test-utils/youtube-publishing-builders';
 import { YouTubeConnectionState } from '../../../application/dto/entity/youtube-publishing-entity.dto';
 import { PrismaYouTubeConnectionRepository } from './prisma-youtube-connection.repository';
