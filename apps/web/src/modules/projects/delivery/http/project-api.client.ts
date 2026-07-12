@@ -10,6 +10,7 @@ export type ProjectApi = Readonly<{
   status: string;
   openaiSpendMicrousd: string;
   source: Readonly<{
+    id: string;
     kind: string;
     displayLabel: string;
     health: string;

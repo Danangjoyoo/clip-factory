@@ -14,6 +14,7 @@ describe('projectApiToCard', () => {
         status: 'TRANSCRIBING',
         openaiSpendMicrousd: '1250000',
         source: {
+          id: 'source-1',
           kind: 'LOCAL_FILE',
           displayLabel: 'branding.mp4',
           health: 'HEALTHY',

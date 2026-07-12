@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createProject } from '../http/project-api.client';
 import type { CreateProjectApiRequest } from '../../converters/api-entity/project.converter';
+import { uploadProjectFile } from '../../../storage/delivery/http/upload-api.client';
 import { NewProjectForm } from './NewProjectForm';
 import { projectModeFor } from './new-project.presentation';
 import type { NewProjectFormValue } from './use-new-project-form';
@@ -41,6 +42,11 @@ export function NewProjectPage() {
     setError(undefined);
     try {
       const project = await createProject(toCreateProjectRequest(value));
+      if (value.sourceMethod === 'UPLOAD') {
+        if (!value.file || !project.source?.id)
+          throw new Error('UPLOAD_FAILED');
+        await uploadProjectFile(project.id, project.source.id, value.file);
+      }
       router.push(`/projects/${project.id}/processing`);
     } catch {
       setError('Unable to create project. Review source and try again.');
