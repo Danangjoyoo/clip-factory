@@ -79,8 +79,6 @@ jobs:
       - run: corepack enable && corepack prepare pnpm@11.11.0 --activate && pnpm install --frozen-lockfile --config.minimum-release-age=0
       - run: pnpm prisma:generate && pnpm exec prisma validate && pnpm db:migrate:deploy
   integration:
-    # Temporarily disabled: restore after CI Compose integration is repaired.
-    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
