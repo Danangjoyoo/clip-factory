@@ -7,7 +7,7 @@ test('application boundary scanner rejects Google SDK types', () => {
     process.execPath,
     [
       'scripts/check-ts-boundaries.mjs',
-      'tests/architecture/fixtures/ts/youtube-sdk-leak.ts',
+      'tests/architecture/fixtures/ts/domain/youtube-sdk-leak.ts',
     ],
     { encoding: 'utf8' },
   );
@@ -31,4 +31,17 @@ test('application repository ports reject Record DTO signatures', () => {
     result.stderr,
     /repository ports must use application Entity DTOs/,
   );
+});
+
+test('adapter scanner permits Google SDK types', () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      'scripts/check-ts-boundaries.mjs',
+      'tests/architecture/fixtures/ts/adapters/youtube-sdk-allowed.ts',
+    ],
+    { encoding: 'utf8' },
+  );
+
+  assert.equal(result.status, 0, result.stderr);
 });

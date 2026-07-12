@@ -5,13 +5,18 @@ import {
   parsePublicationProgressEventV1,
   parsePublicationWorkflowInputV1,
 } from './youtube-publishing';
+import type { RequiredScopes } from './generated/youtube-publishing';
 
 const scopes = [
   'https://www.googleapis.com/auth/youtube.upload',
   'https://www.googleapis.com/auth/youtube.readonly',
 ] as const;
+const constructibleScopes: RequiredScopes = scopes;
 
 describe('YouTube publishing Temporal contract', () => {
+  it('exports constructible required scopes', () => {
+    expect(constructibleScopes).toEqual(scopes);
+  });
   it('accepts exact two scopes and opaque connection id', () => {
     expect(
       parseOAuthConnectionWorkflowInputV1({

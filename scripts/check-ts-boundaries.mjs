@@ -176,10 +176,11 @@ for (const file of files) {
   const specifiers = importsOf(source);
   for (const specifier of specifiers) {
     if (
-      specifier === 'googleapis' ||
-      specifier.startsWith('googleapis/') ||
-      specifier === 'google-auth-library' ||
-      specifier.startsWith('google-auth-library/')
+      /(?:^|\/)(?:domain|application|delivery\/ui)(?:\/|$)/u.test(file) &&
+      (specifier === 'googleapis' ||
+        specifier.startsWith('googleapis/') ||
+        specifier === 'google-auth-library' ||
+        specifier.startsWith('google-auth-library/'))
     ) {
       process.stderr.write(`Google SDK import is adapter-only: ${file}\n`);
       failed = true;

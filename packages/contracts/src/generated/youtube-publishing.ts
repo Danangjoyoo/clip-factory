@@ -12,7 +12,10 @@ export type Uuid = string;
  * @minItems 2
  * @maxItems 2
  */
-export type RequiredScopes = never[];
+export type RequiredScopes = readonly [
+  'https://www.googleapis.com/auth/youtube.upload',
+  'https://www.googleapis.com/auth/youtube.readonly',
+];
 export type YouTubeConnectionEventV1 =
   | {
       contractVersion: 1;

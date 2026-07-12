@@ -95,6 +95,21 @@ for (const name of names) {
     );
   }
   if (name === 'youtube-publishing') {
+    const generatedTypesPath = resolve(root, `src/generated/${name}.ts`);
+    const generatedTypes = await readFile(generatedTypesPath, 'utf8');
+    await writeFile(
+      generatedTypesPath,
+      generatedTypes.replace(
+        'export type RequiredScopes = never[];',
+        [
+          'export type RequiredScopes = readonly [',
+          "  'https://www.googleapis.com/auth/youtube.upload',",
+          "  'https://www.googleapis.com/auth/youtube.readonly',",
+          '];',
+        ].join('\n'),
+      ),
+      'utf8',
+    );
     const generatedPath = resolve(
       worker,
       `src/clip_factory/entrypoints/contracts/generated/${name.replaceAll('-', '_')}.py`,
@@ -119,6 +134,23 @@ for (const name of names) {
           "            raise ValueError('requestedScopes must contain required scopes in canonical order')",
           '        return self',
           '',
+        ].join('\n'),
+      )
+      .replace(
+        '    refreshTokenExpiresAt: Optional[AwareDatetime] = None\n\n\nclass YouTubeConnectionEventV12',
+        [
+          '    refreshTokenExpiresAt: Optional[AwareDatetime] = None',
+          '',
+          "    @model_validator(mode='after')",
+          '    def validate_granted_scopes(self) -> YouTubeConnectionEventV11:',
+          '        if tuple(self.grantedScopes.root) != (',
+          "            'https://www.googleapis.com/auth/youtube.upload',",
+          "            'https://www.googleapis.com/auth/youtube.readonly',",
+          '        ):',
+          "            raise ValueError('grantedScopes must contain required scopes in canonical order')",
+          '        return self',
+          '',
+          'class YouTubeConnectionEventV12',
         ].join('\n'),
       )
       .replace(

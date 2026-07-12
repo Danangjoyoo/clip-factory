@@ -3,6 +3,7 @@ import pytest
 
 from clip_factory.entrypoints.contracts.generated.youtube_publishing import (
     OAuthConnectionWorkflowInputV1,
+    YouTubeConnectionEventV1,
 )
 
 
@@ -42,5 +43,23 @@ def test_oauth_contract_rejects_noncanonical_scopes() -> None:
                 'contractVersion': 1,
                 'connectionId': '018f4f2c-93d7-7c75-8f0f-7f5165e8bb42',
                 'requestedScopes': tuple(reversed(SCOPES)),
+            }
+        )
+
+
+def test_connected_event_rejects_noncanonical_scopes() -> None:
+    with pytest.raises(ValidationError):
+        YouTubeConnectionEventV1.model_validate(
+            {
+                'contractVersion': 1,
+                'type': 'CONNECTED',
+                'connectionId': '018f4f2c-93d7-7c75-8f0f-7f5165e8bb42',
+                'channelId': 'channel',
+                'channelTitle': 'Channel',
+                'channelHandle': None,
+                'avatarUrl': None,
+                'grantedScopes': tuple(reversed(SCOPES)),
+                'oauthMode': 'TESTING',
+                'refreshTokenExpiresAt': None,
             }
         )

@@ -150,6 +150,17 @@ class YouTubeConnectionEventV11(BaseModel):
     oauthMode: OauthMode
     refreshTokenExpiresAt: Optional[AwareDatetime] = None
 
+    @model_validator(mode="after")
+    def validate_granted_scopes(self) -> YouTubeConnectionEventV11:
+        if tuple(self.grantedScopes.root) != (
+            "https://www.googleapis.com/auth/youtube.upload",
+            "https://www.googleapis.com/auth/youtube.readonly",
+        ):
+            raise ValueError(
+                "grantedScopes must contain required scopes in canonical order"
+            )
+        return self
+
 
 class YouTubeConnectionEventV12(BaseModel):
     model_config = ConfigDict(
