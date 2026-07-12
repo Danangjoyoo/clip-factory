@@ -108,6 +108,11 @@ describe.skipIf(!integrationEnabled)(
           title: 'Stale',
         }),
       ).resolves.toBeNull();
+      await expect(repository.findById(first.id)).resolves.toMatchObject({
+        version: 1,
+        revision: 2,
+        metadata: { title: 'Winner' },
+      });
     });
 
     it('database enforces unique versions, manual zero actual cost, and AI usage FK', async () => {
@@ -130,6 +135,16 @@ describe.skipIf(!integrationEnabled)(
             aiUsageEventId: randomUUID(),
             actualCostMicrousd: 1n,
           }) as never,
+        ),
+      ).rejects.toBeDefined();
+      await expect(
+        database.$executeRawUnsafe(
+          `insert into publishing_metadata_drafts (id, project_id, clip_id, version, state, source, title, description, hashtags, keyword_tags, category_id, default_language, made_for_kids, contains_synthetic_media, model_id, reasoning_level, estimated_cost_microusd, actual_cost_microusd) values ('${randomUUID()}', '${ids.project}', '${ids.clip}', 4, 'AWAITING_APPROVAL', 'OPENAI', 'x', '', '[]', '[]', '22', 'en', false, false, 'gpt-5.6', 'high', -1, 0)`,
+        ),
+      ).rejects.toBeDefined();
+      await expect(
+        database.$executeRawUnsafe(
+          `insert into publishing_metadata_drafts (id, project_id, clip_id, version, state, source, title, description, hashtags, keyword_tags, category_id, default_language, made_for_kids, contains_synthetic_media, model_id, reasoning_level, estimated_cost_microusd, actual_cost_microusd) values ('${randomUUID()}', '${ids.project}', '${ids.clip}', 5, 'AWAITING_APPROVAL', 'OPENAI', 'x', '', '[]', '[]', '22', 'en', false, false, 'gpt-5.6', 'high', 0, -1)`,
         ),
       ).rejects.toBeDefined();
     });
