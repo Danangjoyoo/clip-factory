@@ -14,7 +14,11 @@ export function RenderActions({
 }) {
   return (
     <div>
-      <button type="button" disabled={!hasSelection || selectedIsUpdating} onClick={onRenderSelected}>
+      <button
+        type="button"
+        disabled={!hasSelection || selectedIsUpdating}
+        onClick={onRenderSelected}
+      >
         Render selected
       </button>
       <button type="button" disabled={!hasAcceptedClips} onClick={onRenderAll}>

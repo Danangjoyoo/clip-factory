@@ -50,7 +50,9 @@ describe('NewProjectForm', () => {
       target: { value: '/videos/branding.mp4' },
     });
 
-    expect(screen.getByRole('button', { name: 'Create project' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Create project' }),
+    ).toBeDisabled();
 
     const form = screen
       .getByRole('heading', { name: 'New project' })
@@ -62,6 +64,8 @@ describe('NewProjectForm', () => {
       }),
     );
 
-    expect(screen.getByRole('button', { name: 'Create project' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'Create project' }),
+    ).toBeEnabled();
   });
 });

@@ -1,7 +1,8 @@
 const messages = {
   SOURCE_NOT_FOUND: 'The source could not be found. Replace it to continue.',
   SOURCE_CHANGED: 'The source changed. Replace it to continue.',
-  SOURCE_NOT_ALLOWED: 'The source is no longer available. Replace it to continue.',
+  SOURCE_NOT_ALLOWED:
+    'The source is no longer available. Replace it to continue.',
 } as const;
 
 export type SourceValidationError = keyof typeof messages;

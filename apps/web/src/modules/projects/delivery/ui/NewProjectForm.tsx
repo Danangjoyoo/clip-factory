@@ -26,7 +26,10 @@ export function NewProjectForm({
 }) {
   const form = useNewProjectForm();
   const [sourceError, setSourceError] = useState(sourceValidationError);
-  useEffect(() => setSourceError(sourceValidationError), [sourceValidationError]);
+  useEffect(
+    () => setSourceError(sourceValidationError),
+    [sourceValidationError],
+  );
   const unavailableMode =
     form.value.aiMode === 'ADVANCED' || form.value.aiMode === 'COMPLETE';
   const submit = (event: React.FormEvent) => {
@@ -80,78 +83,81 @@ export function NewProjectForm({
         />
       </div>
       <div className={styles.controls}>
-      <label className={styles.control}>
-        Language
-        <select
-          aria-label="Language"
-          value={form.value.language}
-          onChange={(e) => form.update({ language: e.target.value })}
-        >
-          <option value="en">English</option>
-          <option value="es">Spanish</option>
-          <option value="ja">Japanese</option>
-        </select>
-      </label>
-      <label className={styles.control}>
-        Maximum spend (USD)
-        <input
-          aria-label="Maximum spend (USD)"
-          value={form.value.maximumSpendUsd}
-          onChange={(e) => form.update({ maximumSpendUsd: e.target.value })}
-        />
-      </label>
-      <label className={styles.control}>
-        Maximum clips
-        <input
-          aria-label="Maximum clips"
-          type="number"
-          value={form.value.maximumClips}
-          onChange={(e) =>
-            form.update({ maximumClips: Number(e.target.value) })
-          }
-        />
-      </label>
-      <label className={styles.control}>
-        Maximum clip length (seconds)
-        <input
-          aria-label="Maximum clip length (seconds)"
-          type="number"
-          value={form.value.maximumClipSeconds}
-          onChange={(e) =>
-            form.update({ maximumClipSeconds: Number(e.target.value) })
-          }
-        />
-      </label>
-      <label className={styles.control}>
-        Platform guide
-        <select
-          aria-label="Platform guide"
-          value={form.value.platform}
-          onChange={(e) => form.update({ platform: e.target.value })}
-        >
-          <option value="YOUTUBE_SHORTS">YouTube Shorts</option>
-          <option value="INSTAGRAM_REELS">Instagram Reels</option>
-          <option value="TIKTOK">TikTok</option>
-        </select>
-      </label>
-      <label className={styles.control}>
-        Output frame
-        <input readOnly value="Vertical 9:16 · 1080×1920" />
-      </label>
-      <label className={styles.control}>
-        Instruction
-        <textarea
-          aria-label="Instruction"
-          value={form.value.instruction}
-          onChange={(e) => form.update({ instruction: e.target.value })}
-        />
-      </label>
+        <label className={styles.control}>
+          Language
+          <select
+            aria-label="Language"
+            value={form.value.language}
+            onChange={(e) => form.update({ language: e.target.value })}
+          >
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="ja">Japanese</option>
+          </select>
+        </label>
+        <label className={styles.control}>
+          Maximum spend (USD)
+          <input
+            aria-label="Maximum spend (USD)"
+            value={form.value.maximumSpendUsd}
+            onChange={(e) => form.update({ maximumSpendUsd: e.target.value })}
+          />
+        </label>
+        <label className={styles.control}>
+          Maximum clips
+          <input
+            aria-label="Maximum clips"
+            type="number"
+            value={form.value.maximumClips}
+            onChange={(e) =>
+              form.update({ maximumClips: Number(e.target.value) })
+            }
+          />
+        </label>
+        <label className={styles.control}>
+          Maximum clip length (seconds)
+          <input
+            aria-label="Maximum clip length (seconds)"
+            type="number"
+            value={form.value.maximumClipSeconds}
+            onChange={(e) =>
+              form.update({ maximumClipSeconds: Number(e.target.value) })
+            }
+          />
+        </label>
+        <label className={styles.control}>
+          Platform guide
+          <select
+            aria-label="Platform guide"
+            value={form.value.platform}
+            onChange={(e) => form.update({ platform: e.target.value })}
+          >
+            <option value="YOUTUBE_SHORTS">YouTube Shorts</option>
+            <option value="INSTAGRAM_REELS">Instagram Reels</option>
+            <option value="TIKTOK">TikTok</option>
+          </select>
+        </label>
+        <label className={styles.control}>
+          Output frame
+          <input readOnly value="Vertical 9:16 · 1080×1920" />
+        </label>
+        <label className={styles.control}>
+          Instruction
+          <textarea
+            aria-label="Instruction"
+            value={form.value.instruction}
+            onChange={(e) => form.update({ instruction: e.target.value })}
+          />
+        </label>
       </div>
       <aside className={styles.cost} aria-label="Cost and reserve">
         <strong>Cost reserve</strong>
         <p>Up to ${form.value.maximumSpendUsd} reserved before AI analysis.</p>
         {unavailableMode ? (
-          <p>Advanced and Complete publishing are presentation-only until Phase 2 is connected.</p>
+          <p>
+            Advanced and Complete publishing are presentation-only until Phase 2
+            is connected.
+          </p>
         ) : null}
       </aside>
       <button

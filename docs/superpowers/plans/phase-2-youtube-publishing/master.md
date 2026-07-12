@@ -4,6 +4,8 @@
 
 **Goal:** Add a secure, local-first, project-level YouTube publishing workspace that generates approved per-clip metadata, connects one channel through native loopback OAuth, uploads rendered Shorts privately with resumable recovery, and delegates independently timezone-aware schedules to YouTube.
 
+> **Planning memo:** Complete and accept Phase 2 core/publishing prerequisites before building or wiring the YouTube dashboard UI. Dashboard work depends on the Phase 2 contracts, persistence, OAuth, publication, and view-model boundaries.
+
 **Architecture:** Phase 2 is an additive `youtube-publishing` feature. Next.js owns public/internal HTTP delivery and PostgreSQL records; pure application services own approval, scheduling, private-first, idempotency, and recovery policy; the native Python worker owns OAuth, Keychain, OpenAI, Google HTTP, and deterministic Temporal workflows whose I/O occurs only in activities/adapters. HTTP API DTOs, Entity DTOs, Record DTOs, Google/OpenAI client DTOs, Temporal payloads, and UI view models remain distinct and cross only through tested converters.
 
 **Tech Stack:** pnpm workspace; Node.js 24.18.0; pnpm 11.11.0; Next.js 16.2.10; React 19.2.7; TypeScript 7.0.2; Prisma ORM, `@prisma/client`, and `@prisma/adapter-pg` 7.8.0; PostgreSQL 17.5; Redis 8.0.5; MinIO `RELEASE.2025-04-22T22-12-26Z`; Temporal Server 1.29.7; Temporal Python SDK 1.30.0; Vitest 4.1.10; Testing Library; Playwright 1.61.1; `uv` 0.11.28; Python 3.12.11; Pydantic 2.13.4; OpenAI Python SDK 2.45.0; HTTPX 0.28.1; keyring 25.7.0; pytest 9.1.1; pytest-httpserver 1.1.5; Ruff 0.15.21; mypy 2.2.0; import-linter 2.13; `@js-temporal/polyfill` 0.5.1; Docker Engine 29.4.0; Docker Compose 5.1.2; FFmpeg/ffprobe 8.1.2.

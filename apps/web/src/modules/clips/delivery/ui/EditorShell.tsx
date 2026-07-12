@@ -39,8 +39,13 @@ export function EditorShell({
   onTrimChange,
 }: EditorShellProps) {
   const [addOpen, setAddOpen] = useState(false);
-  const [inspectorTab, setInspectorTab] = useState<'frame' | 'metadata'>('frame');
-  const [focalPoint, setFocalPoint] = useState<{ xMicros: number; yMicros: number } | null>(null);
+  const [inspectorTab, setInspectorTab] = useState<'frame' | 'metadata'>(
+    'frame',
+  );
+  const [focalPoint, setFocalPoint] = useState<{
+    xMicros: number;
+    yMicros: number;
+  } | null>(null);
   const selected = clips.find((clip) => clip.id === selectedClipId) ?? clips[0];
   const add = (startMs: number, endMs: number) => {
     setAddOpen(false);
@@ -90,7 +95,12 @@ export function EditorShell({
               {selected && (
                 <>
                   <p>{selected.title ?? 'Untitled clip'}</p>
-                  <p>Output frame: {selected.outputFrame ?? projectOutputFrame ?? 'Not available'}</p>
+                  <p>
+                    Output frame:{' '}
+                    {selected.outputFrame ??
+                      projectOutputFrame ??
+                      'Not available'}
+                  </p>
                   <p>
                     Source range: {selected.startMs}–{selected.endMs} ms
                   </p>
@@ -134,7 +144,9 @@ export function EditorShell({
                     costMicrousd: selected?.costMicrousd,
                     rank: selected?.rank,
                     score: selected?.score,
-                    rangeLabel: selected ? `${selected.startMs}–${selected.endMs} ms` : undefined,
+                    rangeLabel: selected
+                      ? `${selected.startMs}–${selected.endMs} ms`
+                      : undefined,
                     language: selected?.language,
                     inheritedFrame: selected?.inheritedFrame,
                   }}

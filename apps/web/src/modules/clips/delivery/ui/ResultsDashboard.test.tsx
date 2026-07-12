@@ -38,8 +38,6 @@ describe('ResultsDashboard', () => {
     expect(
       screen.getByRole('button', { name: 'Download MP4: Rendering clip' }),
     ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: 'Open editor' }),
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Open editor' })).toBeDisabled();
   });
 });

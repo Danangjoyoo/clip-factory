@@ -7,6 +7,8 @@ describe('ClipsPage', () => {
     render(<ClipsPage />);
 
     expect(screen.queryByText('First local render')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Open editor' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Open editor' }),
+    ).not.toBeInTheDocument();
   });
 });

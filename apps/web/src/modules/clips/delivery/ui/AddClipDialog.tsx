@@ -32,14 +32,21 @@ export function AddClipDialog({
       <form onSubmit={submit}>
         <label>
           Start timecode
-          <input autoFocus value={start} onChange={(e) => setStart(e.target.value)} />
+          <input
+            autoFocus
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+          />
         </label>
         <label>
           End timecode
           <input value={end} onChange={(e) => setEnd(e.target.value)} />
         </label>
         <p>
-          {Number.isFinite(durationMs) ? `Range: ${Math.max(0, durationMs / 1000)} seconds` : 'Enter HH:MM:SS values'} · Maximum duration: 60 seconds
+          {Number.isFinite(durationMs)
+            ? `Range: ${Math.max(0, durationMs / 1000)} seconds`
+            : 'Enter HH:MM:SS values'}{' '}
+          · Maximum duration: 60 seconds
         </p>
         <button type="button" onClick={onCancel}>
           Cancel

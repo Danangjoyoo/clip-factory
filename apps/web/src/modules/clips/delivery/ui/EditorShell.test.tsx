@@ -21,7 +21,12 @@ describe('EditorShell', () => {
     const { unmount } = render(
       <EditorShell
         clips={[
-          { ...clip, id: 'updating', title: 'Updating clip', previewState: 'UPDATING' },
+          {
+            ...clip,
+            id: 'updating',
+            title: 'Updating clip',
+            previewState: 'UPDATING',
+          },
           { ...clip, id: 'ready', title: 'Ready clip', previewState: 'READY' },
         ]}
         selectedClipId="updating"
@@ -40,7 +45,9 @@ describe('EditorShell', () => {
   it('submits manual source timecodes as milliseconds', async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
-    const { unmount } = render(<AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />);
+    const { unmount } = render(
+      <AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />,
+    );
 
     await user.clear(screen.getByLabelText('Start timecode'));
     await user.type(screen.getByLabelText('Start timecode'), '00:32:14');
@@ -58,18 +65,23 @@ describe('EditorShell', () => {
     expect(screen.getByLabelText('Start timecode')).toHaveFocus();
   });
 
-  it.each(['00:00:01:00', '00::01'])('rejects malformed timecode %s', async (start) => {
-    const user = userEvent.setup();
-    const onAdd = vi.fn();
-    const { unmount } = render(<AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />);
+  it.each(['00:00:01:00', '00::01'])(
+    'rejects malformed timecode %s',
+    async (start) => {
+      const user = userEvent.setup();
+      const onAdd = vi.fn();
+      const { unmount } = render(
+        <AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />,
+      );
 
-    await user.clear(screen.getByLabelText('Start timecode'));
-    await user.type(screen.getByLabelText('Start timecode'), start);
-    await user.click(screen.getByRole('button', { name: 'Add clip' }));
+      await user.clear(screen.getByLabelText('Start timecode'));
+      await user.type(screen.getByLabelText('Start timecode'), start);
+      await user.click(screen.getByRole('button', { name: 'Add clip' }));
 
-    expect(onAdd).not.toHaveBeenCalled();
-    unmount();
-  });
+      expect(onAdd).not.toHaveBeenCalled();
+      unmount();
+    },
+  );
 
   it('shows frame and metadata inspector tabs after the timeline in DOM order', async () => {
     const user = userEvent.setup();
@@ -85,8 +97,12 @@ describe('EditorShell', () => {
 
     const timeline = screen.getByRole('region', { name: 'Trim timeline' });
     const inspector = screen.getByRole('complementary', { name: 'Inspector' });
-    expect(timeline.compareDocumentPosition(inspector)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(screen.getByRole('button', { name: 'Center focal point' })).toBeVisible();
+    expect(timeline.compareDocumentPosition(inspector)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(
+      screen.getByRole('button', { name: 'Center focal point' }),
+    ).toBeVisible();
     await user.click(screen.getByRole('tab', { name: 'Metadata' }));
     expect(screen.getByText('Origin')).toBeVisible();
     unmount();

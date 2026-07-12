@@ -11,15 +11,38 @@
   max-width: 72rem;
   padding: var(--space-8);
 }
-.form > h1 { grid-area: title; }
-.project { grid-area: project; }
-.source { grid-area: source; display: grid; gap: var(--space-4); }
-.analysis { grid-area: analysis; }
-.controls { grid-area: controls; display: grid; gap: var(--space-4); }
-.control { display: grid; gap: var(--space-2); }
-.cost { grid-area: cost; }
-.form > button { grid-area: submit; }
-.form label, .form section, .cost {
+.form > h1 {
+  grid-area: title;
+}
+.project {
+  grid-area: project;
+}
+.source {
+  grid-area: source;
+  display: grid;
+  gap: var(--space-4);
+}
+.analysis {
+  grid-area: analysis;
+}
+.controls {
+  grid-area: controls;
+  display: grid;
+  gap: var(--space-4);
+}
+.control {
+  display: grid;
+  gap: var(--space-2);
+}
+.cost {
+  grid-area: cost;
+}
+.form > button {
+  grid-area: submit;
+}
+.form label,
+.form section,
+.cost {
   display: grid;
   gap: var(--space-2);
 }

@@ -13,7 +13,10 @@ export type ClipMetadata = {
 export function MetadataInspector({
   metadata,
 }: Readonly<{ metadata: ClipMetadata }>) {
-  const cost = metadata.costMicrousd == null ? null : Number(metadata.costMicrousd) / 1_000_000;
+  const cost =
+    metadata.costMicrousd == null
+      ? null
+      : Number(metadata.costMicrousd) / 1_000_000;
   return (
     <dl>
       <dt>Origin</dt>
