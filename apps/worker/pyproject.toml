@@ -32,6 +32,12 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "--import-mode=importlib"
 
+[tool.coverage.run]
+omit = [
+  "src/clip_factory/entrypoints/*",
+  "src/clip_factory/ports/*",
+]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

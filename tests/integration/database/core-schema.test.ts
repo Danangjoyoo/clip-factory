@@ -4,6 +4,7 @@ import {
   makePrismaTestClient,
   resetDatabase,
 } from '../support/prisma-test-client';
+import { integrationEnabled } from '../support/test-environment';
 
 const sha = 'a'.repeat(64);
 const projectData = {
@@ -14,7 +15,7 @@ const projectData = {
   defaultPlatformPreset: 'YOUTUBE_SHORTS' as const,
 };
 
-describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
+describe.skipIf(!integrationEnabled)('Phase 1 core schema', () => {
   let prisma: Awaited<ReturnType<typeof makePrismaTestClient>>;
 
   beforeAll(async () => {
@@ -211,9 +212,20 @@ describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
     const project = await prisma.project.create({
       data: { ...projectData, name: 'Cascade' },
     });
+    const source = await prisma.sourceAsset.create({
+      data: {
+        projectId: project.id,
+        kind: 'LOCAL_FILE',
+        displayPath: '/tmp/cascade.mp4',
+      },
+    });
     await prisma.uploadSession.create({
       data: {
         projectId: project.id,
+        sourceAssetId: source.id,
+        fileName: 'cascade.mp4',
+        contentType: 'video/mp4',
+        totalParts: 1,
         objectKey: 'x',
         uploadId: 'upload-unique',
         sizeBytes: 1n,
@@ -287,7 +299,7 @@ describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
       data: {
         projectId: project.id,
         sourceAssetId: source.id,
-        backend: 'whisper',
+        backend: 'FAKE',
         model: 'large-v3',
         modelRevision: 'r1',
         languageTag: 'en',
@@ -306,7 +318,7 @@ describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
         data: {
           projectId: otherProject.id,
           sourceAssetId: source.id,
-          backend: 'whisper',
+          backend: 'FAKE',
           model: 'large-v3',
           modelRevision: 'r1',
           languageTag: 'en',
@@ -330,7 +342,7 @@ describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
         data: {
           projectId: project.id,
           sourceAssetId: transcriptSource.id,
-          backend: 'whisper',
+          backend: 'FAKE',
           model: 'large-v3',
           modelRevision: 'r1',
           languageTag: 'en',
@@ -498,6 +510,10 @@ describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
     await prisma.uploadSession.create({
       data: {
         projectId: project.id,
+        sourceAssetId: source.id,
+        fileName: 'unique.mp4',
+        contentType: 'video/mp4',
+        totalParts: 1,
         objectKey: 'uploads/unique',
         uploadId: 'unique-upload',
         sizeBytes: 1n,
@@ -509,6 +525,10 @@ describe.skipIf(!process.env.DATABASE_URL)('Phase 1 core schema', () => {
       prisma.uploadSession.create({
         data: {
           projectId: project.id,
+          sourceAssetId: source.id,
+          fileName: 'duplicate.mp4',
+          contentType: 'video/mp4',
+          totalParts: 1,
           objectKey: 'uploads/duplicate',
           uploadId: 'unique-upload',
           sizeBytes: 1n,

@@ -7,5 +7,7 @@ export async function makePrismaTestClient() {
 
 export async function resetDatabase() {
   const prisma = await makePrismaTestClient();
-  await prisma.$executeRawUnsafe('TRUNCATE TABLE projects CASCADE');
+  await prisma.$executeRawUnsafe(
+    'TRUNCATE TABLE projects, idempotency_receipts CASCADE',
+  );
 }

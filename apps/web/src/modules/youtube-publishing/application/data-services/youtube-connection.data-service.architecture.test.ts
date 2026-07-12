@@ -1,10 +1,19 @@
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 import { expect, it } from 'vitest';
 
+const modulePath = (file: string) =>
+  resolve(
+    process.cwd(),
+    process.cwd().endsWith('apps/web')
+      ? `src/modules/youtube-publishing/application/data-services/${file}`
+      : `apps/web/src/modules/youtube-publishing/application/data-services/${file}`,
+  );
+
 it('imports exactly its repository and no service, controller, or client', async () => {
   const source = await readFile(
-    'apps/web/src/modules/youtube-publishing/application/data-services/youtube-connection.data-service.ts',
+    modulePath('youtube-connection.data-service.ts'),
     'utf8',
   );
   const imports = [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].flatMap(
