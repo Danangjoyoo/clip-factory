@@ -15,6 +15,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       TEMPORAL_ADDRESS: temporal:7233
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      WORKER_VALIDATION_URL: http://host.docker.internal:8001
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }

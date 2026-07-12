@@ -111,9 +111,9 @@ class AnalysisChildWorkflow:
         remaining = input.remaining_budget_microusd
         while True:
             self._state = "AWAITING_BUDGET"
-            self._budget_action = None
             await workflow.wait_condition(lambda: self._budget_action is not None)
             action = self._budget_action
+            self._budget_action = None
             if action is None:
                 continue
             persisted = await workflow.execute_activity(
@@ -143,7 +143,7 @@ class AnalysisChildWorkflow:
                 )
                 self._state = "COMPLETED"
                 return AnalysisChildResult(tuple(c.title for c in paid.candidates))
-            result: HighlightResponse = await workflow.execute_activity(
+            result: AnalysisChildResult = await workflow.execute_activity(
                 execute_analysis_child,
                 input,
                 start_to_close_timeout=timedelta(hours=6),
