@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createHash } from 'node:crypto';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: vi.fn().mockResolvedValue('https://upload.test'),
@@ -69,14 +70,31 @@ it('creates and signs multipart uploads with SHA-256 checksums', async () => {
 });
 
 it('hashes completed object bytes server-side', async () => {
-  const bytes = new TextEncoder().encode('video');
+  const chunks = [
+    new TextEncoder().encode('vid'),
+    new TextEncoder().encode('eo'),
+  ];
   const adapter = new S3MultipartUploadAdapter({
     send: async () => ({
-      Body: { transformToByteArray: async () => bytes },
+      Body: (async function* () {
+        yield* chunks;
+      })(),
     }),
   } as never);
 
   await expect(
     adapter.sha256('projects/project-1/sources/source.mp4'),
-  ).resolves.toBe(createHash('sha256').update(bytes).digest('hex'));
+  ).resolves.toBe(
+    createHash('sha256').update(chunks[0]).update(chunks[1]).digest('hex'),
+  );
+});
+
+it('signs browser download URLs as GET object requests', async () => {
+  const adapter = new S3MultipartUploadAdapter({
+    send: async () => ({}),
+  } as never);
+  await adapter.presign('projects/project-1/sources/source.mp4');
+
+  const command = vi.mocked(getSignedUrl).mock.calls.at(-1)?.[1];
+  expect(command).toBeInstanceOf(GetObjectCommand);
 });

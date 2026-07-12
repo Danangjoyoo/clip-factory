@@ -165,18 +165,17 @@ export class S3MultipartUploadAdapter
     };
   }
   async sha256(key: string) {
-    const result = await this.safe(() =>
-      this.client.send(
+    return this.safe(async () => {
+      const result = await this.client.send(
         new GetObjectCommand({ Bucket: this.bucket, Key: this.key(key) }),
-      ),
-    );
-    const body = result.Body as
-      | { transformToByteArray?: () => Promise<Uint8Array> }
-      | undefined;
-    if (!body?.transformToByteArray) throw new Error('OBJECT_STORAGE_ERROR');
-    return createHash('sha256')
-      .update(await body.transformToByteArray())
-      .digest('hex');
+      );
+      const body = result.Body as AsyncIterable<Uint8Array> | undefined;
+      if (!body?.[Symbol.asyncIterator])
+        throw new Error('OBJECT_STORAGE_ERROR');
+      const hash = createHash('sha256');
+      for await (const chunk of body) hash.update(chunk);
+      return hash.digest('hex');
+    });
   }
   async deleteMany(keys: readonly string[]) {
     await Promise.all(
@@ -196,7 +195,7 @@ export class S3MultipartUploadAdapter
     return this.safe(() =>
       getSignedUrl(
         this.presignClient,
-        new HeadObjectCommand({ Bucket: this.bucket, Key: this.key(key) }),
+        new GetObjectCommand({ Bucket: this.bucket, Key: this.key(key) }),
         { expiresIn: expiresSeconds },
       ),
     );
