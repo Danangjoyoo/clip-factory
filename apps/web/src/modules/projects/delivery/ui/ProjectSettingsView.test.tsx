@@ -48,4 +48,45 @@ describe('ProjectSettingsView', () => {
       screen.getByText(/Existing clips keep their own edits/i),
     ).toBeVisible();
   });
+
+  it('links tabs to their panel and supports vertical keyboard navigation', async () => {
+    const user = userEvent.setup();
+    render(<ProjectSettingsView value={settings} {...handlers} />);
+
+    const general = screen.getByRole('tab', { name: 'General' });
+    general.focus();
+    await user.keyboard('{ArrowDown}');
+
+    const source = screen.getByRole('tab', { name: 'Source' });
+    expect(source).toHaveAttribute('aria-selected', 'true');
+    expect(source).toHaveAttribute('aria-controls', 'project-settings-source');
+    expect(screen.getByRole('tabpanel')).toHaveAttribute(
+      'aria-labelledby',
+      'project-settings-tab-source',
+    );
+  });
+
+  it('edits defaults and confirms deletion without claiming external assets are deleted', async () => {
+    const user = userEvent.setup();
+    render(<ProjectSettingsView value={settings} {...handlers} />);
+
+    await user.click(screen.getByRole('tab', { name: 'Defaults' }));
+    await user.selectOptions(screen.getByLabelText('Platform'), 'TikTok');
+    await user.click(screen.getByRole('button', { name: 'Save defaults' }));
+    expect(handlers.onSaveDefaults).toHaveBeenCalledWith({
+      platform: 'TikTok',
+      maxDuration: '45 seconds',
+      captionStyle: 'Bold lower third',
+    });
+
+    await user.click(screen.getByRole('tab', { name: 'Danger zone' }));
+    await user.click(screen.getByRole('button', { name: 'Delete project' }));
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      'Rendered files and remote YouTube uploads are untouched.',
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'Delete project permanently' }),
+    );
+    expect(handlers.onDeleteProject).toHaveBeenCalledOnce();
+  });
 });

@@ -77,6 +77,7 @@
   font-weight: 600;
 }
 .panel input,
+.panel select,
 .panel textarea {
   width: 100%;
   border: 1px solid var(--color-surface-raised);
@@ -117,6 +118,17 @@
 }
 .danger {
   background: var(--color-danger) !important;
+}
+.confirmation {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-control);
+}
+.confirmation h3 {
+  margin: 0;
 }
 @media (max-width: 700px) {
   .page {

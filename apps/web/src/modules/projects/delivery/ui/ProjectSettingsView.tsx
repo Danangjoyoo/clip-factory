@@ -37,6 +37,24 @@ export function ProjectSettingsView({
   const [section, setSection] = useState<Section>('general');
   const [title, setTitle] = useState(value.projectTitle);
   const [instruction, setInstruction] = useState(value.instruction);
+  const [platform, setPlatform] = useState(value.platformLabel);
+  const [maxDuration, setMaxDuration] = useState(value.maxDurationLabel);
+  const [captionStyle, setCaptionStyle] = useState(value.captionStyleLabel);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const moveTab = (current: Section, key: string) => {
+    const index = tabs.findIndex((tab) => tab.id === current);
+    const nextIndex =
+      key === 'Home'
+        ? 0
+        : key === 'End'
+          ? tabs.length - 1
+          : (index + (key === 'ArrowUp' ? -1 : 1) + tabs.length) % tabs.length;
+    const next = tabs[nextIndex];
+    if (!next) return;
+    setSection(next.id);
+    document.getElementById(`project-settings-tab-${next.id}`)?.focus();
+  };
 
   return (
     <main className={styles.page}>
@@ -57,10 +75,21 @@ export function ProjectSettingsView({
             {tabs.map((tab) => (
               <button
                 key={tab.id}
+                id={`project-settings-tab-${tab.id}`}
                 type="button"
                 role="tab"
                 aria-selected={section === tab.id}
+                aria-controls={`project-settings-${tab.id}`}
+                tabIndex={section === tab.id ? 0 : -1}
                 onClick={() => setSection(tab.id)}
+                onKeyDown={(event) => {
+                  if (
+                    ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)
+                  ) {
+                    event.preventDefault();
+                    moveTab(tab.id, event.key);
+                  }
+                }}
               >
                 {tab.label}
               </button>
@@ -68,9 +97,10 @@ export function ProjectSettingsView({
           </div>
         </nav>
         <section
+          id={`project-settings-${section}`}
           className={styles.panel}
           role="tabpanel"
-          aria-label={`${tabs.find((tab) => tab.id === section)?.label} settings`}
+          aria-labelledby={`project-settings-tab-${section}`}
         >
           {section === 'general' ? (
             <form
@@ -130,9 +160,9 @@ export function ProjectSettingsView({
               onSubmit={(event) => {
                 event.preventDefault();
                 onSaveDefaults({
-                  platform: value.platformLabel,
-                  maxDuration: value.maxDurationLabel,
-                  captionStyle: value.captionStyleLabel,
+                  platform,
+                  maxDuration,
+                  captionStyle,
                 });
               }}
             >
@@ -148,15 +178,37 @@ export function ProjectSettingsView({
                 </div>
                 <div>
                   <dt>Platform</dt>
-                  <dd>{value.platformLabel}</dd>
+                  <dd>
+                    <select
+                      aria-label="Platform"
+                      value={platform}
+                      onChange={(event) => setPlatform(event.target.value)}
+                    >
+                      <option>YouTube Shorts</option>
+                      <option>Instagram Reels</option>
+                      <option>TikTok</option>
+                    </select>
+                  </dd>
                 </div>
                 <div>
                   <dt>Maximum duration</dt>
-                  <dd>{value.maxDurationLabel}</dd>
+                  <dd>
+                    <input
+                      aria-label="Maximum duration"
+                      value={maxDuration}
+                      onChange={(event) => setMaxDuration(event.target.value)}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>Caption style</dt>
-                  <dd>{value.captionStyleLabel}</dd>
+                  <dd>
+                    <input
+                      aria-label="Caption style"
+                      value={captionStyle}
+                      onChange={(event) => setCaptionStyle(event.target.value)}
+                    />
+                  </dd>
                 </div>
               </dl>
               <button type="submit">Save defaults</button>
@@ -166,20 +218,97 @@ export function ProjectSettingsView({
             <div>
               <h2>Danger zone</h2>
               <p>
-                Delete this project’s metadata and generated clips from Clip
-                Factory. Local filepath source files are never deleted.
+                Delete this project’s local Clip Factory record. Source files,
+                rendered files, and remote uploads are never deleted.
               </p>
               <button
                 className={styles.danger}
                 type="button"
-                onClick={onDeleteProject}
+                onClick={() => setConfirmingDelete(true)}
               >
                 Delete project
               </button>
+              {confirmingDelete ? (
+                <div
+                  className={styles.confirmation}
+                  role="alertdialog"
+                  aria-modal="true"
+                  aria-labelledby="delete-project-title"
+                >
+                  <h3 id="delete-project-title">Delete project?</h3>
+                  <p>
+                    Rendered files and remote YouTube uploads are untouched.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingDelete(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className={styles.danger}
+                    type="button"
+                    onClick={onDeleteProject}
+                  >
+                    Delete project permanently
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </section>
       </div>
     </main>
+  );
+}
+
+export function ProjectSettingsLocalPage({
+  projectId,
+}: Readonly<{ projectId: string }>) {
+  const [value, setValue] = useState<ProjectSettingsViewModel>({
+    projectId,
+    projectTitle: 'Project settings',
+    instruction: '',
+    sourceHealthLabel: 'Source ready',
+    sourceLabel: 'Local filepath source',
+    outputFrameLabel: 'Vertical 9:16 · 1080×1920',
+    platformLabel: 'YouTube Shorts',
+    maxDurationLabel: '45 seconds',
+    captionStyleLabel: 'Bold lower third',
+  });
+
+  return (
+    <ProjectSettingsView
+      value={value}
+      onSaveGeneral={(general) =>
+        setValue((current) => ({
+          ...current,
+          projectTitle: general.title,
+          instruction: general.instruction,
+        }))
+      }
+      onRelinkSource={() =>
+        setValue((current) => ({
+          ...current,
+          sourceHealthLabel: 'Awaiting relink',
+          sourceLabel: 'Choose a local filepath',
+        }))
+      }
+      onSaveDefaults={(defaults) =>
+        setValue((current) => ({
+          ...current,
+          platformLabel: defaults.platform,
+          maxDurationLabel: defaults.maxDuration,
+          captionStyleLabel: defaults.captionStyle,
+        }))
+      }
+      onDeleteProject={() =>
+        setValue((current) => ({
+          ...current,
+          projectTitle: 'Project deleted locally',
+          sourceHealthLabel: 'Deleted',
+        }))
+      }
+    />
   );
 }
