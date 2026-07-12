@@ -122,6 +122,8 @@ export function assertAcknowledgedReplacementAttempt(
     );
   if (evidence.finalChunkDispatchStartedAt > evidence.outcomeUncertainAt)
     throw new Error('replacement requires final-dispatch uncertainty evidence');
+  if (evidence.reconciliationCheckedAt < evidence.outcomeUncertainAt)
+    throw new Error('replacement reconciliation predates upload uncertainty');
   if (evidence.duplicateRiskAcknowledgedAt === null)
     throw new Error(
       'replacement requires durable duplicate-risk acknowledgement',

@@ -157,6 +157,16 @@ it('requires durable proof before retry or replacement', () => {
   expect(() =>
     assertAcknowledgedReplacementAttempt(
       PublicationState.UploadOutcomeUncertain,
+      {
+        ...replacement,
+        reconciliationCheckedAt: new Date('2026-07-11T00:00:00Z'),
+        duplicateRiskAcknowledgedAt: new Date('2026-07-11T00:01:00Z'),
+      },
+    ),
+  ).toThrow('replacement reconciliation predates upload uncertainty');
+  expect(() =>
+    assertAcknowledgedReplacementAttempt(
+      PublicationState.UploadOutcomeUncertain,
       { ...replacement, attemptNumber: 3 },
     ),
   ).toThrow('publication attempt limit reached');
