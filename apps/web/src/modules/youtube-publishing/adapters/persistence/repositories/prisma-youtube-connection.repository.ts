@@ -105,27 +105,37 @@ export class PrismaYouTubeConnectionRepository implements YouTubeConnectionRepos
     id: YouTubeConnectionId,
     state: YouTubeConnectionState,
   ): Promise<YouTubeConnectionEntityDto | null> {
-    const result = await this.database.youTubeConnection.updateMany({
-      where: { id },
-      data: { state },
-    });
-    if (!result.count) return null;
-    return this.findPrimary();
+    try {
+      const row = await this.database.youTubeConnection.update({
+        where: { id },
+        data: { state },
+        select,
+      });
+      return connectionRecordToEntity(record(row));
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2025') return null;
+      throw error;
+    }
   }
 
   async disconnect(
     id: YouTubeConnectionId,
     revocationUncertain: boolean,
   ): Promise<YouTubeConnectionEntityDto | null> {
-    const result = await this.database.youTubeConnection.updateMany({
-      where: { id },
-      data: {
-        state: 'DISCONNECTED',
-        disconnectedAt: new Date(),
-        revocationUncertain,
-      },
-    });
-    if (!result.count) return null;
-    return this.findPrimary();
+    try {
+      const row = await this.database.youTubeConnection.update({
+        where: { id },
+        data: {
+          state: 'DISCONNECTED',
+          disconnectedAt: new Date(),
+          revocationUncertain,
+        },
+        select,
+      });
+      return connectionRecordToEntity(record(row));
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2025') return null;
+      throw error;
+    }
   }
 }
