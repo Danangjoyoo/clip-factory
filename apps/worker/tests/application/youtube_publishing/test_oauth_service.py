@@ -8,7 +8,7 @@ from clip_factory.application.youtube_publishing.oauth_service import OAuthCallb
 from clip_factory.application.youtube_publishing.active_oauth_flow_store import InMemoryActiveOAuthFlowStore
 from clip_factory.domain.youtube_publishing.oauth_policy import OAuthSecurityError
 from clip_factory.ports.youtube_publishing.runtime import ActiveOAuthFlow
-from tests.fakes.youtube_publishing import make_oauth_fakes
+from fakes.youtube_publishing import make_oauth_fakes
 
 
 CONNECTION_ID = "018f4f2c-93d7-7c75-8f0f-7f5165e8bb42"
