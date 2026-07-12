@@ -41,6 +41,7 @@ This starts PostgreSQL, Redis, MinIO, Temporal, Temporal UI, and the web contain
 Useful URLs:
 
 - Web: <http://127.0.0.1:3000>
+- MinIO API: <http://127.0.0.1:9000> (browser upload/download URLs)
 - MinIO console: <http://127.0.0.1:9001>
 - Temporal UI: <http://127.0.0.1:8233>
 

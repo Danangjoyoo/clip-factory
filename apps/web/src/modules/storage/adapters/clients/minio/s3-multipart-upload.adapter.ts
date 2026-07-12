@@ -29,11 +29,19 @@ export const minioClientOptions = () => ({
   },
 });
 
+export const minioPublicClientOptions = () => ({
+  ...minioClientOptions(),
+  endpoint: process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://127.0.0.1:9000',
+});
+
 export class S3MultipartUploadAdapter
   implements MultipartUploadPort, ArtifactStorePort
 {
   private readonly bucket = 'clip-factory';
-  constructor(private readonly client = new S3Client(minioClientOptions())) {}
+  constructor(
+    private readonly client = new S3Client(minioClientOptions()),
+    private readonly presignClient = new S3Client(minioPublicClientOptions()),
+  ) {}
   private key(key: string) {
     if (!/^projects\/[^/]+\/sources\/[^/]+\.(?:mp4|mov|mkv|webm)$/u.test(key))
       throw new Error('INVALID_OBJECT_KEY');
@@ -73,7 +81,7 @@ export class S3MultipartUploadAdapter
     assertPart(partNumber);
     return this.safe(() =>
       getSignedUrl(
-        this.client,
+        this.presignClient,
         new UploadPartCommand({
           Bucket: this.bucket,
           Key: this.key(key),
@@ -173,7 +181,7 @@ export class S3MultipartUploadAdapter
   async presign(key: string, expiresSeconds = 900) {
     return this.safe(() =>
       getSignedUrl(
-        this.client,
+        this.presignClient,
         new HeadObjectCommand({ Bucket: this.bucket, Key: this.key(key) }),
         { expiresIn: expiresSeconds },
       ),

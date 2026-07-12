@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import {
   minioClientOptions,
+  minioPublicClientOptions,
   S3MultipartUploadAdapter,
 } from './s3-multipart-upload.adapter';
 
@@ -14,6 +15,14 @@ it('uses configured MinIO application credentials', () => {
     accessKeyId: 'configured-key',
     secretAccessKey: 'configured-secret',
   });
+});
+
+it('uses browser-reachable endpoint for signed URLs', () => {
+  vi.stubEnv('MINIO_ENDPOINT', 'http://minio:9000');
+  vi.stubEnv('MINIO_PUBLIC_ENDPOINT', 'http://127.0.0.1:9000');
+
+  expect(minioClientOptions().endpoint).toBe('http://minio:9000');
+  expect(minioPublicClientOptions().endpoint).toBe('http://127.0.0.1:9000');
 });
 
 it('rejects unscoped object keys and unsafe upload ids', async () => {
