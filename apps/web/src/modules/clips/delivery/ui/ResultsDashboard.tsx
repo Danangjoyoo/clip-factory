@@ -55,7 +55,9 @@ export function ResultsDashboard({
                   {clip.editorHref ? (
                     <a href={clip.editorHref}>Open editor</a>
                   ) : (
-                    <button type="button">Open editor</button>
+                    <button type="button" disabled>
+                      Open editor
+                    </button>
                   )}
                   {downloadable ? (
                     <a

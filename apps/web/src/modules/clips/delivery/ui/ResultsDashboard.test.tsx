@@ -11,6 +11,7 @@ const renderedClip = {
   sizeLabel: '18 MB',
   formatLabel: 'MP4 · H.264 + AAC · captions stitched',
   downloadHref: '/downloads/ready-clip.mp4',
+  editorHref: '/projects/project-1/editor',
 };
 
 const renderingClip = {
@@ -19,6 +20,7 @@ const renderingClip = {
   title: 'Rendering clip',
   state: 'RENDERING' as const,
   downloadHref: undefined,
+  editorHref: undefined,
 };
 
 describe('ResultsDashboard', () => {
@@ -35,6 +37,9 @@ describe('ResultsDashboard', () => {
     ).toHaveAttribute('href', renderedClip.downloadHref);
     expect(
       screen.getByRole('button', { name: 'Download MP4: Rendering clip' }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Open editor' }),
     ).toBeDisabled();
   });
 });
