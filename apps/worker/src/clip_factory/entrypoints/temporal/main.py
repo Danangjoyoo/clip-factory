@@ -23,7 +23,11 @@ async def start_health_server(port: int) -> asyncio.Server:
 async def run_worker() -> None:
     settings = WorkerSettings.from_env()
     client = await Client.connect(settings.temporal_address)
-    worker = build_worker(client, os.environ.get("TEMPORAL_TASK_QUEUE", "clip-factory"))
+    worker = build_worker(
+        client,
+        os.environ.get("TEMPORAL_TASK_QUEUE", "clip-factory"),
+        settings.openai_api_key.get_secret_value() if settings.openai_api_key else None,
+    )
     server = await start_health_server(
         int(os.environ.get("WORKER_HEALTH_PORT", "8001"))
     )

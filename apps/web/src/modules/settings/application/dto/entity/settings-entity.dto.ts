@@ -3,4 +3,5 @@ export type SettingsEntity = {
   defaultPlatform: string;
   captionProfile: string;
   catalogVersion: string;
+  openAiApiKey: string;
 };

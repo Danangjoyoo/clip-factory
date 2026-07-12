@@ -43,7 +43,7 @@ jobs:
       - run: uv run --directory apps/worker ruff format --check src tests
       - run: uv run --directory apps/worker ruff check src tests
       - run: uv run --directory apps/worker mypy src
-      - run: uv run --directory apps/worker pytest --cov=clip_factory --cov-fail-under=75
+      - run: uv run --directory apps/worker pytest --cov=clip_factory --cov-fail-under=80
   architecture-contracts:
     # Temporarily disabled: restore after Compose contract parsing is repaired.
     if: ${{ false }}

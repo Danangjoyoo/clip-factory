@@ -29,3 +29,19 @@ def test_worker_composes_durable_audio_receipt_store(tmp_path: Path) -> None:
         settings.audio_validation_receipts().__class__.__name__
         == "JsonAudioValidationReceiptStore"
     )
+
+
+def test_worker_reads_openai_key_from_local_settings_file(tmp_path: Path) -> None:
+    settings_file = tmp_path / "settings.json"
+    settings_file.write_text('{"openAiApiKey":"sk-local-settings"}')
+
+    settings = WorkerSettings.from_mapping(
+        {
+            "OPENAI_ADAPTER": "live",
+            "INTERNAL_SERVICE_TOKEN": "local-test-token",
+            "SETTINGS_FILE": str(settings_file),
+        }
+    )
+
+    assert settings.openai_api_key is not None
+    assert settings.openai_api_key.get_secret_value() == "sk-local-settings"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createProject } from '../http/project-api.client';
 import type { CreateProjectApiRequest } from '../../converters/api-entity/project.converter';
 import { uploadProjectFile } from '../../../storage/delivery/http/upload-api.client';
@@ -37,6 +37,14 @@ export function NewProjectPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
+  const [openAiApiKeyConfigured, setOpenAiApiKeyConfigured] = useState(false);
+  useEffect(() => {
+    void fetch('/api/settings')
+      .then((response) => response.json())
+      .then((settings) =>
+        setOpenAiApiKeyConfigured(Boolean(settings.openAiApiKeyConfigured)),
+      );
+  }, []);
   const submit = async (value: NewProjectFormValue) => {
     setSubmitting(true);
     setError(undefined);
@@ -58,6 +66,7 @@ export function NewProjectPage() {
     <NewProjectForm
       onSubmit={submit}
       submitting={submitting}
+      openAiApiKeyConfigured={openAiApiKeyConfigured}
       {...(error ? { submitError: error } : {})}
     />
   );

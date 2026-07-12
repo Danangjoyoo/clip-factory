@@ -97,4 +97,30 @@ describe('NewProjectForm', () => {
       within(form).getByRole('button', { name: 'Create project' }),
     ).toBeEnabled();
   });
+
+  it('disables AI-assisted modes when OpenAI API key is missing', () => {
+    const { container } = render(
+      <NewProjectForm openAiApiKeyConfigured={false} />,
+    );
+    const form = within(container)
+      .getByRole('heading', {
+        name: 'New project',
+      })
+      .closest('form') as HTMLFormElement;
+
+    expect(
+      within(form).getByText(
+        'OpenAI API KEY is missing, AI Assisted Mode is disabled',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(form).getByRole('option', { name: 'Partial' }),
+    ).toBeDisabled();
+    expect(
+      within(form).getByRole('option', { name: 'Advanced' }),
+    ).toBeDisabled();
+    expect(
+      within(form).getByRole('option', { name: 'Complete' }),
+    ).toBeDisabled();
+  });
 });

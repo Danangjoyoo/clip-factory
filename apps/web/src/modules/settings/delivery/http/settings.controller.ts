@@ -9,7 +9,17 @@ const schema = z.object({
   defaultPlatform: z.string(),
   captionProfile: z.string(),
   catalogVersion: z.string(),
+  openAiApiKey: z.string().optional(),
 });
+const view = (settings: SettingsEntity) => {
+  const { openAiApiKey: _, ...safe } = settings;
+  return {
+    ...safe,
+    openAiApiKeyConfigured: Boolean(
+      settings.openAiApiKey || process.env.OPENAI_API_KEY,
+    ),
+  };
+};
 export class SettingsController {
   constructor(
     private readonly store: { get(): Promise<SettingsEntity> },
@@ -18,13 +28,24 @@ export class SettingsController {
     private readonly diagnostics: ExportDiagnosticsService,
   ) {}
   async get() {
-    return Response.json(await this.store.get());
+    return Response.json(view(await this.store.get()));
   }
   async save(request: Request) {
     const parsed = schema.safeParse(await request.json().catch(() => null));
-    return parsed.success
-      ? Response.json(await this.update.execute(parsed.data), { status: 200 })
-      : Response.json({ code: 'INVALID_SETTINGS' }, { status: 400 });
+    if (!parsed.success)
+      return Response.json({ code: 'INVALID_SETTINGS' }, { status: 400 });
+    const current = await this.store.get();
+    const openAiApiKey = parsed.data.openAiApiKey?.trim();
+    return Response.json(
+      view(
+        await this.update.execute({
+          ...current,
+          ...parsed.data,
+          openAiApiKey: openAiApiKey || current.openAiApiKey,
+        }),
+      ),
+      { status: 200 },
+    );
   }
   async healthCheck() {
     return Response.json(await this.health.execute());

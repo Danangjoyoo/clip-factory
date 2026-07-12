@@ -13,6 +13,7 @@ export function AnalysisSettings({
   onMode,
   onModel,
   onReasoning,
+  openAiApiKeyConfigured = true,
 }: {
   mode: AiAssistedMode;
   model: ModelId;
@@ -21,24 +22,36 @@ export function AnalysisSettings({
   onMode: (value: AiAssistedMode) => void;
   onModel: (value: ModelId) => void;
   onReasoning: (value: string) => void;
+  openAiApiKeyConfigured?: boolean;
 }) {
   return (
     <section aria-label="Analysis settings">
+      {!openAiApiKeyConfigured ? (
+        <p role="alert">
+          OpenAI API KEY is missing, AI Assisted Mode is disabled
+        </p>
+      ) : null}
       <label>
         AI-assisted mode
         <select
           aria-label="AI-assisted mode"
-          value={mode}
+          value={openAiApiKeyConfigured ? mode : 'MANUAL'}
           onChange={(e) => onMode(e.target.value as AiAssistedMode)}
         >
           <option value="MANUAL">Manual</option>
-          <option value="PARTIAL">Partial</option>
-          <option value="ADVANCED">Advanced</option>
-          <option value="COMPLETE">Complete</option>
+          <option value="PARTIAL" disabled={!openAiApiKeyConfigured}>
+            Partial
+          </option>
+          <option value="ADVANCED" disabled={!openAiApiKeyConfigured}>
+            Advanced
+          </option>
+          <option value="COMPLETE" disabled={!openAiApiKeyConfigured}>
+            Complete
+          </option>
         </select>
       </label>
-      <p>{aiModeCopy[mode]}</p>
-      {mode !== 'MANUAL' ? (
+      <p>{aiModeCopy[openAiApiKeyConfigured ? mode : 'MANUAL']}</p>
+      {openAiApiKeyConfigured && mode !== 'MANUAL' ? (
         <>
           <label>
             Model

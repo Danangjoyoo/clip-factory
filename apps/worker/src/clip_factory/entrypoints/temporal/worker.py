@@ -24,14 +24,17 @@ from clip_factory.entrypoints.temporal.project_workflow import ProjectWorkflow
 from clip_factory.ports.model_access import ModelAccessResult
 
 
-def build_worker(client: Client, task_queue: str = "clip-factory") -> Worker:
+def build_worker(
+    client: Client, task_queue: str = "clip-factory", openai_api_key: str | None = None
+) -> Worker:
     dependencies = LocalPaidCallDependencies(
         os.environ.get("CLIP_FACTORY_PAID_STATE", ".clip-factory-paid-calls.sqlite3")
     )
-    if os.environ.get("OPENAI_API_KEY"):
+    api_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
+    if api_key:
         from openai import AsyncOpenAI
 
-        sdk_client: Any = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        sdk_client: Any = AsyncOpenAI(api_key=api_key)
         model: Any = OpenAIHighlightAdapter(sdk_client)
         model_access: Any = OpenAIModelAccessAdapter(sdk_client)
     else:

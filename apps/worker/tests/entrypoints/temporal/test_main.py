@@ -31,8 +31,14 @@ def test_run_worker_connects_and_runs_configured_queue(monkeypatch) -> None:
     monkeypatch.setattr(
         entrypoint,
         "build_worker",
-        lambda client, task_queue: (
-            captured.update({"client": client, "task_queue": task_queue})
+        lambda client, task_queue, openai_api_key: (
+            captured.update(
+                {
+                    "client": client,
+                    "task_queue": task_queue,
+                    "openai_api_key": openai_api_key,
+                }
+            )
             or FakeWorker()
         ),
     )
@@ -46,6 +52,7 @@ def test_run_worker_connects_and_runs_configured_queue(monkeypatch) -> None:
         "address": "temporal.test:7233",
         "client": captured["client"],
         "task_queue": "test-queue",
+        "openai_api_key": None,
         "ran": True,
         "closed": True,
         "wait_closed": True,

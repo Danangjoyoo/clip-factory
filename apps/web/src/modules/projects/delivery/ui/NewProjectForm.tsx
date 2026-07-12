@@ -21,6 +21,7 @@ export function NewProjectForm({
   onSubmit,
   submitting = false,
   submitError,
+  openAiApiKeyConfigured = true,
 }: {
   catalog?: CatalogView;
   sourceValidationError?: SourceValidationError;
@@ -28,8 +29,11 @@ export function NewProjectForm({
   onSubmit?: (value: NewProjectFormValue) => void | Promise<void>;
   submitting?: boolean;
   submitError?: string;
+  openAiApiKeyConfigured?: boolean;
 }) {
-  const form = useNewProjectForm();
+  const form = useNewProjectForm(
+    openAiApiKeyConfigured ? defaults.aiMode : 'MANUAL',
+  );
   const [sourceError, setSourceError] = useState(sourceValidationError);
   useEffect(
     () => setSourceError(sourceValidationError),
@@ -89,6 +93,7 @@ export function NewProjectForm({
           model={form.value.model}
           reasoning={form.value.reasoning}
           catalog={catalog}
+          openAiApiKeyConfigured={openAiApiKeyConfigured}
           onMode={(aiMode) => form.update({ aiMode })}
           onModel={(model) =>
             form.update({ model, reasoning: defaults.reasoning })

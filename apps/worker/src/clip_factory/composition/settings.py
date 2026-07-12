@@ -1,5 +1,6 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+import json
 from pathlib import Path
 from typing import Literal, cast
 
@@ -33,7 +34,7 @@ class WorkerSettings:
         adapter = values.get("OPENAI_ADAPTER", "fake")
         if adapter not in {"fake", "live"}:
             raise ValueError(f"Unsupported OPENAI_ADAPTER: {adapter}")
-        api_key = values.get("OPENAI_API_KEY")
+        api_key = values.get("OPENAI_API_KEY") or _local_openai_api_key(values)
         if adapter == "live" and not api_key:
             raise ValueError("OPENAI_API_KEY is required for live OpenAI adapter")
         token = values.get("INTERNAL_SERVICE_TOKEN")
@@ -67,3 +68,14 @@ class WorkerSettings:
         import os
 
         return cls.from_mapping(os.environ)
+
+
+def _local_openai_api_key(values: Mapping[str, str]) -> str | None:
+    try:
+        data = json.loads(
+            Path(values.get("SETTINGS_FILE", ".data/settings.json")).read_text()
+        )
+    except (OSError, json.JSONDecodeError):
+        return None
+    key = data.get("openAiApiKey")
+    return key.strip() if isinstance(key, str) and key.strip() else None
