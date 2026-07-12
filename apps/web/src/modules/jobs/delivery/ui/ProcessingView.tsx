@@ -21,7 +21,7 @@ export function ProcessingView({
     value.state === 'RUNNING' && typeof value.percent === 'number';
   const cancel = actions.cancel;
   return (
-    <main className={styles.runSheet} aria-label="Processing run sheet">
+    <section className={styles.runSheet} aria-label="Processing run sheet">
       <h1>Processing</h1>
       <section aria-label="Current stage">
         <h2>{value.stage ?? 'Waiting for a worker'}</h2>
@@ -81,6 +81,6 @@ export function ProcessingView({
       <section aria-label="Sanitized worker logs">
         <SanitizedLogList logs={value.logs} />
       </section>
-    </main>
+    </section>
   );
 }

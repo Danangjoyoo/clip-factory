@@ -6,6 +6,8 @@ export default defineConfig({
   globalTeardown: './tests/e2e/global-teardown.ts',
   timeout: 30_000,
   fullyParallel: true,
+  // ponytail: fake test-control state is global; add per-test state before parallel E2E.
+  workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? [['dot'], ['html', { open: 'never' }]] : 'list',
   use: {
