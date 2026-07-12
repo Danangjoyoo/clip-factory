@@ -63,11 +63,9 @@ services:
     entrypoint: [/bin/sh, -ec]
     command:
       - >
-        printf '%s' '{"CORSRules":[{"AllowedOrigins":["http://127.0.0.1:3000"],"AllowedMethods":["GET","PUT","HEAD"],"AllowedHeaders":["content-type","x-amz-checksum-sha256"],"ExposeHeaders":["ETag","x-amz-checksum-sha256"],"MaxAgeSeconds":3600}]}' > /tmp/cors.json &&
         mc alias set local http://minio:9000 "$${MINIO_ACCESS_KEY}" "$${MINIO_SECRET_KEY}" &&
         mc mb --ignore-existing local/clip-factory &&
-        mc anonymous set none local/clip-factory &&
-        mc cors set local/clip-factory /tmp/cors.json
+        mc anonymous set none local/clip-factory
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
