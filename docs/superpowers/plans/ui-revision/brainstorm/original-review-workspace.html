@@ -1,0 +1,83 @@
+<style>
+  .layout-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:22px; }
+  .layout-card { cursor:pointer; border:1px solid var(--border); border-radius:18px; overflow:hidden; background:var(--surface); transition:.18s ease; }
+  .layout-card:hover { transform:translateY(-3px); border-color:var(--accent); box-shadow:0 14px 35px rgba(0,0,0,.13); }
+  .layout-card.selected { outline:3px solid var(--accent); }
+  .mini-app { height:280px; background:#10141d; color:#eef2f8; padding:10px; font-size:8px; display:flex; flex-direction:column; gap:8px; }
+  .topbar { height:22px; display:flex; align-items:center; justify-content:space-between; padding:0 7px; border-radius:5px; background:#1b2230; }
+  .brand { color:#72e2ac; font-weight:800; letter-spacing:.08em; }
+  .export { padding:3px 7px; border-radius:4px; color:#0a1911; background:#72e2ac; font-weight:800; }
+  .workspace { display:grid; gap:7px; min-height:0; flex:1; }
+  .filmstrip .workspace { grid-template-columns:44px minmax(0,1fr) 76px; }
+  .transcript .workspace { grid-template-columns:92px minmax(0,1fr); }
+  .cards-layout .workspace { grid-template-columns:1fr; }
+  .rail,.panel,.transcript-pane { border-radius:6px; background:#1b2230; padding:6px; overflow:hidden; }
+  .thumb { height:34px; margin-bottom:5px; border-radius:4px; background:linear-gradient(135deg,#596a87,#293246); position:relative; }
+  .thumb.active { outline:2px solid #72e2ac; }
+  .preview { position:relative; min-height:0; border-radius:7px; background:linear-gradient(145deg,#485873,#1b2332); overflow:hidden; }
+  .preview:before { content:""; position:absolute; width:42px; height:72px; left:calc(50% - 21px); top:26%; border-radius:22px 22px 8px 8px; background:#d99b74; }
+  .preview:after { content:"ONE DECISION CHANGED EVERYTHING"; position:absolute; left:12%; right:12%; bottom:15%; text-align:center; color:white; font-size:9px; font-weight:900; text-shadow:0 2px 4px #000; }
+  .control { height:7px; margin:7px 0; border-radius:4px; background:#343e50; }
+  .control.short { width:66%; }
+  .chip { display:inline-block; padding:3px 5px; margin:2px; border-radius:999px; background:#293549; color:#aeb9ca; }
+  .timeline { height:34px; border-radius:6px; background:#1b2230; padding:5px; display:flex; align-items:center; gap:2px; }
+  .wave { height:14px; flex:1; background:repeating-linear-gradient(90deg,#72e2ac 0 2px,transparent 2px 4px); opacity:.7; }
+  .words { display:flex; flex-direction:column; gap:5px; }
+  .sentence { padding:6px; border-radius:4px; background:#242d3d; line-height:1.35; }
+  .sentence.active { border-left:3px solid #72e2ac; background:#29384a; }
+  .transcript .preview { min-height:155px; }
+  .clip-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; overflow:hidden; }
+  .clip-card-mini { display:grid; grid-template-columns:40px 1fr; gap:6px; min-height:70px; padding:6px; border-radius:6px; background:#1b2230; }
+  .poster { border-radius:4px; background:linear-gradient(145deg,#61718d,#252e40); }
+  .card-lines div { height:6px; margin-bottom:5px; border-radius:4px; background:#344055; }
+  .card-lines div:first-child { width:75%; background:#72e2ac; opacity:.75; }
+  .layout-copy { padding:16px; }
+  .layout-copy .tag { display:inline-block; padding:4px 8px; border-radius:999px; color:#258257; background:#dff7e9; font-size:11px; font-weight:800; }
+  .layout-copy h3 { margin:9px 0 7px; }
+  .layout-copy p { margin:0; color:var(--muted); line-height:1.45; font-size:14px; }
+  @media (max-width:900px) { .layout-grid { grid-template-columns:1fr; } }
+</style>
+
+<h2>Which review workspace feels best?</h2>
+<p class="subtitle">All three support previewing, trimming, caption editing, reframing, and rendering. The difference is what stays visible while you work.</p>
+
+<div class="layout-grid">
+  <div class="layout-card" data-choice="filmstrip-inspector" onclick="toggleSelect(this)">
+    <div class="mini-app filmstrip">
+      <div class="topbar"><span class="brand">CLIPPER</span><span>Project 01</span><span class="export">Render</span></div>
+      <div class="workspace">
+        <div class="rail"><div class="thumb active"></div><div class="thumb"></div><div class="thumb"></div><div class="thumb"></div></div>
+        <div class="preview"></div>
+        <div class="panel"><b>CAPTIONS</b><div class="control"></div><div class="control short"></div><b>REFRAME</b><div class="control"></div><span class="chip">9:16</span><span class="chip">1080p</span></div>
+      </div>
+      <div class="timeline"><span>0:32</span><div class="wave"></div><span>1:18</span></div>
+    </div>
+    <div class="layout-copy"><span class="tag">Recommended</span><h3>A · Filmstrip + inspector</h3><p>Switch clips on the left, edit the selected clip on the right, and trim on a persistent bottom timeline.</p></div>
+  </div>
+
+  <div class="layout-card" data-choice="transcript-first" onclick="toggleSelect(this)">
+    <div class="mini-app transcript">
+      <div class="topbar"><span class="brand">CLIPPER</span><span>Project 01</span><span class="export">Render</span></div>
+      <div class="workspace">
+        <div class="transcript-pane"><b>TRANSCRIPT</b><div class="words"><div class="sentence">The usual advice misses one important detail…</div><div class="sentence active">One decision changed everything for our team.</div><div class="sentence">Here is how you can apply it today.</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:7px"><div class="preview"></div><div class="timeline"><div class="wave"></div></div></div>
+      </div>
+    </div>
+    <div class="layout-copy"><h3>B · Transcript-first editor</h3><p>Edit spoken text and boundaries from the transcript. Excellent for dialogue, but visual controls need secondary panels.</p></div>
+  </div>
+
+  <div class="layout-card" data-choice="clip-card-dashboard" onclick="toggleSelect(this)">
+    <div class="mini-app cards-layout">
+      <div class="topbar"><span class="brand">CLIPPER</span><span>6 highlights found</span><span class="export">Render all</span></div>
+      <div class="workspace"><div class="clip-cards">
+        <div class="clip-card-mini"><div class="poster"></div><div class="card-lines"><div></div><div></div><div></div></div></div>
+        <div class="clip-card-mini"><div class="poster"></div><div class="card-lines"><div></div><div></div><div></div></div></div>
+        <div class="clip-card-mini"><div class="poster"></div><div class="card-lines"><div></div><div></div><div></div></div></div>
+        <div class="clip-card-mini"><div class="poster"></div><div class="card-lines"><div></div><div></div><div></div></div></div>
+        <div class="clip-card-mini"><div class="poster"></div><div class="card-lines"><div></div><div></div><div></div></div></div>
+        <div class="clip-card-mini"><div class="poster"></div><div class="card-lines"><div></div><div></div><div></div></div></div>
+      </div></div>
+    </div>
+    <div class="layout-copy"><h3>C · Clip-card dashboard</h3><p>Compare every highlight at a glance, then open a clip in a modal editor. Great overview, with more switching during detailed work.</p></div>
+  </div>
+</div>
