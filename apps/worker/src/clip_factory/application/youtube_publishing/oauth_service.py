@@ -11,7 +11,9 @@ from clip_factory.domain.youtube_publishing.oauth_policy import (
     validate_loopback_redirect_uri,
     validate_scopes,
 )
-from clip_factory.ports.youtube_publishing.connection_event_sink import ConnectionEventSink
+from clip_factory.ports.youtube_publishing.connection_event_sink import (
+    ConnectionEventSink,
+)
 from clip_factory.ports.youtube_publishing.credential_vault import CredentialVault
 from clip_factory.ports.youtube_publishing.oauth import (
     AuthorizationRequest,
@@ -75,9 +77,10 @@ class YouTubeOAuthService:
         state = create_state(self._entropy.bytes)
         verifier, challenge = create_pkce(self._entropy.bytes)
         state_digest = hash_state(state)
-        self._active_flows.put(state_digest, ActiveOAuthFlow(
-            connection_id, state, verifier, redirect_uri, expires_at
-        ))
+        self._active_flows.put(
+            state_digest,
+            ActiveOAuthFlow(connection_id, state, verifier, redirect_uri, expires_at),
+        )
         await self._state_store.put(state_digest, connection_id, expires_at)
         full_url = await self._gateway.create_authorization_request(
             connection_id, redirect_uri, state, challenge
@@ -93,7 +96,9 @@ class YouTubeOAuthService:
     async def complete(self, callback: OAuthCallback) -> SanitizedChannelConnection:
         state_digest = hash_state(callback.state)
         active = self._active_flows.pop(state_digest)
-        stored_connection_id = await self._state_store.consume(state_digest, self._clock.now())
+        stored_connection_id = await self._state_store.consume(
+            state_digest, self._clock.now()
+        )
         if active is None or stored_connection_id is None:
             raise OAuthSecurityError("OAuth state is missing or already consumed")
         if stored_connection_id != active.connection_id:
@@ -109,7 +114,10 @@ class YouTubeOAuthService:
         if callback.error is not None or callback.code is None:
             raise OAuthSecurityError("OAuth authorization denied")
         connection = await self._gateway.exchange_store_and_identify(
-            active.connection_id, active.redirect_uri, callback.code, active.code_verifier
+            active.connection_id,
+            active.redirect_uri,
+            callback.code,
+            active.code_verifier,
         )
         validate_scopes(connection.granted_scopes)
         await self._events.connected(connection)

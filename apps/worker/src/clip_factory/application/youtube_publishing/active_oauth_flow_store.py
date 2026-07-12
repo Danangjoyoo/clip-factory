@@ -1,4 +1,7 @@
-from clip_factory.ports.youtube_publishing.runtime import ActiveOAuthFlow, ActiveOAuthFlowStore
+from clip_factory.ports.youtube_publishing.runtime import (
+    ActiveOAuthFlow,
+    ActiveOAuthFlowStore,
+)
 
 
 class InMemoryActiveOAuthFlowStore(ActiveOAuthFlowStore):

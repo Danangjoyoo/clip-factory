@@ -11,30 +11,30 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, conint, constr
 
 
 class Scope(Enum):
-    ANALYSIS = 'ANALYSIS'
-    RENDER = 'RENDER'
+    ANALYSIS = "ANALYSIS"
+    RENDER = "RENDER"
 
 
 class Unit(Enum):
-    BYTES = 'BYTES'
-    MEDIA_MILLISECONDS = 'MEDIA_MILLISECONDS'
-    WINDOWS = 'WINDOWS'
-    FRAMES = 'FRAMES'
-    ITEMS = 'ITEMS'
+    BYTES = "BYTES"
+    MEDIA_MILLISECONDS = "MEDIA_MILLISECONDS"
+    WINDOWS = "WINDOWS"
+    FRAMES = "FRAMES"
+    ITEMS = "ITEMS"
 
 
 class Confidence(Enum):
-    LOW = 'LOW'
-    MEDIUM = 'MEDIUM'
-    HIGH = 'HIGH'
-    NOT_APPLICABLE = 'NOT_APPLICABLE'
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
 class ProgressEvent(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    schemaVersion: Literal['1.0.0']
+    schemaVersion: Literal["1.0.0"]
     workflowId: UUID
     projectId: UUID
     scope: Scope

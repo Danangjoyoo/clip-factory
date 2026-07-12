@@ -3,7 +3,10 @@ from clip_factory.domain.youtube_publishing.redaction import redact_google_event
 
 def test_redacts_headers_queries_bodies_and_nested_credentials() -> None:
     event = {
-        "headers": {"Authorization": "Bearer sentinel", "Content-Type": "application/json"},
+        "headers": {
+            "Authorization": "Bearer sentinel",
+            "Content-Type": "application/json",
+        },
         "url": "https://oauth2.googleapis.com/token?code=sentinel&state=sentinel",
         "body": {"refresh_token": "sentinel", "nested": {"accessToken": "sentinel"}},
         "status": 400,

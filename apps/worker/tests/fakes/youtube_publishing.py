@@ -7,7 +7,9 @@ from clip_factory.ports.youtube_publishing.runtime import ActiveOAuthFlow
 
 
 class FakeGateway:
-    def __init__(self, connection: SanitizedChannelConnection, revoke_result: bool) -> None:
+    def __init__(
+        self, connection: SanitizedChannelConnection, revoke_result: bool
+    ) -> None:
         self.connection = connection
         self.revoke_result = revoke_result
         self.exchanges: list[tuple[str, str, str, str]] = []
@@ -17,13 +19,23 @@ class FakeGateway:
         self, connection_id: str, redirect_uri: str, state: str, code_challenge: str
     ) -> str:
         return "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(
-            {"state": state, "code_challenge": code_challenge, "redirect_uri": redirect_uri}
+            {
+                "state": state,
+                "code_challenge": code_challenge,
+                "redirect_uri": redirect_uri,
+            }
         )
 
     async def exchange_store_and_identify(
-        self, connection_id: str, redirect_uri: str, authorization_code: str, code_verifier: str
+        self,
+        connection_id: str,
+        redirect_uri: str,
+        authorization_code: str,
+        code_verifier: str,
     ) -> SanitizedChannelConnection:
-        self.exchanges.append((connection_id, redirect_uri, authorization_code, code_verifier))
+        self.exchanges.append(
+            (connection_id, redirect_uri, authorization_code, code_verifier)
+        )
         return self.connection
 
     async def refresh_and_check(self, connection_id: str) -> SanitizedChannelConnection:
@@ -50,7 +62,9 @@ class FakeStateStore:
         self.entries: dict[str, tuple[str, datetime]] = {}
         self.raw_states: list[str] = []
 
-    async def put(self, state_digest: str, connection_id: str, expires_at: datetime) -> None:
+    async def put(
+        self, state_digest: str, connection_id: str, expires_at: datetime
+    ) -> None:
         self.entries[state_digest] = (connection_id, expires_at)
 
     async def consume(self, state_digest: str, now: datetime) -> str | None:

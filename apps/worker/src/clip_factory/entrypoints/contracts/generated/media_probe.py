@@ -10,15 +10,15 @@ from pydantic import BaseModel, ConfigDict, conint, constr
 
 
 class Container(Enum):
-    mp4 = 'mp4'
-    mov = 'mov'
-    matroska = 'matroska'
-    webm = 'webm'
+    mp4 = "mp4"
+    mov = "mov"
+    matroska = "matroska"
+    webm = "webm"
 
 
 class Video(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     codec: constr(min_length=1)
     width: conint(ge=1)
@@ -29,7 +29,7 @@ class Video(BaseModel):
 
 class Audio(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     codec: constr(min_length=1)
     sampleRateHz: conint(ge=1)
@@ -38,9 +38,9 @@ class Audio(BaseModel):
 
 class MediaProbe(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
-    schemaVersion: Literal['1.0.0']
+    schemaVersion: Literal["1.0.0"]
     durationMs: conint(ge=1)
     sizeBytes: conint(ge=1)
     container: Container

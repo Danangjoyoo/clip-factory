@@ -46,7 +46,11 @@ def test_callback_requires_exact_target_state_and_unexpired_flow() -> None:
         now=now,
         expires_at=expires_at,
     )
-    for field, value in (("host", "localhost"), ("path", "/wrong"), ("supplied_state", "state-2")):
+    for field, value in (
+        ("host", "localhost"),
+        ("path", "/wrong"),
+        ("supplied_state", "state-2"),
+    ):
         arguments = {
             "host": "127.0.0.1",
             "path": "/oauth2/callback",
@@ -95,4 +99,9 @@ def test_scope_validation_requires_exact_capabilities_without_extra_scope() -> N
     with pytest.raises(OAuthSecurityError, match="missing required scopes"):
         validate_scopes((REQUIRED_YOUTUBE_SCOPES[0],))
     with pytest.raises(OAuthSecurityError, match="unexpected OAuth scopes"):
-        validate_scopes((*REQUIRED_YOUTUBE_SCOPES, "https://www.googleapis.com/auth/youtube.force-ssl"))
+        validate_scopes(
+            (
+                *REQUIRED_YOUTUBE_SCOPES,
+                "https://www.googleapis.com/auth/youtube.force-ssl",
+            )
+        )
