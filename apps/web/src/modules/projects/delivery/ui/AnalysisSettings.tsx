@@ -1,36 +1,44 @@
 import {
+  aiModeCopy,
   models,
+  type AiAssistedMode,
   type CatalogView,
   type ModelId,
 } from './new-project.presentation';
 export function AnalysisSettings({
-  discover,
+  mode,
   model,
   reasoning,
   catalog,
-  onDiscover,
+  onMode,
   onModel,
   onReasoning,
 }: {
-  discover: boolean;
+  mode: AiAssistedMode;
   model: ModelId;
   reasoning: string;
   catalog: CatalogView;
-  onDiscover: (value: boolean) => void;
+  onMode: (value: AiAssistedMode) => void;
   onModel: (value: ModelId) => void;
   onReasoning: (value: string) => void;
 }) {
   return (
     <section aria-label="Analysis settings">
       <label>
-        <input
-          type="checkbox"
-          checked={discover}
-          onChange={(e) => onDiscover(e.target.checked)}
-        />{' '}
-        Discover highlights with OpenAI
+        AI-assisted mode
+        <select
+          aria-label="AI-assisted mode"
+          value={mode}
+          onChange={(e) => onMode(e.target.value as AiAssistedMode)}
+        >
+          <option value="MANUAL">Manual</option>
+          <option value="PARTIAL">Partial</option>
+          <option value="ADVANCED">Advanced</option>
+          <option value="COMPLETE">Complete</option>
+        </select>
       </label>
-      {discover ? (
+      <p>{aiModeCopy[mode]}</p>
+      {mode !== 'MANUAL' ? (
         <>
           <label>
             Model
@@ -69,9 +77,7 @@ export function AnalysisSettings({
             Generated-token ceiling includes reasoning and visible output.
           </small>
         </>
-      ) : (
-        <p>No cloud AI / no API cost</p>
-      )}
+      ) : null}
     </section>
   );
 }

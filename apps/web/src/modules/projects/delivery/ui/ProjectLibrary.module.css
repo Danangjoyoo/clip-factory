@@ -16,6 +16,11 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
 }
+.library > section {
+  border: 1px dashed var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  padding: var(--space-8);
+}
 @media (max-width: 1023px) {
   .library ul {
     grid-template-columns: 1fr;

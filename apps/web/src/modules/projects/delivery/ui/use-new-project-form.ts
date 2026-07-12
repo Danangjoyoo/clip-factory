@@ -2,11 +2,13 @@ import { useState } from 'react';
 import {
   defaults,
   validateForm,
+  type AiAssistedMode,
   type ModelId,
 } from './new-project.presentation';
 type FormValue = {
+  name: string;
   sourceMethod: 'FILEPATH' | 'UPLOAD';
-  discoverHighlights: boolean;
+  aiMode: AiAssistedMode;
   language: string;
   model: ModelId;
   reasoning: string;

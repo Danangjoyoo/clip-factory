@@ -6,3 +6,14 @@
   display: grid;
   gap: var(--space-2);
 }
+.source { margin: 0; }
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+.metrics div { display: grid; gap: var(--space-1); }
+.metrics dt { color: var(--color-text-muted); font-size: 0.8125rem; }
+.metrics dd { margin: 0; }
+.summary { margin: 0; color: var(--color-text-muted); }

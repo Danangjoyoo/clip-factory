@@ -10,17 +10,22 @@ export function ProjectCard({
       <a href={project.href}>
         <h2>{project.name}</h2>
       </a>
-      <p>
+      <p className={styles.source}>
         <span aria-hidden="true">●</span> {project.sourceHealthLabel}
       </p>
-      <p>{project.modeLabel}</p>
-      <p>{project.progressLabel}</p>
-      {project.etaLabel ? <p>{project.etaLabel}</p> : null}
-      <p>
+      <dl className={styles.metrics}>
+        <div><dt>Mode</dt><dd>{project.modeLabel}</dd></div>
+        <div><dt>Progress</dt><dd>{project.progressLabel}</dd></div>
+        {project.etaLabel ? <div><dt>ETA</dt><dd>{project.etaLabel}</dd></div> : null}
+        <div><dt>Candidates</dt><dd>{project.candidateCount}</dd></div>
+        <div><dt>Renders</dt><dd>{project.renderCount}</dd></div>
+        <div><dt>Spend</dt><dd>{project.spendLabel}</dd></div>
+        <div><dt>Last update</dt><dd><time>{project.updatedLabel}</time></dd></div>
+      </dl>
+      <p className={styles.summary}>
         {project.candidateCount} clips · {project.renderCount} render ·{' '}
         {project.spendLabel}
       </p>
-      <time>{project.updatedLabel}</time>
       <button
         type="button"
         onClick={() => onDelete(project.id)}

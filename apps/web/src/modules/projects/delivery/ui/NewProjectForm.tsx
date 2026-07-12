@@ -1,51 +1,80 @@
 'use client';
 import { AnalysisSettings } from './AnalysisSettings';
 import { SourceMethodFields } from './SourceMethodFields';
+import {
+  SourceValidationPanel,
+  type SourceValidationError,
+} from './SourceValidationPanel';
 import { useNewProjectForm } from './use-new-project-form';
-import { defaults, type CatalogView } from './new-project.presentation';
+import {
+  defaults,
+  projectModeFor,
+  type CatalogView,
+} from './new-project.presentation';
+import styles from './NewProjectForm.module.css';
 export function NewProjectForm({
   catalog = {},
+  sourceValidationError,
   onEstimate,
   onSubmit,
 }: {
   catalog?: CatalogView;
+  sourceValidationError?: SourceValidationError;
   onEstimate?: (value: unknown) => void;
   onSubmit?: (value: unknown) => void;
 }) {
   const form = useNewProjectForm();
+  const unavailableMode =
+    form.value.aiMode === 'ADVANCED' || form.value.aiMode === 'COMPLETE';
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.valid) return;
-    onEstimate?.(form.value);
-    onSubmit?.(form.value);
+    if (!form.valid || sourceValidationError || unavailableMode) return;
+    const value = { ...form.value, mode: projectModeFor(form.value.aiMode) };
+    onEstimate?.(value);
+    onSubmit?.(value);
   };
   return (
-    <form onSubmit={submit}>
+    <form className={styles.form} onSubmit={submit}>
       <h1>New project</h1>
-      <label>
+      <label className={styles.project}>
         Project name
-        <input aria-label="Project name" required />
+        <input
+          aria-label="Project name"
+          required
+          value={form.value.name}
+          onChange={(e) => form.update({ name: e.target.value })}
+        />
       </label>
-      <SourceMethodFields
-        method={form.value.sourceMethod}
-        path={form.value.path}
-        file={form.value.file}
-        onMethod={(sourceMethod) => form.update({ sourceMethod })}
-        onPath={(path) => form.update({ path })}
-        onFile={(file) => form.update({ file })}
-      />
-      <AnalysisSettings
-        discover={form.value.discoverHighlights}
-        model={form.value.model}
-        reasoning={form.value.reasoning}
-        catalog={catalog}
-        onDiscover={(discoverHighlights) => form.update({ discoverHighlights })}
-        onModel={(model) =>
-          form.update({ model, reasoning: defaults.reasoning })
-        }
-        onReasoning={(reasoning) => form.update({ reasoning })}
-      />
-      <label>
+      <div className={styles.source}>
+        <SourceMethodFields
+          method={form.value.sourceMethod}
+          path={form.value.path}
+          file={form.value.file}
+          onMethod={(sourceMethod) => form.update({ sourceMethod })}
+          onPath={(path) => form.update({ path })}
+          onFile={(file) => form.update({ file })}
+        />
+        <SourceValidationPanel
+          title={form.value.name}
+          error={sourceValidationError}
+          onReplace={() => form.update({ sourceMethod: 'FILEPATH' })}
+        />
+      </div>
+      <div className={styles.analysis}>
+        <AnalysisSettings
+          mode={form.value.aiMode}
+          model={form.value.model}
+          reasoning={form.value.reasoning}
+          catalog={catalog}
+          onMode={(aiMode) => form.update({ aiMode })}
+          onModel={(model) =>
+            form.update({ model, reasoning: defaults.reasoning })
+          }
+          onReasoning={(reasoning) => form.update({ reasoning })}
+        />
+      </div>
+      <div className={styles.controls}>
+      <label className={styles.control}>
         Language
         <select
           aria-label="Language"
@@ -57,7 +86,7 @@ export function NewProjectForm({
           <option value="ja">Japanese</option>
         </select>
       </label>
-      <label>
+      <label className={styles.control}>
         Maximum spend (USD)
         <input
           aria-label="Maximum spend (USD)"
@@ -65,7 +94,7 @@ export function NewProjectForm({
           onChange={(e) => form.update({ maximumSpendUsd: e.target.value })}
         />
       </label>
-      <label>
+      <label className={styles.control}>
         Maximum clips
         <input
           aria-label="Maximum clips"
@@ -76,7 +105,7 @@ export function NewProjectForm({
           }
         />
       </label>
-      <label>
+      <label className={styles.control}>
         Maximum clip length (seconds)
         <input
           aria-label="Maximum clip length (seconds)"
@@ -87,7 +116,7 @@ export function NewProjectForm({
           }
         />
       </label>
-      <label>
+      <label className={styles.control}>
         Platform guide
         <select
           aria-label="Platform guide"
@@ -99,7 +128,11 @@ export function NewProjectForm({
           <option value="TIKTOK">TikTok</option>
         </select>
       </label>
-      <label>
+      <label className={styles.control}>
+        Output frame
+        <input readOnly value="Vertical 9:16 · 1080×1920" />
+      </label>
+      <label className={styles.control}>
         Instruction
         <textarea
           aria-label="Instruction"
@@ -107,7 +140,18 @@ export function NewProjectForm({
           onChange={(e) => form.update({ instruction: e.target.value })}
         />
       </label>
-      <button type="submit" disabled={!form.valid}>
+      </div>
+      <aside className={styles.cost} aria-label="Cost and reserve">
+        <strong>Cost reserve</strong>
+        <p>Up to ${form.value.maximumSpendUsd} reserved before AI analysis.</p>
+        {unavailableMode ? (
+          <p>Advanced and Complete publishing are presentation-only until Phase 2 is connected.</p>
+        ) : null}
+      </aside>
+      <button
+        type="submit"
+        disabled={!form.valid || Boolean(sourceValidationError) || unavailableMode}
+      >
         Create project
       </button>
     </form>
