@@ -12,8 +12,9 @@ export function AddClipDialog({
   const [start, setStart] = useState('00:00:00');
   const [end, setEnd] = useState('00:00:10');
   const toMilliseconds = (timecode: string) => {
+    if (!/^\d{2}:\d{2}:\d{2}$/.test(timecode)) return NaN;
     const [hours, minutes, seconds] = timecode.split(':').map(Number);
-    return [hours, minutes, seconds].every(Number.isFinite)
+    return minutes < 60 && seconds < 60
       ? ((hours * 60 + minutes) * 60 + seconds) * 1000
       : NaN;
   };
@@ -22,16 +23,16 @@ export function AddClipDialog({
     e.preventDefault();
     const s = toMilliseconds(start),
       n = toMilliseconds(end);
-    if (s >= n) return;
+    if (!Number.isFinite(s) || !Number.isFinite(n) || s >= n) return;
     onAdd(s, n);
   };
   const durationMs = toMilliseconds(end) - toMilliseconds(start);
   return (
-    <dialog open aria-label="Add Clip">
+    <dialog open aria-label="Add Clip" aria-modal="true">
       <form onSubmit={submit}>
         <label>
           Start timecode
-          <input value={start} onChange={(e) => setStart(e.target.value)} />
+          <input autoFocus value={start} onChange={(e) => setStart(e.target.value)} />
         </label>
         <label>
           End timecode

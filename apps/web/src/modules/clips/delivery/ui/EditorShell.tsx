@@ -5,6 +5,8 @@ import type { EditorClip } from './editor.presentation';
 import { AddClipDialog } from './AddClipDialog';
 import { ClipFilmstrip } from './ClipFilmstrip';
 import { ClipUpdateOverlay } from './ClipUpdateOverlay';
+import { FrameInspector } from './FrameInspector';
+import { MetadataInspector } from './MetadataInspector';
 import { RenderActions } from './RenderActions';
 import { TrimTimeline } from './TrimTimeline';
 import { VerticalPreview } from './VerticalPreview';
@@ -35,6 +37,8 @@ export function EditorShell({
   onTrimChange,
 }: EditorShellProps) {
   const [addOpen, setAddOpen] = useState(false);
+  const [inspectorTab, setInspectorTab] = useState<'frame' | 'metadata'>('frame');
+  const [focalPoint, setFocalPoint] = useState<{ xMicros: number; yMicros: number } | null>(null);
   const selected = clips.find((clip) => clip.id === selectedClipId) ?? clips[0];
   const add = (startMs: number, endMs: number) => {
     setAddOpen(false);
@@ -64,22 +68,6 @@ export function EditorShell({
             />
           )}
         </section>
-        <aside className={styles.inspector} aria-label="Inspector">
-          {inspector ?? (
-            <>
-              <h2>Inspector</h2>
-              {selected && (
-                <>
-                  <p>{selected.title ?? 'Untitled clip'}</p>
-                  <p>9:16 · 1080×1920</p>
-                  <p>
-                    Source range: {selected.startMs}–{selected.endMs} ms
-                  </p>
-                </>
-              )}
-            </>
-          )}
-        </aside>
         <section className={styles.timeline} aria-label="Trim timeline">
           {selected && (
             <TrimTimeline
@@ -93,6 +81,57 @@ export function EditorShell({
             />
           )}
         </section>
+        <aside className={styles.inspector} aria-label="Inspector">
+          {inspector ?? (
+            <>
+              <h2>Inspector</h2>
+              {selected && (
+                <>
+                  <p>{selected.title ?? 'Untitled clip'}</p>
+                  <p>9:16 · 1080×1920</p>
+                  <p>
+                    Source range: {selected.startMs}–{selected.endMs} ms
+                  </p>
+                </>
+              )}
+              <div role="tablist" aria-label="Inspector tabs">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={inspectorTab === 'frame'}
+                  onClick={() => setInspectorTab('frame')}
+                >
+                  Frame
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={inspectorTab === 'metadata'}
+                  onClick={() => setInspectorTab('metadata')}
+                >
+                  Metadata
+                </button>
+              </div>
+              {inspectorTab === 'frame' ? (
+                <FrameInspector
+                  value={focalPoint}
+                  onChange={setFocalPoint}
+                  onReset={() => setFocalPoint(null)}
+                />
+              ) : (
+                <MetadataInspector
+                  metadata={{
+                    origin: selected?.origin === 'AI_HIGHLIGHT' ? 'AI_HIGHLIGHT' : 'MANUAL',
+                    costMicrousd: 0n,
+                    rank: selected?.rank,
+                    rangeLabel: selected ? `${selected.startMs}–${selected.endMs} ms` : undefined,
+                    inheritedFrame: focalPoint ? 'Manual focal point' : 'Automatic focal point',
+                  }}
+                />
+              )}
+            </>
+          )}
+        </aside>
         <div className={styles.actions}>
           <RenderActions
             hasSelection={Boolean(selected)}

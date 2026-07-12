@@ -29,6 +29,7 @@ export function FrameInspector({
         if (event.key === 'ArrowDown') nudge('yMicros', amount);
       }}
     >
+      <h3>Reframe & focal point</h3>
       <p>{value ? 'Manual focal point' : 'Automatic focal point'}</p>
       <button
         type="button"

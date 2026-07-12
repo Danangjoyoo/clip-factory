@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AddClipDialog } from './AddClipDialog';
 import { EditorShell } from './EditorShell';
 
@@ -14,6 +14,7 @@ const clip = {
 };
 
 describe('EditorShell', () => {
+  afterEach(cleanup);
   it('allows selecting a ready filmstrip clip while the current clip updates', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
@@ -48,6 +49,46 @@ describe('EditorShell', () => {
     await user.click(screen.getByRole('button', { name: 'Add clip' }));
 
     expect(onAdd).toHaveBeenCalledWith(1_934_000, 1_982_000);
+    unmount();
+  });
+
+  it('focuses the start timecode when the dialog opens', () => {
+    render(<AddClipDialog open onCancel={vi.fn()} onAdd={vi.fn()} />);
+
+    expect(screen.getByLabelText('Start timecode')).toHaveFocus();
+  });
+
+  it.each(['00:00:01:00', '00::01'])('rejects malformed timecode %s', async (start) => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    const { unmount } = render(<AddClipDialog open onCancel={vi.fn()} onAdd={onAdd} />);
+
+    await user.clear(screen.getByLabelText('Start timecode'));
+    await user.type(screen.getByLabelText('Start timecode'), start);
+    await user.click(screen.getByRole('button', { name: 'Add clip' }));
+
+    expect(onAdd).not.toHaveBeenCalled();
+    unmount();
+  });
+
+  it('shows frame and metadata inspector tabs after the timeline in DOM order', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <EditorShell
+        clips={[clip]}
+        onSelect={vi.fn()}
+        onAddClip={vi.fn()}
+        onRenderSelected={vi.fn()}
+        onRenderAll={vi.fn()}
+      />,
+    );
+
+    const timeline = screen.getByRole('region', { name: 'Trim timeline' });
+    const inspector = screen.getByRole('complementary', { name: 'Inspector' });
+    expect(timeline.compareDocumentPosition(inspector)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.getByRole('button', { name: 'Center focal point' })).toBeVisible();
+    await user.click(screen.getByRole('tab', { name: 'Metadata' }));
+    expect(screen.getByText('Origin')).toBeVisible();
     unmount();
   });
 

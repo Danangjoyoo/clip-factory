@@ -10,17 +10,21 @@
 }
 .preview {
   grid-column: 2;
+  grid-row: 1;
   display: grid;
   place-items: center;
 }
 .inspector {
   grid-column: 3;
+  grid-row: 1;
 }
 .timeline {
   grid-column: 2/4;
+  grid-row: 2;
 }
 .actions {
   grid-column: 2/4;
+  grid-row: 3;
 }
 @media (max-width: 1024px) {
   .shell {
