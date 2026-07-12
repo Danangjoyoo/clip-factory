@@ -75,11 +75,18 @@ const setServiceEnv = async () => {
   const redis = await hostPort('redis', '6379');
   const minio = await hostPort('minio', '9000');
   const temporal = await hostPort('temporal', '7233');
+  const postgresContainer = await output('docker', [
+    ...compose,
+    'ps',
+    '-q',
+    'postgres',
+  ]);
   process.env.DATABASE_URL = `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${postgres.host}:${postgres.port}/${process.env.POSTGRES_DB}`;
   process.env.REDIS_URL = `redis://${redis.host}:${redis.port}/0`;
   process.env.MINIO_ENDPOINT = `http://${minio.host}:${minio.port}`;
   process.env.MINIO_PUBLIC_ENDPOINT = process.env.MINIO_ENDPOINT;
   process.env.TEMPORAL_ADDRESS = `${temporal.host}:${temporal.port}`;
+  process.env.PG_DUMP_CONTAINER = postgresContainer;
 };
 const children = [];
 const start = (value) => {

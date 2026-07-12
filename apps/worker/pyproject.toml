@@ -46,3 +46,7 @@ exclude = ["src/clip_factory/entrypoints/contracts/generated"]
 [[tool.mypy.overrides]]
 module = ["clip_factory.entrypoints.contracts.generated.*"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["mediapipe", "mediapipe.*", "mlx_whisper", "mlx_whisper.*"]
+ignore_missing_imports = true

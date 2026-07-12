@@ -37,12 +37,8 @@ export async function applyMigrations(url = databaseUrl) {
   });
 }
 export async function normalizedSchemaHash(url = databaseUrl) {
-  const { stdout } = await exec('pg_dump', [
-    '--schema-only',
-    '--no-owner',
-    '--no-privileges',
-    url,
-  ]);
+  const dump = pgDumpCommand(url);
+  const { stdout } = await exec(dump.command, dump.args);
   return createHash('sha256')
     .update(
       stdout
@@ -50,4 +46,24 @@ export async function normalizedSchemaHash(url = databaseUrl) {
         .replace(/^\\(?:un)?restrict .*\n/gm, ''),
     )
     .digest('hex');
+}
+
+function pgDumpCommand(url: string) {
+  const baseArgs = ['--schema-only', '--no-owner', '--no-privileges'];
+  if (!process.env.PG_DUMP_CONTAINER)
+    return { command: 'pg_dump', args: [...baseArgs, url] };
+
+  const containerUrl = new URL(url);
+  containerUrl.hostname = '127.0.0.1';
+  containerUrl.port = '5432';
+  return {
+    command: 'docker',
+    args: [
+      'exec',
+      process.env.PG_DUMP_CONTAINER,
+      'pg_dump',
+      ...baseArgs,
+      containerUrl.toString(),
+    ],
+  };
 }
