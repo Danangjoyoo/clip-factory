@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import {
   assertFakeMode,
+  assertFakeAudit,
+  assertProjectAccepted,
   assertTerminalState,
   parseArgs,
   redactReport,
@@ -54,4 +56,41 @@ test('fails the gate when a job does not reach a terminal state', () => {
   );
   assert.doesNotThrow(() => assertTerminalState({ status: 'COMPLETED' }));
   assert.doesNotThrow(() => assertTerminalState({ status: 'FAILED' }));
+});
+
+test('accepts only draft local-file projects from the project route', () => {
+  assert.doesNotThrow(() =>
+    assertProjectAccepted({
+      id: 'project-1',
+      status: 'DRAFT',
+      source: { kind: 'LOCAL_FILE' },
+    }),
+  );
+  assert.throws(
+    () => assertProjectAccepted({ id: 'project-1', status: 'COMPLETED' }),
+    /accepted draft/u,
+  );
+  assert.throws(
+    () =>
+      assertProjectAccepted({
+        id: 'project-1',
+        status: 'DRAFT',
+        source: { kind: 'BROWSER_UPLOAD' },
+      }),
+    /local-file/u,
+  );
+});
+
+test('requires fake audit without media path retention', () => {
+  assert.doesNotThrow(() =>
+    assertFakeAudit([{ transcript: 'fixture', instruction: 'find' }]),
+  );
+  assert.throws(() => assertFakeAudit([]), /exactly one request/u);
+  assert.throws(
+    () =>
+      assertFakeAudit([
+        { transcript: 'fixture', instruction: 'find', mediaPath: '/tmp/x.mp4' },
+      ]),
+    /media path/u,
+  );
 });

@@ -80,6 +80,21 @@ export function assertTerminalState(job) {
     throw new Error('job did not reach a terminal state');
 }
 
+export function assertProjectAccepted(project) {
+  if (!project?.id || project.status !== 'DRAFT')
+    throw new Error('project submission did not return an accepted draft');
+  if (project.source?.kind !== 'LOCAL_FILE')
+    throw new Error('project submission did not retain local-file source');
+}
+
+export function assertFakeAudit(audit) {
+  const requests = Array.isArray(audit) ? audit : [];
+  if (requests.length !== 1)
+    throw new Error('fake highlight audit did not record exactly one request');
+  if ('mediaPath' in requests[0])
+    throw new Error('fake highlight audit retained a media path');
+}
+
 async function request(baseUrl, path, init) {
   const response = await fetch(new URL(path, baseUrl), init);
   const text = await response.text();
@@ -127,6 +142,9 @@ export async function run(
   )
     throw new Error('fake highlight contract failed');
   report.checks.push('fake-highlights');
+  const control = await request(options.baseUrl, '/api/test-control');
+  assertFakeAudit(control.audit);
+  report.checks.push('fake-audit');
   const project = await request(options.baseUrl, '/api/projects', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -139,8 +157,15 @@ export async function run(
       source: { type: 'FILEPATH', path: options.sample },
     }),
   });
-  if (!project.id) throw new Error('project submission did not return an id');
+  assertProjectAccepted(project);
   report.checks.push('project-submission');
+  const projects = await request(options.baseUrl, '/api/projects');
+  if (
+    !Array.isArray(projects) ||
+    !projects.some((item) => item.id === project.id)
+  )
+    throw new Error('submitted project did not appear in project list');
+  report.checks.push('project-list');
   const safe = redactReport({
     projectId: project.id,
     model: highlight.model,
