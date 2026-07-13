@@ -1,15 +1,15 @@
 .card {
   display: grid;
-  grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+  grid-template-columns: 3.75rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.8rem;
   background: color-mix(in srgb, var(--color-surface) 88%, transparent);
   border: 1px solid var(--color-surface-raised);
-  border-radius: 0.65rem;
+  border-radius: var(--radius-panel);
   padding: 0.75rem;
 }
 .thumb {
-  height: 3.1rem;
+  height: 2.65rem;
   border-radius: 0.45rem;
   background:
     linear-gradient(135deg, rgba(152, 240, 255, 0.38), transparent 60%),
@@ -25,7 +25,7 @@
 .body h2 {
   margin: 0;
   overflow-wrap: anywhere;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 .body a:hover h2 {
   color: var(--color-accent);
@@ -36,13 +36,7 @@
   font-size: 0.75rem;
 }
 .metrics {
-  grid-column: 2 / 4;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.65rem;
-  max-height: 0;
-  margin: 0;
-  overflow: hidden;
+  display: none;
 }
 .metrics div {
   display: grid;

@@ -1,3 +1,5 @@
+import { formatTimecode } from '../../domain/timecode';
+
 export const addClip = async (
   projectId: string,
   input: { startMs: number; endMs: number },
@@ -8,7 +10,10 @@ export const addClip = async (
       'content-type': 'application/json',
       'idempotency-key': crypto.randomUUID(),
     },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      start: formatTimecode(input.startMs),
+      end: formatTimecode(input.endMs),
+    }),
   });
   if (!response.ok) throw new Error('Unable to add clip');
   return response.json();

@@ -166,4 +166,26 @@ describe('NewProjectForm', () => {
       within(form).getByRole('option', { name: 'Complete' }),
     ).toBeDisabled();
   });
+
+  it('hides AI-only controls when manual mode is selected', () => {
+    const { container } = render(<NewProjectForm openAiApiKeyConfigured />);
+    const form = within(container)
+      .getByRole('heading', {
+        name: 'New project',
+      })
+      .closest('form') as HTMLFormElement;
+
+    fireEvent.change(within(form).getByLabelText('AI-assisted mode'), {
+      target: { value: 'MANUAL' },
+    });
+
+    expect(
+      within(form).queryByLabelText('Maximum spend (USD)'),
+    ).not.toBeInTheDocument();
+    expect(within(form).queryByLabelText('Maximum clips')).not.toBeInTheDocument();
+    expect(within(form).queryByLabelText('Language')).not.toBeInTheDocument();
+    expect(
+      within(form).queryByLabelText('Maximum clip length (seconds)'),
+    ).not.toBeInTheDocument();
+  });
 });

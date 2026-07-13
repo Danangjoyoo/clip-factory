@@ -4,8 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import {
-  assertFakeMode,
-  assertFakeAudit,
+  assertManualMode,
   assertProjectAccepted,
   assertTerminalState,
   parseArgs,
@@ -14,15 +13,22 @@ import {
   validateSample,
 } from '../../scripts/integration-test.js';
 
-test('defaults to the supplied sample and fake mode', () => {
+test('defaults to the supplied sample and manual mode', () => {
   const options = parseArgs([]);
-  assert.equal(options.mode, 'fake');
+  assert.equal(options.mode, 'manual');
   assert.match(options.sample, /samples[\\/]what-is-branding\.mp4$/u);
 });
 
-test('rejects live mode before any network work', () => {
-  assert.throws(() => assertFakeMode({ OPENAI_ADAPTER: 'live' }), /fake mode/u);
-  assert.doesNotThrow(() => assertFakeMode({ OPENAI_ADAPTER: 'fake' }));
+test('rejects fake or live highlight modes before any network work', () => {
+  assert.throws(
+    () => assertManualMode({ OPENAI_ADAPTER: 'fake' }, 'fake'),
+    /manual mode/u,
+  );
+  assert.throws(
+    () => assertManualMode({ OPENAI_ADAPTER: 'live' }, 'live'),
+    /manual mode/u,
+  );
+  assert.doesNotThrow(() => assertManualMode({}, 'manual'));
 });
 
 test('validates a non-empty regular sample file', async () => {
@@ -37,14 +43,14 @@ test('redacts secrets, absolute paths, and transcript text from reports', () => 
     source: '/Users/mac/video.mp4',
     transcript: 'private words',
     apiKey: 'sk-secret',
-    model: 'fake-highlights-v1',
+    model: 'mlx-community/whisper-large-v3-mlx',
     costMicrousd: '12',
   });
   assert.deepEqual(report, {
     source: '[REDACTED_PATH]',
     transcript: '[REDACTED_TEXT]',
     apiKey: '[REDACTED_SECRET]',
-    model: 'fake-highlights-v1',
+    model: 'mlx-community/whisper-large-v3-mlx',
     costMicrousd: '12',
   });
   assert.doesNotMatch(JSON.stringify(report), /Users|private words|sk-secret/u);
@@ -82,20 +88,6 @@ test('accepts only draft local-file projects from the project route', () => {
   );
 });
 
-test('requires fake audit without media path retention', () => {
-  assert.doesNotThrow(() =>
-    assertFakeAudit([{ transcript: 'fixture', instruction: 'find' }]),
-  );
-  assert.throws(() => assertFakeAudit([]), /exactly one request/u);
-  assert.throws(
-    () =>
-      assertFakeAudit([
-        { transcript: 'fixture', instruction: 'find', mediaPath: '/tmp/x.mp4' },
-      ]),
-    /media path/u,
-  );
-});
-
 test('runs browser UI checks as part of the integration gate', async () => {
   const sample = join(tmpdir(), `clip-factory-ui-${Date.now()}.mp4`);
   await writeFile(sample, 'fixture');
@@ -104,23 +96,32 @@ test('runs browser UI checks as part of the integration gate', async () => {
     status: 'DRAFT',
     source: { kind: 'LOCAL_FILE' },
   };
+  const requestedPaths = [];
   const http = async (_baseUrl, path, init = {}) => {
+    requestedPaths.push(path);
     if (path === '/api/health') return { status: 'HEALTHY' };
-    if (path === '/api/test-control' && init.method === 'POST') {
-      const body = JSON.parse(init.body);
-      if (body.action === 'highlight')
-        return { model: 'fake-highlights-v1', candidates: [] };
-      return {};
-    }
-    if (path === '/api/test-control') return { audit: [{}] };
     if (path === '/api/projects' && init.method === 'POST') return project;
+    if (path === '/api/projects/project-1/workflow' && init.method === 'POST')
+      return {
+        projectId: 'project-1',
+        status: 'COMPLETED',
+        clipIds: [],
+        renderIds: [],
+        editorHref: '/projects/project-1/editor',
+        resultsHref: '/projects/project-1/clips',
+      };
     if (path === '/api/projects') return [project];
     throw new Error(`unexpected request ${path}`);
   };
   const ui = async ({ baseUrl, sample: uiSample }) => {
     assert.equal(baseUrl, 'http://127.0.0.1:3000');
     assert.equal(uiSample, sample);
-    return ['ui-new-project-localpath', 'ui-new-project-upload'];
+    return [
+      'ui-new-project-localpath-editor',
+      'ui-transcript-download',
+      'ui-manual-clip-download',
+      'ui-new-project-upload-editor',
+    ];
   };
 
   const report = await run(parseArgs(['--sample', sample]), process.env, {
@@ -128,8 +129,14 @@ test('runs browser UI checks as part of the integration gate', async () => {
     uiChecks: ui,
   });
 
-  assert.deepEqual(report.checks.slice(-2), [
-    'ui-new-project-localpath',
-    'ui-new-project-upload',
+  assert.deepEqual(report.checks.slice(-6), [
+    'workflow-complete',
+    'project-list',
+    'ui-new-project-localpath-editor',
+    'ui-transcript-download',
+    'ui-manual-clip-download',
+    'ui-new-project-upload-editor',
   ]);
+  assert(!requestedPaths.includes('/api/test-control'));
+  assert(!requestedPaths.includes('/api/settings'));
 });

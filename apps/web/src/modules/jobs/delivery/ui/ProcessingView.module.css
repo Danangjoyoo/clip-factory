@@ -2,6 +2,13 @@
   max-width: 72rem;
   margin: 0 auto;
   padding: var(--space-8);
+  background:
+    radial-gradient(
+      circle at 85% 3%,
+      color-mix(in srgb, var(--color-accent) 14%, transparent),
+      transparent 24rem
+    ),
+    transparent;
 }
 
 .header {
@@ -118,6 +125,10 @@
   color: var(--color-text-muted);
 }
 
+.panel li::marker {
+  color: var(--color-accent);
+}
+
 .panel li:last-child {
   border-bottom: 0;
 }
@@ -204,7 +215,7 @@
   margin-top: 1rem;
   border-radius: var(--radius-control);
   padding: 0.75rem;
-  background: var(--color-canvas);
+  background: #0c1524;
   color: var(--color-text-muted);
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 0.74rem;

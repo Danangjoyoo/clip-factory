@@ -12,15 +12,21 @@ const browserConsoleTypes = new Set(['error', 'warning']);
 
 export function parseArgs(argv) {
   const options = {
-    mode: 'fake',
+    mode: 'manual',
     sample: defaultSample,
     baseUrl: 'http://127.0.0.1:3000',
   };
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
-    if (value === '--live' || value === '--mode=live') options.mode = 'live';
-    else if (value === '--fake' || value === '--mode=fake')
-      options.mode = 'fake';
+    if (value === '--manual' || value === '--mode=manual')
+      options.mode = 'manual';
+    else if (
+      value === '--live' ||
+      value === '--mode=live' ||
+      value === '--fake' ||
+      value === '--mode=fake'
+    )
+      options.mode = value.includes('live') ? 'live' : 'fake';
     else if (value === '--sample') options.sample = resolve(argv[++index]);
     else if (value.startsWith('--sample='))
       options.sample = resolve(value.slice(9));
@@ -31,13 +37,17 @@ export function parseArgs(argv) {
   return options;
 }
 
-export function assertFakeMode(
+export function assertManualMode(
   env = process.env,
-  requestedMode = env.OPENAI_ADAPTER ?? 'fake',
+  requestedMode = 'manual',
 ) {
-  if (requestedMode !== 'fake' || env.OPENAI_ADAPTER === 'live')
+  if (
+    requestedMode !== 'manual' ||
+    env.OPENAI_ADAPTER === 'fake' ||
+    env.OPENAI_ADAPTER === 'live'
+  )
     throw new Error(
-      'Integration gate is fake mode only; refusing live OpenAI mode before network requests',
+      'Integration gate is manual mode only; refusing fake/live highlight mode before network requests',
     );
 }
 
@@ -88,12 +98,13 @@ export function assertProjectAccepted(project) {
     throw new Error('project submission did not retain local-file source');
 }
 
-export function assertFakeAudit(audit) {
-  const requests = Array.isArray(audit) ? audit : [];
-  if (requests.length !== 1)
-    throw new Error('fake highlight audit did not record exactly one request');
-  if ('mediaPath' in requests[0])
-    throw new Error('fake highlight audit retained a media path');
+export function assertWorkflowCompleted(workflow) {
+  if (workflow?.status !== 'COMPLETED')
+    throw new Error('workflow did not complete');
+  if (!Array.isArray(workflow.clipIds))
+    throw new Error('workflow did not return clip ids');
+  if (!workflow.editorHref || !workflow.resultsHref)
+    throw new Error('workflow did not return editor and results links');
 }
 
 async function request(baseUrl, path, init) {
@@ -147,7 +158,8 @@ export async function runUiChecks(options, launchBrowser = launchChromium) {
   const browser = await launchBrowser();
   const issues = [];
   try {
-    const page = await browser.newPage();
+    const context = await browser.newContext({ acceptDownloads: true });
+    const page = await context.newPage();
     watchBrowser(page, options.baseUrl, issues);
     await page.goto(new URL('/projects/new', options.baseUrl).href, {
       waitUntil: 'networkidle',
@@ -166,6 +178,38 @@ export async function runUiChecks(options, launchBrowser = launchChromium) {
       throw new Error('local filepath create button is disabled');
     await page.getByRole('button', { name: 'Create project' }).click();
     await page.waitForURL(/\/projects\/[0-9a-f-]+\/processing/u);
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/editor/u, {
+      timeout: 20 * 60_000,
+    });
+    const localProjectId = page.url().match(/\/projects\/([^/]+)\/editor/u)?.[1];
+    if (!localProjectId) throw new Error('editor URL did not include project id');
+    await page.getByRole('tab', { name: 'Transcript' }).click();
+    await page.getByText(/transcript/i).first().waitFor();
+    const transcriptDownload = page.getByRole('link', {
+      name: 'Download transcript',
+    });
+    if (!(await transcriptDownload.isVisible()))
+      throw new Error('transcript download link is not visible');
+    await Promise.all([
+      page.waitForEvent('download'),
+      transcriptDownload.click(),
+    ]);
+    await page.getByRole('tab', { name: 'Clip editor' }).click();
+    await page.getByRole('button', { name: 'Add Clip' }).click();
+    await page.getByRole('button', { name: 'Add clip' }).click();
+    await page.goto(
+      new URL(`/projects/${localProjectId}/clips`, options.baseUrl).href,
+      { waitUntil: 'networkidle' },
+    );
+    const mp4Download = page.getByRole('link', { name: /Download MP4:/u }).first();
+    await mp4Download.waitFor({ state: 'visible' });
+    const mp4Href = await mp4Download.getAttribute('href');
+    if (!mp4Href) throw new Error('manual clip download href is missing');
+    const mp4Response = await page.request.get(
+      new URL(mp4Href, options.baseUrl).href,
+    );
+    if (!mp4Response.ok())
+      throw new Error(`manual clip download returned HTTP ${mp4Response.status()}`);
 
     await page.goto(new URL('/projects/new', options.baseUrl).href, {
       waitUntil: 'networkidle',
@@ -179,8 +223,18 @@ export async function runUiChecks(options, launchBrowser = launchChromium) {
       throw new Error('upload create button is disabled');
     await page.getByRole('button', { name: 'Create project' }).click();
     await page.waitForURL(/\/projects\/[0-9a-f-]+\/processing/u);
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/editor/u, {
+      timeout: 20 * 60_000,
+    });
+    if (!(await page.getByRole('tab', { name: 'Transcript' }).isVisible()))
+      throw new Error('upload flow did not reach editor transcript tabs');
     assertBrowserClean(issues);
-    return ['ui-new-project-localpath', 'ui-new-project-upload'];
+    return [
+      'ui-new-project-localpath-editor',
+      'ui-transcript-download',
+      'ui-manual-clip-download',
+      'ui-new-project-upload-editor',
+    ];
   } finally {
     await browser.close();
   }
@@ -193,39 +247,13 @@ export async function run(
 ) {
   const http = dependencies.request ?? request;
   const uiChecks = dependencies.uiChecks ?? runUiChecks;
-  assertFakeMode(env, options.mode);
+  assertManualMode(env, options.mode);
   await validateSample(options.sample);
-  const report = { mode: 'fake', sample: basename(options.sample), checks: [] };
+  const report = { mode: 'manual', sample: basename(options.sample), checks: [] };
   const health = await http(options.baseUrl, '/api/health');
   if (health.status !== 'HEALTHY')
     throw new Error('service health is not HEALTHY');
   report.checks.push('service-health');
-  await http(options.baseUrl, '/api/test-control', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action: 'reset' }),
-  });
-  const highlight = await http(options.baseUrl, '/api/test-control', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      action: 'highlight',
-      request: {
-        transcript: 'fixture transcript',
-        instruction: 'find highlights',
-        mediaPath: options.sample,
-      },
-    }),
-  });
-  if (
-    highlight.model !== 'fake-highlights-v1' ||
-    !Array.isArray(highlight.candidates)
-  )
-    throw new Error('fake highlight contract failed');
-  report.checks.push('fake-highlights');
-  const control = await http(options.baseUrl, '/api/test-control');
-  assertFakeAudit(control.audit);
-  report.checks.push('fake-audit');
   const project = await http(options.baseUrl, '/api/projects', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -240,6 +268,13 @@ export async function run(
   });
   assertProjectAccepted(project);
   report.checks.push('project-submission');
+  const workflow = await http(
+    options.baseUrl,
+    `/api/projects/${project.id}/workflow`,
+    { method: 'POST' },
+  );
+  assertWorkflowCompleted(workflow);
+  report.checks.push('workflow-complete');
   const projects = await http(options.baseUrl, '/api/projects');
   if (
     !Array.isArray(projects) ||
@@ -250,10 +285,9 @@ export async function run(
   report.checks.push(...(await uiChecks(options)));
   const safe = redactReport({
     projectId: project.id,
-    model: highlight.model,
+    model: 'mlx-community/whisper-large-v3-mlx',
     costMicrousd: '0',
     source: options.sample,
-    transcript: 'fixture transcript',
   });
   report.result = safe;
   return report;

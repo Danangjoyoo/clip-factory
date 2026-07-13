@@ -29,8 +29,8 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 13rem minmax(0, 1fr);
-  gap: var(--space-5);
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 1rem;
   align-items: start;
 }
 
@@ -58,7 +58,7 @@
 
 .panel {
   min-height: 18rem;
-  padding: var(--space-6);
+  padding: 1rem;
 }
 
 @media (max-width: 700px) {

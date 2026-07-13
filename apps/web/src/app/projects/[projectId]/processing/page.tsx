@@ -1,24 +1,10 @@
-import { ProcessingView } from '../../../../modules/jobs/delivery/ui/ProcessingView';
+import { ProcessingLocalPage } from '../../../../modules/jobs/delivery/ui/ProcessingLocalPage';
+
 export default async function ProcessingPage({
   params,
 }: {
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  return (
-    <ProcessingView
-      value={{
-        projectId,
-        state: 'RUNNING',
-        stage: 'Processing',
-        percent: 0,
-        eta: null,
-        stages: [],
-        workerOnline: true,
-        logs: [],
-        analysisVersion: '',
-        analysisId: '',
-      }}
-    />
-  );
+  return <ProcessingLocalPage projectId={projectId} />;
 }

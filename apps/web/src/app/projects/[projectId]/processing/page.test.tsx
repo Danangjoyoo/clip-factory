@@ -1,6 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import ProcessingPage from './page';
+
+vi.mock('../../../../modules/jobs/delivery/ui/ProcessingLocalPage', () => ({
+  ProcessingLocalPage: ({ projectId }: { projectId: string }) => (
+    <a href={`/projects/${projectId}/clips`}>View local results</a>
+  ),
+}));
 
 describe('ProcessingPage', () => {
   it('links to the local results route', async () => {

@@ -9,7 +9,7 @@
   gap: 1rem;
   max-width: 72rem;
   margin: 0 auto;
-  padding: var(--space-4) var(--space-8) var(--space-8);
+  padding: 1.6rem var(--space-8) var(--space-8);
 }
 
 .header {
@@ -57,7 +57,7 @@
   align-self: start;
   border: 1px solid var(--color-surface-raised);
   border-radius: var(--radius-panel);
-  padding: 0.9rem;
+  padding: 1rem;
   background: var(--color-surface);
 }
 
@@ -109,7 +109,7 @@
 
 .source input[type='file'] {
   width: 100%;
-  min-height: 6.2rem;
+  min-height: 7.5rem;
   border: 1px dashed color-mix(in srgb, var(--color-accent) 55%, transparent);
   border-radius: var(--radius-control);
   padding: 2.6rem 1rem 1rem;
@@ -120,6 +120,14 @@
 .source section[aria-label='Source validation'] {
   border-top: 1px solid var(--color-surface-raised);
   padding-top: 0.9rem;
+}
+
+.source section[aria-label='Source validation'] label {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .source section[aria-label='Source validation'] p {
@@ -150,6 +158,13 @@
   line-height: 1.45;
 }
 
+.analysis section[aria-label='Analysis settings'] [role='alert'] {
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-control);
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-canvas));
+}
+
 .controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -174,7 +189,7 @@
   border-radius: var(--radius-control);
   padding: 0.48rem 0.6rem;
   color: var(--color-text);
-  background: var(--color-canvas);
+  background: #0e1829;
 }
 
 .form textarea {

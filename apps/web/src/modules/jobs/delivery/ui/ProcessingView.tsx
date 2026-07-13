@@ -51,8 +51,8 @@ export function ProcessingView({
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>ANALYSIS RUN</p>
-          <h1>Finding the strongest moments.</h1>
-          <p>We will pause before any paid work that can exceed your limit.</p>
+          <h1>Processing the source.</h1>
+          <p>Follow the worker stages, ETA, budget guard, and sanitized logs.</p>
         </div>
         <span className={styles.status}>{stateLabel[value.state]}</span>
       </header>

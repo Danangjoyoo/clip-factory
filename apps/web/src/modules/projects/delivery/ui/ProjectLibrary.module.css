@@ -45,6 +45,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(17rem, 0.8fr);
   gap: 1rem;
+  align-items: start;
 }
 .library ul {
   list-style: none;
@@ -59,7 +60,7 @@
   border: 1px dashed var(--color-surface-raised);
   border-radius: var(--radius-panel);
   padding: var(--space-8);
-  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
 }
 .empty h2,
 .empty p {
@@ -90,7 +91,7 @@
   text-transform: uppercase;
 }
 .metric strong {
-  font-size: 1.25rem;
+  font-size: 1.45rem;
 }
 .metric p {
   margin: 0;

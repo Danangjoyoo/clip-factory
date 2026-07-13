@@ -2,6 +2,13 @@
   max-width: 72rem;
   margin: 0 auto;
   padding: var(--space-8);
+  background:
+    radial-gradient(
+      circle at 94% 0,
+      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      transparent 24rem
+    ),
+    transparent;
 }
 
 .tabs {
@@ -59,8 +66,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.8rem;
   padding: 0;
   list-style: none;
 }
@@ -74,7 +81,7 @@
 
 .poster {
   position: relative;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 9 / 13;
   background:
     radial-gradient(
       circle at 52% 30%,

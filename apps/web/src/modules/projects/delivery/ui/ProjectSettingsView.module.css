@@ -45,8 +45,8 @@
 }
 .layout {
   display: grid;
-  grid-template-columns: 13rem minmax(0, 1fr);
-  gap: var(--space-5);
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 1rem;
   align-items: start;
 }
 .rail,
@@ -72,13 +72,13 @@
   cursor: pointer;
 }
 .rail button[aria-selected='true'] {
-  color: var(--color-text);
-  background: var(--color-surface-raised);
-  font-weight: 700;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+  font-weight: 900;
 }
 .panel {
   min-height: 22rem;
-  padding: var(--space-6);
+  padding: 1rem;
 }
 .panel h2 {
   margin-top: 0;
@@ -104,7 +104,7 @@
   border-radius: var(--radius-control);
   padding: var(--space-3);
   color: var(--color-text);
-  background: var(--color-canvas);
+  background: #0d192a;
   font: inherit;
 }
 .panel button {

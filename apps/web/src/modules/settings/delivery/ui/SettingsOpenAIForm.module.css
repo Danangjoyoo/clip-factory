@@ -45,7 +45,7 @@
   border-radius: var(--radius-control);
   padding: var(--space-3);
   color: var(--color-text);
-  background: var(--color-canvas);
+  background: #0d192a;
 }
 
 .form button {
