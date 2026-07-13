@@ -21,6 +21,12 @@ class WorkerSettings:
     minio_secret_key: SecretStr
     allowed_source_roots: Sequence[Path]
     audio_validation_receipt_path: Path
+    youtube_oauth_client_config_path: Path | None
+    youtube_oauth_authorization_endpoint: str
+    google_token_endpoint: str
+    google_revoke_endpoint: str
+    youtube_api_base_url: str
+    youtube_connection_event_endpoint: str
 
     def audio_validation_receipts(self) -> AudioValidationReceiptPort:
         from clip_factory.adapters.storage.json_audio_validation_receipt_store import (
@@ -61,6 +67,32 @@ class WorkerSettings:
                     "./data/audio-validation-receipts.json",
                 )
             ).expanduser(),
+            Path(values["YOUTUBE_OAUTH_CLIENT_CONFIG_PATH"]).expanduser()
+            if values.get("YOUTUBE_OAUTH_CLIENT_CONFIG_PATH")
+            else None,
+            _endpoint(
+                values.get("YOUTUBE_OAUTH_BASE_URL", "https://accounts.google.com"),
+                "/o/oauth2/v2/auth",
+            ),
+            _endpoint(
+                values.get("GOOGLE_TOKEN_BASE_URL", "https://oauth2.googleapis.com"),
+                "/token",
+            ),
+            _endpoint(
+                values.get("GOOGLE_TOKEN_BASE_URL", "https://oauth2.googleapis.com"),
+                "/revoke",
+            ),
+            values.get(
+                "YOUTUBE_API_BASE_URL",
+                "https://www.googleapis.com/youtube",
+            ).rstrip("/"),
+            values.get(
+                "YOUTUBE_CONNECTION_EVENT_ENDPOINT",
+                _endpoint(
+                    values.get("INTERNAL_API_BASE_URL", "http://127.0.0.1:3000"),
+                    "/api/internal/v1/youtube/connections/events",
+                ),
+            ),
         )
 
     @classmethod
@@ -79,3 +111,7 @@ def _local_openai_api_key(values: Mapping[str, str]) -> str | None:
         return None
     key = data.get("openAiApiKey")
     return key.strip() if isinstance(key, str) and key.strip() else None
+
+
+def _endpoint(base_url: str, path: str) -> str:
+    return f"{base_url.rstrip('/')}/{path.lstrip('/')}"

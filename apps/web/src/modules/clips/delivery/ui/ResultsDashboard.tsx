@@ -25,7 +25,7 @@ export function ResultsDashboard({
         <a aria-current="page" href="./clips">
           Clips
         </a>
-        <span aria-disabled="true">YouTube</span>
+        <a href="./youtube">YouTube</a>
         <a href="/usage">Usage</a>
         <a href="./settings">Project settings</a>
       </nav>

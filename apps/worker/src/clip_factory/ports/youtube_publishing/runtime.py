@@ -14,6 +14,14 @@ class EntropySource(Protocol):
 class LoopbackListener(Protocol):
     async def bind(self) -> str: ...
 
+    async def wait_for_callback(self) -> "LoopbackOAuthCallback": ...
+
+
+@dataclass(frozen=True, slots=True)
+class LoopbackOAuthCallback:
+    code: str
+    state: str
+
 
 @dataclass(frozen=True, slots=True)
 class ActiveOAuthFlow:

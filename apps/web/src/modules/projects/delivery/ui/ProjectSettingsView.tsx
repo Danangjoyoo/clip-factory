@@ -67,7 +67,7 @@ export function ProjectSettingsView({
       </header>
       <nav className={styles.tabs} aria-label="Project workspace">
         <a href={`/projects/${value.projectId}/clips`}>Clips</a>
-        <span aria-disabled="true">YouTube</span>
+        <a href={`/projects/${value.projectId}/youtube`}>YouTube</a>
         <a href="/usage">Usage</a>
         <a aria-current="page" href={`/projects/${value.projectId}/settings`}>
           Project settings

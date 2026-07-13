@@ -6,6 +6,8 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from clip_factory.composition.worker_container import project_activities
+from clip_factory.composition.worker_container import build_youtube_oauth_activities
+from clip_factory.composition.settings import WorkerSettings
 from clip_factory.composition.paid_call import LocalPaidCallDependencies
 from clip_factory.adapters.openai.model_access_adapter import OpenAIModelAccessAdapter
 from clip_factory.adapters.storage.minio_artifact_store import MinioArtifactStore
@@ -22,6 +24,14 @@ from clip_factory.entrypoints.temporal.child_workflows import (
 )
 from clip_factory.entrypoints.temporal.project_workflow import ProjectWorkflow
 from clip_factory.ports.model_access import ModelAccessResult
+from clip_factory.entrypoints.temporal.youtube_publishing.oauth_activities import (
+    authorize_or_resume_oauth_activity,
+    configure_youtube_oauth_activities,
+    deliver_oauth_result_activity,
+)
+from clip_factory.entrypoints.temporal.youtube_publishing.oauth_workflow import (
+    YouTubeOAuthWorkflow,
+)
 
 
 def build_worker(
@@ -59,16 +69,29 @@ def build_worker(
             )
         )
     )
+    workflows: list[type] = [
+        ProjectWorkflow,
+        AnalysisChildWorkflow,
+        RenderBatchChildWorkflow,
+        PaidCallWorkflow,
+    ]
+    activities = project_activities()
+    if os.environ.get("YOUTUBE_OAUTH_CLIENT_CONFIG_PATH"):
+        configure_youtube_oauth_activities(
+            build_youtube_oauth_activities(WorkerSettings.from_env())
+        )
+        workflows.append(YouTubeOAuthWorkflow)
+        activities.extend(
+            [
+                authorize_or_resume_oauth_activity,
+                deliver_oauth_result_activity,
+            ]
+        )
     return Worker(
         client,
         task_queue=task_queue,
-        workflows=[
-            ProjectWorkflow,
-            AnalysisChildWorkflow,
-            RenderBatchChildWorkflow,
-            PaidCallWorkflow,
-        ],
-        activities=project_activities(),
+        workflows=workflows,
+        activities=activities,
         max_concurrent_activities=1,
         max_concurrent_workflow_tasks=20,
     )

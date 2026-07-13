@@ -39,6 +39,10 @@ describe('ResultsDashboard', () => {
     expect(
       screen.getByRole('navigation', { name: 'Project workspace' }),
     ).toHaveTextContent('Project settings');
+    expect(screen.getByRole('link', { name: 'YouTube' })).toHaveAttribute(
+      'href',
+      './youtube',
+    );
     expect(
       screen.getByRole('button', { name: 'Download MP4: Rendering clip' }),
     ).toBeDisabled();

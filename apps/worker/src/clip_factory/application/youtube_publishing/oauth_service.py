@@ -93,6 +93,18 @@ class YouTubeOAuthService:
             expires_at,
         )
 
+    async def authorize(self, connection_id: str) -> SanitizedChannelConnection:
+        await self.begin(connection_id)
+        callback = await self._loopback_listener.wait_for_callback()
+        return await self.complete(
+            OAuthCallback(
+                host="127.0.0.1",
+                path="/oauth2/callback",
+                state=callback.state,
+                code=callback.code,
+            )
+        )
+
     async def complete(self, callback: OAuthCallback) -> SanitizedChannelConnection:
         state_digest = hash_state(callback.state)
         active = self._active_flows.pop(state_digest)

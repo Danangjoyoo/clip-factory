@@ -3,7 +3,10 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 from clip_factory.ports.youtube_publishing.oauth import SanitizedChannelConnection
-from clip_factory.ports.youtube_publishing.runtime import ActiveOAuthFlow
+from clip_factory.ports.youtube_publishing.runtime import (
+    ActiveOAuthFlow,
+    LoopbackOAuthCallback,
+)
 
 
 class FakeGateway:
@@ -105,11 +108,26 @@ class FakeEntropy:
 
 
 class FakeLoopbackListener:
-    def __init__(self, redirect_uri: str) -> None:
+    def __init__(
+        self,
+        redirect_uri: str,
+        callback_code: str | None,
+        callback_state: str | None,
+    ) -> None:
         self.redirect_uri = redirect_uri
+        self.callback_code = callback_code
+        self.callback_state = callback_state
 
     async def bind(self) -> str:
         return self.redirect_uri
+
+    async def wait_for_callback(self) -> LoopbackOAuthCallback:
+        if self.callback_code is None or self.callback_state is None:
+            raise TimeoutError("OAuth callback timed out")
+        return LoopbackOAuthCallback(
+            code=self.callback_code,
+            state=self.callback_state,
+        )
 
 
 class FakeActiveOAuthFlowStore:
@@ -139,6 +157,8 @@ def make_oauth_fakes(
     now: datetime,
     revoke_result: bool = True,
     redirect_uri: str = "http://127.0.0.1:49152/oauth2/callback",
+    callback_code: str | None = None,
+    callback_state: str | None = None,
 ) -> OAuthFakes:
     connection = SanitizedChannelConnection(
         connection_id="018f4f2c-93d7-7c75-8f0f-7f5165e8bb42",
@@ -171,7 +191,11 @@ def make_oauth_fakes(
             "events": events,
             "clock": clock,
             "entropy": FakeEntropy(),
-            "loopback_listener": FakeLoopbackListener(redirect_uri),
+            "loopback_listener": FakeLoopbackListener(
+                redirect_uri,
+                callback_code,
+                callback_state,
+            ),
             "active_flows": active_flows,
         },
         gateway,

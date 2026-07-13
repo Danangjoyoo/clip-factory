@@ -37,6 +37,10 @@ describe('ProjectSettingsView', () => {
     expect(
       screen.getByText(/Settings are scoped to Episode one/i),
     ).toBeVisible();
+    expect(screen.getByRole('link', { name: 'YouTube' })).toHaveAttribute(
+      'href',
+      '/projects/episode-1/youtube',
+    );
     expect(screen.getByRole('tab', { name: 'General' })).toBeVisible();
     expect(screen.getByRole('tab', { name: 'Source' })).toBeVisible();
     expect(screen.getByRole('tab', { name: 'Defaults' })).toBeVisible();

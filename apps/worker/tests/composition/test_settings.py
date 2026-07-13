@@ -45,3 +45,27 @@ def test_worker_reads_openai_key_from_local_settings_file(tmp_path: Path) -> Non
 
     assert settings.openai_api_key is not None
     assert settings.openai_api_key.get_secret_value() == "sk-local-settings"
+
+
+def test_worker_reads_native_youtube_oauth_settings(tmp_path: Path) -> None:
+    client_config = tmp_path / "google-client.json"
+    settings = WorkerSettings.from_mapping(
+        {
+            "INTERNAL_SERVICE_TOKEN": "local-test-token",
+            "YOUTUBE_OAUTH_CLIENT_CONFIG_PATH": str(client_config),
+            "YOUTUBE_OAUTH_BASE_URL": "https://accounts.example",
+            "GOOGLE_TOKEN_BASE_URL": "https://oauth2.example",
+            "YOUTUBE_API_BASE_URL": "https://youtube.example/youtube",
+        }
+    )
+
+    assert settings.youtube_oauth_client_config_path == client_config
+    assert settings.youtube_oauth_authorization_endpoint == (
+        "https://accounts.example/o/oauth2/v2/auth"
+    )
+    assert settings.google_token_endpoint == "https://oauth2.example/token"
+    assert settings.google_revoke_endpoint == "https://oauth2.example/revoke"
+    assert settings.youtube_api_base_url == "https://youtube.example/youtube"
+    assert settings.youtube_connection_event_endpoint == (
+        "http://127.0.0.1:3000/api/internal/v1/youtube/connections/events"
+    )

@@ -1,0 +1,233 @@
+.workspace {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-surface-raised);
+}
+
+.tabs a {
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
+  padding: 0.55rem 0.7rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.tabs a[aria-current='page'] {
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+  font-weight: 900;
+}
+
+.header {
+  margin-bottom: var(--space-4);
+}
+
+.header h1 {
+  margin: var(--space-1) 0;
+  font-size: 2.2rem;
+}
+
+.header p,
+.empty,
+.cardBody p {
+  color: var(--color-text-muted);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(17rem, 22rem) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.gallery {
+  min-width: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.sectionHeader span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.empty {
+  margin: 0;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  padding: var(--space-5);
+  background: var(--color-surface);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+}
+
+.poster {
+  position: relative;
+  aspect-ratio: 9 / 12;
+  background:
+    linear-gradient(160deg, rgba(152, 240, 255, 0.28), transparent 60%),
+    var(--color-surface-raised);
+}
+
+.poster span {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  border-radius: 999px;
+  padding: 0.25rem 0.45rem;
+  background: rgba(3, 11, 19, 0.76);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.cardBody {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.cardBody h3,
+.cardBody p,
+.details dd,
+.details dt {
+  margin: 0;
+}
+
+.cardBody h3 {
+  font-size: 0.98rem;
+}
+
+.cardBody dl,
+.details {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.cardBody dl div,
+.details div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.cardBody dt,
+.details dt {
+  color: var(--color-text-muted);
+}
+
+.cardBody dd,
+.details dd {
+  text-align: right;
+}
+
+.cardBody button,
+.drawer button,
+.detailTabs button {
+  border: 0;
+  border-radius: var(--radius-control);
+  padding: 0.6rem 0.75rem;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.drawer {
+  position: fixed;
+  inset: var(--space-4) var(--space-4) var(--space-4) auto;
+  z-index: 20;
+  display: grid;
+  align-content: start;
+  width: min(28rem, calc(100vw - 2rem));
+  gap: var(--space-4);
+  overflow: auto;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.35);
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.drawerHeader h2 {
+  margin: var(--space-1) 0 0;
+  font-size: 1.15rem;
+}
+
+.drawerHeader button,
+.detailTabs button {
+  color: var(--color-text);
+  border: 1px solid var(--color-surface-raised);
+  background: var(--color-canvas);
+}
+
+.detailTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.detailTabs button[aria-selected='true'] {
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+}
+
+@media (max-width: 760px) {
+  .workspace {
+    padding: var(--space-4);
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

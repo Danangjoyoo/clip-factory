@@ -12,7 +12,9 @@ from clip_factory.application.youtube_publishing.active_oauth_flow_store import 
     InMemoryActiveOAuthFlowStore,
 )
 from clip_factory.domain.youtube_publishing.oauth_policy import OAuthSecurityError
+from clip_factory.domain.youtube_publishing.oauth_policy import create_state
 from clip_factory.ports.youtube_publishing.runtime import ActiveOAuthFlow
+from clip_factory.testing.youtube_publishing_fakes import FakeEntropy
 from clip_factory.testing.youtube_publishing_fakes import make_oauth_fakes
 
 
@@ -92,6 +94,22 @@ def test_complete_consumes_state_once_validates_scope_and_reports_sanitized_conn
     assert fakes.events.connected_events == [connection]
     with pytest.raises(OAuthSecurityError, match="missing or already consumed"):
         asyncio.run(service.complete(callback))
+
+
+def test_authorize_waits_for_loopback_callback_and_reports_connection() -> None:
+    expected_state = create_state(FakeEntropy().bytes)
+    fakes = make_oauth_fakes(
+        now=datetime(2026, 7, 11, tzinfo=UTC),
+        callback_code="short-lived-code",
+        callback_state=expected_state,
+    )
+    service = YouTubeOAuthService(**fakes.dependencies)
+
+    connection = asyncio.run(service.authorize(CONNECTION_ID))
+
+    assert connection == fakes.gateway.connection
+    assert fakes.gateway.exchanges[0][2] == "short-lived-code"
+    assert fakes.events.connected_events == [connection]
 
 
 def test_complete_rejects_denial_mismatch_expiry_and_bad_scope() -> None:
