@@ -1,0 +1,1 @@
+"""Pure YouTube publishing policy."""

@@ -302,6 +302,8 @@ export type ClipWhereInput = {
   usageEvents?: Prisma.AIUsageEventListRelationFilter;
   allocations?: Prisma.CostAllocationListRelationFilter;
   renders?: Prisma.RenderListRelationFilter;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftListRelationFilter;
+  publications?: Prisma.PublicationListRelationFilter;
 };
 
 export type ClipOrderByWithRelationInput = {
@@ -325,6 +327,8 @@ export type ClipOrderByWithRelationInput = {
   usageEvents?: Prisma.AIUsageEventOrderByRelationAggregateInput;
   allocations?: Prisma.CostAllocationOrderByRelationAggregateInput;
   renders?: Prisma.RenderOrderByRelationAggregateInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftOrderByRelationAggregateInput;
+  publications?: Prisma.PublicationOrderByRelationAggregateInput;
 };
 
 export type ClipWhereUniqueInput = Prisma.AtLeast<
@@ -360,6 +364,8 @@ export type ClipWhereUniqueInput = Prisma.AtLeast<
     usageEvents?: Prisma.AIUsageEventListRelationFilter;
     allocations?: Prisma.CostAllocationListRelationFilter;
     renders?: Prisma.RenderListRelationFilter;
+    publishingMetadataDrafts?: Prisma.PublishingMetadataDraftListRelationFilter;
+    publications?: Prisma.PublicationListRelationFilter;
   },
   'id'
 >;
@@ -438,6 +444,8 @@ export type ClipCreateInput = {
   usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutClipInput;
 };
 
 export type ClipUncheckedCreateInput = {
@@ -459,6 +467,8 @@ export type ClipUncheckedCreateInput = {
   usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationUncheckedCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutClipInput;
 };
 
 export type ClipUpdateInput = {
@@ -484,6 +494,8 @@ export type ClipUpdateInput = {
   usageEvents?: Prisma.AIUsageEventUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateInput = {
@@ -512,6 +524,8 @@ export type ClipUncheckedUpdateInput = {
   usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUncheckedUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUncheckedUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipCreateManyInput = {
@@ -897,6 +911,58 @@ export type EnumClipStateRecordFieldUpdateOperationsInput = {
   set?: $Enums.ClipStateRecord;
 };
 
+export type ClipCreateNestedOneWithoutPublishingMetadataDraftsInput = {
+  create?: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublishingMetadataDraftsInput,
+    Prisma.ClipUncheckedCreateWithoutPublishingMetadataDraftsInput
+  >;
+  connectOrCreate?: Prisma.ClipCreateOrConnectWithoutPublishingMetadataDraftsInput;
+  connect?: Prisma.ClipWhereUniqueInput;
+};
+
+export type ClipUpdateOneRequiredWithoutPublishingMetadataDraftsNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublishingMetadataDraftsInput,
+    Prisma.ClipUncheckedCreateWithoutPublishingMetadataDraftsInput
+  >;
+  connectOrCreate?: Prisma.ClipCreateOrConnectWithoutPublishingMetadataDraftsInput;
+  upsert?: Prisma.ClipUpsertWithoutPublishingMetadataDraftsInput;
+  connect?: Prisma.ClipWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.ClipUpdateToOneWithWhereWithoutPublishingMetadataDraftsInput,
+      Prisma.ClipUpdateWithoutPublishingMetadataDraftsInput
+    >,
+    Prisma.ClipUncheckedUpdateWithoutPublishingMetadataDraftsInput
+  >;
+};
+
+export type ClipCreateNestedOneWithoutPublicationsInput = {
+  create?: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublicationsInput,
+    Prisma.ClipUncheckedCreateWithoutPublicationsInput
+  >;
+  connectOrCreate?: Prisma.ClipCreateOrConnectWithoutPublicationsInput;
+  connect?: Prisma.ClipWhereUniqueInput;
+};
+
+export type ClipUpdateOneRequiredWithoutPublicationsNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublicationsInput,
+    Prisma.ClipUncheckedCreateWithoutPublicationsInput
+  >;
+  connectOrCreate?: Prisma.ClipCreateOrConnectWithoutPublicationsInput;
+  upsert?: Prisma.ClipUpsertWithoutPublicationsInput;
+  connect?: Prisma.ClipWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.ClipUpdateToOneWithWhereWithoutPublicationsInput,
+      Prisma.ClipUpdateWithoutPublicationsInput
+    >,
+    Prisma.ClipUncheckedUpdateWithoutPublicationsInput
+  >;
+};
+
 export type ClipCreateNestedOneWithoutRendersInput = {
   create?: Prisma.XOR<
     Prisma.ClipCreateWithoutRendersInput,
@@ -941,6 +1007,8 @@ export type ClipCreateWithoutProjectInput = {
   usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutClipInput;
 };
 
 export type ClipUncheckedCreateWithoutProjectInput = {
@@ -961,6 +1029,8 @@ export type ClipUncheckedCreateWithoutProjectInput = {
   usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationUncheckedCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutClipInput;
 };
 
 export type ClipCreateOrConnectWithoutProjectInput = {
@@ -1043,6 +1113,8 @@ export type ClipCreateWithoutAnalysisRunInput = {
   usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutClipInput;
 };
 
 export type ClipUncheckedCreateWithoutAnalysisRunInput = {
@@ -1063,6 +1135,8 @@ export type ClipUncheckedCreateWithoutAnalysisRunInput = {
   usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationUncheckedCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutClipInput;
 };
 
 export type ClipCreateOrConnectWithoutAnalysisRunInput = {
@@ -1126,6 +1200,8 @@ export type ClipCreateWithoutUsageEventsInput = {
   analysisRun?: Prisma.AnalysisRunCreateNestedOneWithoutClipsInput;
   allocations?: Prisma.CostAllocationCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutClipInput;
 };
 
 export type ClipUncheckedCreateWithoutUsageEventsInput = {
@@ -1146,6 +1222,8 @@ export type ClipUncheckedCreateWithoutUsageEventsInput = {
   updatedAt?: Date | string;
   allocations?: Prisma.CostAllocationUncheckedCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutClipInput;
 };
 
 export type ClipCreateOrConnectWithoutUsageEventsInput = {
@@ -1198,6 +1276,8 @@ export type ClipUpdateWithoutUsageEventsInput = {
   analysisRun?: Prisma.AnalysisRunUpdateOneWithoutClipsNestedInput;
   allocations?: Prisma.CostAllocationUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateWithoutUsageEventsInput = {
@@ -1225,6 +1305,8 @@ export type ClipUncheckedUpdateWithoutUsageEventsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   allocations?: Prisma.CostAllocationUncheckedUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUncheckedUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipCreateWithoutAllocationsInput = {
@@ -1245,6 +1327,8 @@ export type ClipCreateWithoutAllocationsInput = {
   analysisRun?: Prisma.AnalysisRunCreateNestedOneWithoutClipsInput;
   usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutClipInput;
 };
 
 export type ClipUncheckedCreateWithoutAllocationsInput = {
@@ -1265,6 +1349,8 @@ export type ClipUncheckedCreateWithoutAllocationsInput = {
   updatedAt?: Date | string;
   usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutClipInput;
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutClipInput;
 };
 
 export type ClipCreateOrConnectWithoutAllocationsInput = {
@@ -1317,6 +1403,8 @@ export type ClipUpdateWithoutAllocationsInput = {
   analysisRun?: Prisma.AnalysisRunUpdateOneWithoutClipsNestedInput;
   usageEvents?: Prisma.AIUsageEventUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateWithoutAllocationsInput = {
@@ -1344,6 +1432,262 @@ export type ClipUncheckedUpdateWithoutAllocationsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUncheckedUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutClipNestedInput;
+};
+
+export type ClipCreateWithoutPublishingMetadataDraftsInput = {
+  id?: string;
+  origin: $Enums.ClipOriginRecord;
+  startMs: number;
+  endMs: number;
+  title?: string | null;
+  rank?: number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?: $Enums.ClipStateRecord;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  project: Prisma.ProjectCreateNestedOneWithoutClipsInput;
+  analysisRun?: Prisma.AnalysisRunCreateNestedOneWithoutClipsInput;
+  usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutClipInput;
+  allocations?: Prisma.CostAllocationCreateNestedManyWithoutClipInput;
+  renders?: Prisma.RenderCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutClipInput;
+};
+
+export type ClipUncheckedCreateWithoutPublishingMetadataDraftsInput = {
+  id?: string;
+  projectId: string;
+  analysisRunId?: string | null;
+  origin: $Enums.ClipOriginRecord;
+  startMs: number;
+  endMs: number;
+  title?: string | null;
+  rank?: number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?: $Enums.ClipStateRecord;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutClipInput;
+  allocations?: Prisma.CostAllocationUncheckedCreateNestedManyWithoutClipInput;
+  renders?: Prisma.RenderUncheckedCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutClipInput;
+};
+
+export type ClipCreateOrConnectWithoutPublishingMetadataDraftsInput = {
+  where: Prisma.ClipWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublishingMetadataDraftsInput,
+    Prisma.ClipUncheckedCreateWithoutPublishingMetadataDraftsInput
+  >;
+};
+
+export type ClipUpsertWithoutPublishingMetadataDraftsInput = {
+  update: Prisma.XOR<
+    Prisma.ClipUpdateWithoutPublishingMetadataDraftsInput,
+    Prisma.ClipUncheckedUpdateWithoutPublishingMetadataDraftsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublishingMetadataDraftsInput,
+    Prisma.ClipUncheckedCreateWithoutPublishingMetadataDraftsInput
+  >;
+  where?: Prisma.ClipWhereInput;
+};
+
+export type ClipUpdateToOneWithWhereWithoutPublishingMetadataDraftsInput = {
+  where?: Prisma.ClipWhereInput;
+  data: Prisma.XOR<
+    Prisma.ClipUpdateWithoutPublishingMetadataDraftsInput,
+    Prisma.ClipUncheckedUpdateWithoutPublishingMetadataDraftsInput
+  >;
+};
+
+export type ClipUpdateWithoutPublishingMetadataDraftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?:
+    | Prisma.EnumClipOriginRecordFieldUpdateOperationsInput
+    | $Enums.ClipOriginRecord;
+  startMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  endMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  rank?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?:
+    | Prisma.EnumClipStateRecordFieldUpdateOperationsInput
+    | $Enums.ClipStateRecord;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  project?: Prisma.ProjectUpdateOneRequiredWithoutClipsNestedInput;
+  analysisRun?: Prisma.AnalysisRunUpdateOneWithoutClipsNestedInput;
+  usageEvents?: Prisma.AIUsageEventUpdateManyWithoutClipNestedInput;
+  allocations?: Prisma.CostAllocationUpdateManyWithoutClipNestedInput;
+  renders?: Prisma.RenderUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutClipNestedInput;
+};
+
+export type ClipUncheckedUpdateWithoutPublishingMetadataDraftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string;
+  analysisRunId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  origin?:
+    | Prisma.EnumClipOriginRecordFieldUpdateOperationsInput
+    | $Enums.ClipOriginRecord;
+  startMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  endMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  rank?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?:
+    | Prisma.EnumClipStateRecordFieldUpdateOperationsInput
+    | $Enums.ClipStateRecord;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutClipNestedInput;
+  allocations?: Prisma.CostAllocationUncheckedUpdateManyWithoutClipNestedInput;
+  renders?: Prisma.RenderUncheckedUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutClipNestedInput;
+};
+
+export type ClipCreateWithoutPublicationsInput = {
+  id?: string;
+  origin: $Enums.ClipOriginRecord;
+  startMs: number;
+  endMs: number;
+  title?: string | null;
+  rank?: number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?: $Enums.ClipStateRecord;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  project: Prisma.ProjectCreateNestedOneWithoutClipsInput;
+  analysisRun?: Prisma.AnalysisRunCreateNestedOneWithoutClipsInput;
+  usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutClipInput;
+  allocations?: Prisma.CostAllocationCreateNestedManyWithoutClipInput;
+  renders?: Prisma.RenderCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutClipInput;
+};
+
+export type ClipUncheckedCreateWithoutPublicationsInput = {
+  id?: string;
+  projectId: string;
+  analysisRunId?: string | null;
+  origin: $Enums.ClipOriginRecord;
+  startMs: number;
+  endMs: number;
+  title?: string | null;
+  rank?: number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?: $Enums.ClipStateRecord;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutClipInput;
+  allocations?: Prisma.CostAllocationUncheckedCreateNestedManyWithoutClipInput;
+  renders?: Prisma.RenderUncheckedCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutClipInput;
+};
+
+export type ClipCreateOrConnectWithoutPublicationsInput = {
+  where: Prisma.ClipWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublicationsInput,
+    Prisma.ClipUncheckedCreateWithoutPublicationsInput
+  >;
+};
+
+export type ClipUpsertWithoutPublicationsInput = {
+  update: Prisma.XOR<
+    Prisma.ClipUpdateWithoutPublicationsInput,
+    Prisma.ClipUncheckedUpdateWithoutPublicationsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.ClipCreateWithoutPublicationsInput,
+    Prisma.ClipUncheckedCreateWithoutPublicationsInput
+  >;
+  where?: Prisma.ClipWhereInput;
+};
+
+export type ClipUpdateToOneWithWhereWithoutPublicationsInput = {
+  where?: Prisma.ClipWhereInput;
+  data: Prisma.XOR<
+    Prisma.ClipUpdateWithoutPublicationsInput,
+    Prisma.ClipUncheckedUpdateWithoutPublicationsInput
+  >;
+};
+
+export type ClipUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  origin?:
+    | Prisma.EnumClipOriginRecordFieldUpdateOperationsInput
+    | $Enums.ClipOriginRecord;
+  startMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  endMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  rank?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?:
+    | Prisma.EnumClipStateRecordFieldUpdateOperationsInput
+    | $Enums.ClipStateRecord;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  project?: Prisma.ProjectUpdateOneRequiredWithoutClipsNestedInput;
+  analysisRun?: Prisma.AnalysisRunUpdateOneWithoutClipsNestedInput;
+  usageEvents?: Prisma.AIUsageEventUpdateManyWithoutClipNestedInput;
+  allocations?: Prisma.CostAllocationUpdateManyWithoutClipNestedInput;
+  renders?: Prisma.RenderUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutClipNestedInput;
+};
+
+export type ClipUncheckedUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string;
+  analysisRunId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  origin?:
+    | Prisma.EnumClipOriginRecordFieldUpdateOperationsInput
+    | $Enums.ClipOriginRecord;
+  startMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  endMs?: Prisma.IntFieldUpdateOperationsInput | number;
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  rank?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  scoreJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  captionJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  styleJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  frameJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  state?:
+    | Prisma.EnumClipStateRecordFieldUpdateOperationsInput
+    | $Enums.ClipStateRecord;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutClipNestedInput;
+  allocations?: Prisma.CostAllocationUncheckedUpdateManyWithoutClipNestedInput;
+  renders?: Prisma.RenderUncheckedUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipCreateWithoutRendersInput = {
@@ -1364,6 +1708,8 @@ export type ClipCreateWithoutRendersInput = {
   analysisRun?: Prisma.AnalysisRunCreateNestedOneWithoutClipsInput;
   usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutClipInput;
 };
 
 export type ClipUncheckedCreateWithoutRendersInput = {
@@ -1384,6 +1730,8 @@ export type ClipUncheckedCreateWithoutRendersInput = {
   updatedAt?: Date | string;
   usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutClipInput;
   allocations?: Prisma.CostAllocationUncheckedCreateNestedManyWithoutClipInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutClipInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutClipInput;
 };
 
 export type ClipCreateOrConnectWithoutRendersInput = {
@@ -1436,6 +1784,8 @@ export type ClipUpdateWithoutRendersInput = {
   analysisRun?: Prisma.AnalysisRunUpdateOneWithoutClipsNestedInput;
   usageEvents?: Prisma.AIUsageEventUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateWithoutRendersInput = {
@@ -1463,6 +1813,8 @@ export type ClipUncheckedUpdateWithoutRendersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUncheckedUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipCreateManyProjectInput = {
@@ -1504,6 +1856,8 @@ export type ClipUpdateWithoutProjectInput = {
   usageEvents?: Prisma.AIUsageEventUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateWithoutProjectInput = {
@@ -1531,6 +1885,8 @@ export type ClipUncheckedUpdateWithoutProjectInput = {
   usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUncheckedUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUncheckedUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateManyWithoutProjectInput = {
@@ -1596,6 +1952,8 @@ export type ClipUpdateWithoutAnalysisRunInput = {
   usageEvents?: Prisma.AIUsageEventUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateWithoutAnalysisRunInput = {
@@ -1620,6 +1978,8 @@ export type ClipUncheckedUpdateWithoutAnalysisRunInput = {
   usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutClipNestedInput;
   allocations?: Prisma.CostAllocationUncheckedUpdateManyWithoutClipNestedInput;
   renders?: Prisma.RenderUncheckedUpdateManyWithoutClipNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutClipNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutClipNestedInput;
 };
 
 export type ClipUncheckedUpdateManyWithoutAnalysisRunInput = {
@@ -1651,6 +2011,8 @@ export type ClipCountOutputType = {
   usageEvents: number;
   allocations: number;
   renders: number;
+  publishingMetadataDrafts: number;
+  publications: number;
 };
 
 export type ClipCountOutputTypeSelect<
@@ -1660,6 +2022,10 @@ export type ClipCountOutputTypeSelect<
   usageEvents?: boolean | ClipCountOutputTypeCountUsageEventsArgs;
   allocations?: boolean | ClipCountOutputTypeCountAllocationsArgs;
   renders?: boolean | ClipCountOutputTypeCountRendersArgs;
+  publishingMetadataDrafts?:
+    | boolean
+    | ClipCountOutputTypeCountPublishingMetadataDraftsArgs;
+  publications?: boolean | ClipCountOutputTypeCountPublicationsArgs;
 };
 
 /**
@@ -1705,6 +2071,26 @@ export type ClipCountOutputTypeCountRendersArgs<
   where?: Prisma.RenderWhereInput;
 };
 
+/**
+ * ClipCountOutputType without action
+ */
+export type ClipCountOutputTypeCountPublishingMetadataDraftsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.PublishingMetadataDraftWhereInput;
+};
+
+/**
+ * ClipCountOutputType without action
+ */
+export type ClipCountOutputTypeCountPublicationsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.PublicationWhereInput;
+};
+
 export type ClipSelect<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
     runtime.Types.Extensions.DefaultArgs,
@@ -1730,6 +2116,10 @@ export type ClipSelect<
     usageEvents?: boolean | Prisma.Clip$usageEventsArgs<ExtArgs>;
     allocations?: boolean | Prisma.Clip$allocationsArgs<ExtArgs>;
     renders?: boolean | Prisma.Clip$rendersArgs<ExtArgs>;
+    publishingMetadataDrafts?:
+      | boolean
+      | Prisma.Clip$publishingMetadataDraftsArgs<ExtArgs>;
+    publications?: boolean | Prisma.Clip$publicationsArgs<ExtArgs>;
     _count?: boolean | Prisma.ClipCountOutputTypeDefaultArgs<ExtArgs>;
   },
   ExtArgs['result']['clip']
@@ -1835,6 +2225,10 @@ export type ClipInclude<
   usageEvents?: boolean | Prisma.Clip$usageEventsArgs<ExtArgs>;
   allocations?: boolean | Prisma.Clip$allocationsArgs<ExtArgs>;
   renders?: boolean | Prisma.Clip$rendersArgs<ExtArgs>;
+  publishingMetadataDrafts?:
+    | boolean
+    | Prisma.Clip$publishingMetadataDraftsArgs<ExtArgs>;
+  publications?: boolean | Prisma.Clip$publicationsArgs<ExtArgs>;
   _count?: boolean | Prisma.ClipCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type ClipIncludeCreateManyAndReturn<
@@ -1863,6 +2257,8 @@ export type $ClipPayload<
     usageEvents: Prisma.$AIUsageEventPayload<ExtArgs>[];
     allocations: Prisma.$CostAllocationPayload<ExtArgs>[];
     renders: Prisma.$RenderPayload<ExtArgs>[];
+    publishingMetadataDrafts: Prisma.$PublishingMetadataDraftPayload<ExtArgs>[];
+    publications: Prisma.$PublicationPayload<ExtArgs>[];
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -2491,6 +2887,30 @@ export interface Prisma__ClipClient<
       >
     | Null
   >;
+  publishingMetadataDrafts<
+    T extends Prisma.Clip$publishingMetadataDraftsArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<T, Prisma.Clip$publishingMetadataDraftsArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$PublishingMetadataDraftPayload<ExtArgs>,
+        T,
+        'findMany',
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  publications<T extends Prisma.Clip$publicationsArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Clip$publicationsArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$PublicationPayload<ExtArgs>,
+        T,
+        'findMany',
+        GlobalOmitOptions
+      >
+    | Null
+  >;
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3107,6 +3527,68 @@ export type Clip$rendersArgs<
   take?: number;
   skip?: number;
   distinct?: Prisma.RenderScalarFieldEnum | Prisma.RenderScalarFieldEnum[];
+};
+
+/**
+ * Clip.publishingMetadataDrafts
+ */
+export type Clip$publishingMetadataDraftsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the PublishingMetadataDraft
+   */
+  select?: Prisma.PublishingMetadataDraftSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the PublishingMetadataDraft
+   */
+  omit?: Prisma.PublishingMetadataDraftOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PublishingMetadataDraftInclude<ExtArgs> | null;
+  where?: Prisma.PublishingMetadataDraftWhereInput;
+  orderBy?:
+    | Prisma.PublishingMetadataDraftOrderByWithRelationInput
+    | Prisma.PublishingMetadataDraftOrderByWithRelationInput[];
+  cursor?: Prisma.PublishingMetadataDraftWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.PublishingMetadataDraftScalarFieldEnum
+    | Prisma.PublishingMetadataDraftScalarFieldEnum[];
+};
+
+/**
+ * Clip.publications
+ */
+export type Clip$publicationsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the Publication
+   */
+  select?: Prisma.PublicationSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the Publication
+   */
+  omit?: Prisma.PublicationOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PublicationInclude<ExtArgs> | null;
+  where?: Prisma.PublicationWhereInput;
+  orderBy?:
+    | Prisma.PublicationOrderByWithRelationInput
+    | Prisma.PublicationOrderByWithRelationInput[];
+  cursor?: Prisma.PublicationWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.PublicationScalarFieldEnum
+    | Prisma.PublicationScalarFieldEnum[];
 };
 
 /**

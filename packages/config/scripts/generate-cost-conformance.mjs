@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { format } from 'prettier';
 
 const modelCatalog = JSON.parse(
   await readFile(new URL('../src/model-catalog.json', import.meta.url), 'utf8'),
@@ -128,7 +129,9 @@ const fixtureUrl = new URL(
   '../../contracts/test-fixtures/cost-conformance-vectors.json',
   import.meta.url,
 );
-const content = `${JSON.stringify(rows, null, 2)}\n`;
+const content = await format(JSON.stringify(rows, null, 2), {
+  parser: 'json',
+});
 if (process.argv.includes('--check')) {
   const existing = await readFile(fixtureUrl, 'utf8');
   if (existing !== content)

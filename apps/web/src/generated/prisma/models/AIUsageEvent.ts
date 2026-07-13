@@ -421,6 +421,10 @@ export type AIUsageEventWhereInput = {
     Prisma.PaidCallReservationNullableScalarRelationFilter,
     Prisma.PaidCallReservationWhereInput
   > | null;
+  publishingMetadataDraft?: Prisma.XOR<
+    Prisma.PublishingMetadataDraftNullableScalarRelationFilter,
+    Prisma.PublishingMetadataDraftWhereInput
+  > | null;
 };
 
 export type AIUsageEventOrderByWithRelationInput = {
@@ -453,6 +457,7 @@ export type AIUsageEventOrderByWithRelationInput = {
   analysisRun?: Prisma.AnalysisRunOrderByWithRelationInput;
   clip?: Prisma.ClipOrderByWithRelationInput;
   paidCallReservation?: Prisma.PaidCallReservationOrderByWithRelationInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftOrderByWithRelationInput;
 };
 
 export type AIUsageEventWhereUniqueInput = Prisma.AtLeast<
@@ -511,6 +516,10 @@ export type AIUsageEventWhereUniqueInput = Prisma.AtLeast<
     paidCallReservation?: Prisma.XOR<
       Prisma.PaidCallReservationNullableScalarRelationFilter,
       Prisma.PaidCallReservationWhereInput
+    > | null;
+    publishingMetadataDraft?: Prisma.XOR<
+      Prisma.PublishingMetadataDraftNullableScalarRelationFilter,
+      Prisma.PublishingMetadataDraftWhereInput
     > | null;
   },
   'id' | 'providerResponseId'
@@ -640,6 +649,7 @@ export type AIUsageEventCreateInput = {
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput;
   clip?: Prisma.ClipCreateNestedOneWithoutUsageEventsInput;
   paidCallReservation?: Prisma.PaidCallReservationCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventUncheckedCreateInput = {
@@ -671,6 +681,7 @@ export type AIUsageEventUncheckedCreateInput = {
     | runtime.InputJsonValue;
   createdAt?: Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventUpdateInput = {
@@ -713,6 +724,7 @@ export type AIUsageEventUpdateInput = {
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput;
   clip?: Prisma.ClipUpdateOneWithoutUsageEventsNestedInput;
   paidCallReservation?: Prisma.PaidCallReservationUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateInput = {
@@ -755,6 +767,7 @@ export type AIUsageEventUncheckedUpdateInput = {
     | runtime.InputJsonValue;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventCreateManyInput = {
@@ -1339,6 +1352,34 @@ export type AIUsageEventUncheckedUpdateManyWithoutClipNestedInput = {
     | Prisma.AIUsageEventScalarWhereInput[];
 };
 
+export type AIUsageEventCreateNestedOneWithoutPublishingMetadataDraftInput = {
+  create?: Prisma.XOR<
+    Prisma.AIUsageEventCreateWithoutPublishingMetadataDraftInput,
+    Prisma.AIUsageEventUncheckedCreateWithoutPublishingMetadataDraftInput
+  >;
+  connectOrCreate?: Prisma.AIUsageEventCreateOrConnectWithoutPublishingMetadataDraftInput;
+  connect?: Prisma.AIUsageEventWhereUniqueInput;
+};
+
+export type AIUsageEventUpdateOneWithoutPublishingMetadataDraftNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.AIUsageEventCreateWithoutPublishingMetadataDraftInput,
+    Prisma.AIUsageEventUncheckedCreateWithoutPublishingMetadataDraftInput
+  >;
+  connectOrCreate?: Prisma.AIUsageEventCreateOrConnectWithoutPublishingMetadataDraftInput;
+  upsert?: Prisma.AIUsageEventUpsertWithoutPublishingMetadataDraftInput;
+  disconnect?: Prisma.AIUsageEventWhereInput | boolean;
+  delete?: Prisma.AIUsageEventWhereInput | boolean;
+  connect?: Prisma.AIUsageEventWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.AIUsageEventUpdateToOneWithWhereWithoutPublishingMetadataDraftInput,
+      Prisma.AIUsageEventUpdateWithoutPublishingMetadataDraftInput
+    >,
+    Prisma.AIUsageEventUncheckedUpdateWithoutPublishingMetadataDraftInput
+  >;
+};
+
 export type AIUsageEventCreateWithoutProjectInput = {
   id?: string;
   reservationCallId?: string | null;
@@ -1367,6 +1408,7 @@ export type AIUsageEventCreateWithoutProjectInput = {
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput;
   clip?: Prisma.ClipCreateNestedOneWithoutUsageEventsInput;
   paidCallReservation?: Prisma.PaidCallReservationCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventUncheckedCreateWithoutProjectInput = {
@@ -1397,6 +1439,7 @@ export type AIUsageEventUncheckedCreateWithoutProjectInput = {
     | runtime.InputJsonValue;
   createdAt?: Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventCreateOrConnectWithoutProjectInput = {
@@ -1513,6 +1556,7 @@ export type AIUsageEventCreateWithoutAnalysisRunInput = {
   project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput;
   clip?: Prisma.ClipCreateNestedOneWithoutUsageEventsInput;
   paidCallReservation?: Prisma.PaidCallReservationCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventUncheckedCreateWithoutAnalysisRunInput = {
@@ -1543,6 +1587,7 @@ export type AIUsageEventUncheckedCreateWithoutAnalysisRunInput = {
     | runtime.InputJsonValue;
   createdAt?: Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventCreateOrConnectWithoutAnalysisRunInput = {
@@ -1616,6 +1661,7 @@ export type AIUsageEventCreateWithoutPaidCallReservationInput = {
   project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput;
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput;
   clip?: Prisma.ClipCreateNestedOneWithoutUsageEventsInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventUncheckedCreateWithoutPaidCallReservationInput = {
@@ -1646,6 +1692,7 @@ export type AIUsageEventUncheckedCreateWithoutPaidCallReservationInput = {
     | Prisma.NullableJsonNullValueInput
     | runtime.InputJsonValue;
   createdAt?: Date | string;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventCreateOrConnectWithoutPaidCallReservationInput = {
@@ -1715,6 +1762,7 @@ export type AIUsageEventUpdateWithoutPaidCallReservationInput = {
   project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput;
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput;
   clip?: Prisma.ClipUpdateOneWithoutUsageEventsNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateWithoutPaidCallReservationInput = {
@@ -1756,6 +1804,7 @@ export type AIUsageEventUncheckedUpdateWithoutPaidCallReservationInput = {
     | Prisma.NullableJsonNullValueInput
     | runtime.InputJsonValue;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventCreateWithoutClipInput = {
@@ -1786,6 +1835,7 @@ export type AIUsageEventCreateWithoutClipInput = {
   project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput;
   analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput;
   paidCallReservation?: Prisma.PaidCallReservationCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventUncheckedCreateWithoutClipInput = {
@@ -1816,6 +1866,7 @@ export type AIUsageEventUncheckedCreateWithoutClipInput = {
     | runtime.InputJsonValue;
   createdAt?: Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedCreateNestedOneWithoutAiUsageEventInput;
 };
 
 export type AIUsageEventCreateOrConnectWithoutClipInput = {
@@ -1859,6 +1910,181 @@ export type AIUsageEventUpdateManyWithWhereWithoutClipInput = {
     Prisma.AIUsageEventUpdateManyMutationInput,
     Prisma.AIUsageEventUncheckedUpdateManyWithoutClipInput
   >;
+};
+
+export type AIUsageEventCreateWithoutPublishingMetadataDraftInput = {
+  id?: string;
+  reservationCallId?: string | null;
+  reservationProjectId?: string | null;
+  reservationAnalysisRunId?: string | null;
+  providerResponseId: string;
+  requestHash: string;
+  purpose: string;
+  modelId: string;
+  reasoning: $Enums.ReasoningRecord;
+  promptVersion: string;
+  schemaVersion: string;
+  pricingVersion: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteInputTokens: number;
+  outputTokens: number;
+  reasoningTokens: number;
+  pricingTier: string;
+  costMicrousd: bigint | number;
+  occurredAt: Date | string;
+  responseObjectReference?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
+  createdAt?: Date | string;
+  project: Prisma.ProjectCreateNestedOneWithoutUsageEventsInput;
+  analysisRun: Prisma.AnalysisRunCreateNestedOneWithoutUsageEventsInput;
+  clip?: Prisma.ClipCreateNestedOneWithoutUsageEventsInput;
+  paidCallReservation?: Prisma.PaidCallReservationCreateNestedOneWithoutUsageEventInput;
+};
+
+export type AIUsageEventUncheckedCreateWithoutPublishingMetadataDraftInput = {
+  id?: string;
+  projectId: string;
+  analysisRunId: string;
+  clipId?: string | null;
+  reservationCallId?: string | null;
+  reservationProjectId?: string | null;
+  reservationAnalysisRunId?: string | null;
+  providerResponseId: string;
+  requestHash: string;
+  purpose: string;
+  modelId: string;
+  reasoning: $Enums.ReasoningRecord;
+  promptVersion: string;
+  schemaVersion: string;
+  pricingVersion: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteInputTokens: number;
+  outputTokens: number;
+  reasoningTokens: number;
+  pricingTier: string;
+  costMicrousd: bigint | number;
+  occurredAt: Date | string;
+  responseObjectReference?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
+  createdAt?: Date | string;
+  paidCallReservation?: Prisma.PaidCallReservationUncheckedCreateNestedOneWithoutUsageEventInput;
+};
+
+export type AIUsageEventCreateOrConnectWithoutPublishingMetadataDraftInput = {
+  where: Prisma.AIUsageEventWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.AIUsageEventCreateWithoutPublishingMetadataDraftInput,
+    Prisma.AIUsageEventUncheckedCreateWithoutPublishingMetadataDraftInput
+  >;
+};
+
+export type AIUsageEventUpsertWithoutPublishingMetadataDraftInput = {
+  update: Prisma.XOR<
+    Prisma.AIUsageEventUpdateWithoutPublishingMetadataDraftInput,
+    Prisma.AIUsageEventUncheckedUpdateWithoutPublishingMetadataDraftInput
+  >;
+  create: Prisma.XOR<
+    Prisma.AIUsageEventCreateWithoutPublishingMetadataDraftInput,
+    Prisma.AIUsageEventUncheckedCreateWithoutPublishingMetadataDraftInput
+  >;
+  where?: Prisma.AIUsageEventWhereInput;
+};
+
+export type AIUsageEventUpdateToOneWithWhereWithoutPublishingMetadataDraftInput =
+  {
+    where?: Prisma.AIUsageEventWhereInput;
+    data: Prisma.XOR<
+      Prisma.AIUsageEventUpdateWithoutPublishingMetadataDraftInput,
+      Prisma.AIUsageEventUncheckedUpdateWithoutPublishingMetadataDraftInput
+    >;
+  };
+
+export type AIUsageEventUpdateWithoutPublishingMetadataDraftInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  reservationCallId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  reservationProjectId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  reservationAnalysisRunId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string;
+  requestHash?: Prisma.StringFieldUpdateOperationsInput | string;
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string;
+  modelId?: Prisma.StringFieldUpdateOperationsInput | string;
+  reasoning?:
+    | Prisma.EnumReasoningRecordFieldUpdateOperationsInput
+    | $Enums.ReasoningRecord;
+  promptVersion?: Prisma.StringFieldUpdateOperationsInput | string;
+  schemaVersion?: Prisma.StringFieldUpdateOperationsInput | string;
+  pricingVersion?: Prisma.StringFieldUpdateOperationsInput | string;
+  inputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  cachedInputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  cacheWriteInputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  outputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  reasoningTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  pricingTier?: Prisma.StringFieldUpdateOperationsInput | string;
+  costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number;
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  responseObjectReference?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput;
+  analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput;
+  clip?: Prisma.ClipUpdateOneWithoutUsageEventsNestedInput;
+  paidCallReservation?: Prisma.PaidCallReservationUpdateOneWithoutUsageEventNestedInput;
+};
+
+export type AIUsageEventUncheckedUpdateWithoutPublishingMetadataDraftInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string;
+  analysisRunId?: Prisma.StringFieldUpdateOperationsInput | string;
+  clipId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  reservationCallId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  reservationProjectId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  reservationAnalysisRunId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  providerResponseId?: Prisma.StringFieldUpdateOperationsInput | string;
+  requestHash?: Prisma.StringFieldUpdateOperationsInput | string;
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string;
+  modelId?: Prisma.StringFieldUpdateOperationsInput | string;
+  reasoning?:
+    | Prisma.EnumReasoningRecordFieldUpdateOperationsInput
+    | $Enums.ReasoningRecord;
+  promptVersion?: Prisma.StringFieldUpdateOperationsInput | string;
+  schemaVersion?: Prisma.StringFieldUpdateOperationsInput | string;
+  pricingVersion?: Prisma.StringFieldUpdateOperationsInput | string;
+  inputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  cachedInputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  cacheWriteInputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  outputTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  reasoningTokens?: Prisma.IntFieldUpdateOperationsInput | number;
+  pricingTier?: Prisma.StringFieldUpdateOperationsInput | string;
+  costMicrousd?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number;
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  responseObjectReference?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput;
 };
 
 export type AIUsageEventCreateManyProjectInput = {
@@ -1929,6 +2155,7 @@ export type AIUsageEventUpdateWithoutProjectInput = {
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput;
   clip?: Prisma.ClipUpdateOneWithoutUsageEventsNestedInput;
   paidCallReservation?: Prisma.PaidCallReservationUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateWithoutProjectInput = {
@@ -1970,6 +2197,7 @@ export type AIUsageEventUncheckedUpdateWithoutProjectInput = {
     | runtime.InputJsonValue;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateManyWithoutProjectInput = {
@@ -2080,6 +2308,7 @@ export type AIUsageEventUpdateWithoutAnalysisRunInput = {
   project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput;
   clip?: Prisma.ClipUpdateOneWithoutUsageEventsNestedInput;
   paidCallReservation?: Prisma.PaidCallReservationUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateWithoutAnalysisRunInput = {
@@ -2121,6 +2350,7 @@ export type AIUsageEventUncheckedUpdateWithoutAnalysisRunInput = {
     | runtime.InputJsonValue;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateManyWithoutAnalysisRunInput = {
@@ -2231,6 +2461,7 @@ export type AIUsageEventUpdateWithoutClipInput = {
   project?: Prisma.ProjectUpdateOneRequiredWithoutUsageEventsNestedInput;
   analysisRun?: Prisma.AnalysisRunUpdateOneRequiredWithoutUsageEventsNestedInput;
   paidCallReservation?: Prisma.PaidCallReservationUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateWithoutClipInput = {
@@ -2272,6 +2503,7 @@ export type AIUsageEventUncheckedUpdateWithoutClipInput = {
     | runtime.InputJsonValue;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   paidCallReservation?: Prisma.PaidCallReservationUncheckedUpdateOneWithoutUsageEventNestedInput;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftUncheckedUpdateOneWithoutAiUsageEventNestedInput;
 };
 
 export type AIUsageEventUncheckedUpdateManyWithoutClipInput = {
@@ -2350,6 +2582,9 @@ export type AIUsageEventSelect<
     paidCallReservation?:
       | boolean
       | Prisma.AIUsageEvent$paidCallReservationArgs<ExtArgs>;
+    publishingMetadataDraft?:
+      | boolean
+      | Prisma.AIUsageEvent$publishingMetadataDraftArgs<ExtArgs>;
   },
   ExtArgs['result']['aIUsageEvent']
 >;
@@ -2497,6 +2732,9 @@ export type AIUsageEventInclude<
   paidCallReservation?:
     | boolean
     | Prisma.AIUsageEvent$paidCallReservationArgs<ExtArgs>;
+  publishingMetadataDraft?:
+    | boolean
+    | Prisma.AIUsageEvent$publishingMetadataDraftArgs<ExtArgs>;
 };
 export type AIUsageEventIncludeCreateManyAndReturn<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
@@ -2525,6 +2763,7 @@ export type $AIUsageEventPayload<
     analysisRun: Prisma.$AnalysisRunPayload<ExtArgs>;
     clip: Prisma.$ClipPayload<ExtArgs> | null;
     paidCallReservation: Prisma.$PaidCallReservationPayload<ExtArgs> | null;
+    publishingMetadataDraft: Prisma.$PublishingMetadataDraftPayload<ExtArgs> | null;
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -3168,6 +3407,24 @@ export interface Prisma__AIUsageEventClient<
     ExtArgs,
     GlobalOmitOptions
   >;
+  publishingMetadataDraft<
+    T extends Prisma.AIUsageEvent$publishingMetadataDraftArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.AIUsageEvent$publishingMetadataDraftArgs<ExtArgs>
+    >,
+  ): Prisma.Prisma__PublishingMetadataDraftClient<
+    runtime.Types.Result.GetResult<
+      Prisma.$PublishingMetadataDraftPayload<ExtArgs>,
+      T,
+      'findUniqueOrThrow',
+      GlobalOmitOptions
+    > | null,
+    null,
+    ExtArgs,
+    GlobalOmitOptions
+  >;
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3747,6 +4004,28 @@ export type AIUsageEvent$paidCallReservationArgs<
    */
   include?: Prisma.PaidCallReservationInclude<ExtArgs> | null;
   where?: Prisma.PaidCallReservationWhereInput;
+};
+
+/**
+ * AIUsageEvent.publishingMetadataDraft
+ */
+export type AIUsageEvent$publishingMetadataDraftArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the PublishingMetadataDraft
+   */
+  select?: Prisma.PublishingMetadataDraftSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the PublishingMetadataDraft
+   */
+  omit?: Prisma.PublishingMetadataDraftOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PublishingMetadataDraftInclude<ExtArgs> | null;
+  where?: Prisma.PublishingMetadataDraftWhereInput;
 };
 
 /**

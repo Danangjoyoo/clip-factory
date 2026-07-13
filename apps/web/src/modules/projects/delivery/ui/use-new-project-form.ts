@@ -2,11 +2,13 @@ import { useState } from 'react';
 import {
   defaults,
   validateForm,
+  type AiAssistedMode,
   type ModelId,
 } from './new-project.presentation';
-type FormValue = {
+export type NewProjectFormValue = {
+  name: string;
   sourceMethod: 'FILEPATH' | 'UPLOAD';
-  discoverHighlights: boolean;
+  aiMode: AiAssistedMode;
   language: string;
   model: ModelId;
   reasoning: string;
@@ -18,10 +20,10 @@ type FormValue = {
   path: string;
   file: File | null;
 };
-export function useNewProjectForm() {
-  const [value, setValue] = useState<FormValue>({
+export function useNewProjectForm(aiMode: AiAssistedMode = defaults.aiMode) {
+  const [value, setValue] = useState<NewProjectFormValue>({
     ...defaults,
-    sourceMethod: 'FILEPATH',
+    aiMode,
     path: '',
     file: null,
   });
@@ -33,7 +35,14 @@ export function useNewProjectForm() {
     maximumClipSeconds: value.maximumClipSeconds,
     instruction: value.instruction,
   });
-  const update = (patch: Partial<FormValue>) =>
+  const update = (patch: Partial<NewProjectFormValue>) =>
     setValue((current) => ({ ...current, ...patch }));
-  return { value, errors, update, valid: !Object.values(errors).some(Boolean) };
+  return {
+    value,
+    errors,
+    update,
+    valid:
+      !Object.values(errors).some(Boolean) &&
+      (value.sourceMethod !== 'UPLOAD' || Boolean(value.file)),
+  };
 }

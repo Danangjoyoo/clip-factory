@@ -1,10 +1,15 @@
 .preview {
-  width: min(100%, 24rem);
+  width: min(100%, 16rem);
   aspect-ratio: 9/16;
+  margin: auto;
+  overflow: hidden;
+  border: 5px solid #0a111d;
+  border-radius: 0.85rem;
   background: #111;
   color: #fff;
   display: grid;
   place-items: center;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
 }
 .preview video {
   max-width: 100%;
@@ -17,4 +22,5 @@
   min-height: 20rem;
   display: grid;
   place-items: center;
+  color: var(--color-text-muted);
 }

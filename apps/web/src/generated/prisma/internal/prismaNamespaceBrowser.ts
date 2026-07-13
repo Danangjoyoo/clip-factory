@@ -62,11 +62,15 @@ export const ModelName = {
   PaidCallReservation: 'PaidCallReservation',
   CostAllocation: 'CostAllocation',
   Clip: 'Clip',
+  PublishingMetadataDraft: 'PublishingMetadataDraft',
+  Publication: 'Publication',
+  PublicationAttempt: 'PublicationAttempt',
   Render: 'Render',
   JobProjection: 'JobProjection',
   StageTimingObservation: 'StageTimingObservation',
   UploadSession: 'UploadSession',
   IdempotencyReceipt: 'IdempotencyReceipt',
+  YouTubeConnection: 'YouTubeConnection',
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -253,6 +257,93 @@ export const ClipScalarFieldEnum = {
 export type ClipScalarFieldEnum =
   (typeof ClipScalarFieldEnum)[keyof typeof ClipScalarFieldEnum];
 
+export const PublishingMetadataDraftScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  clipId: 'clipId',
+  version: 'version',
+  revision: 'revision',
+  state: 'state',
+  source: 'source',
+  title: 'title',
+  description: 'description',
+  hashtags: 'hashtags',
+  keywordTags: 'keywordTags',
+  categoryId: 'categoryId',
+  defaultLanguage: 'defaultLanguage',
+  madeForKids: 'madeForKids',
+  containsSyntheticMedia: 'containsSyntheticMedia',
+  publishingInstruction: 'publishingInstruction',
+  modelId: 'modelId',
+  reasoningLevel: 'reasoningLevel',
+  maxCostMicrousd: 'maxCostMicrousd',
+  estimatedCostMicrousd: 'estimatedCostMicrousd',
+  actualCostMicrousd: 'actualCostMicrousd',
+  aiUsageEventId: 'aiUsageEventId',
+  approvedAt: 'approvedAt',
+  supersededAt: 'supersededAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type PublishingMetadataDraftScalarFieldEnum =
+  (typeof PublishingMetadataDraftScalarFieldEnum)[keyof typeof PublishingMetadataDraftScalarFieldEnum];
+
+export const PublicationScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  clipId: 'clipId',
+  renderId: 'renderId',
+  connectionId: 'connectionId',
+  metadataDraftId: 'metadataDraftId',
+  workflowId: 'workflowId',
+  intentKey: 'intentKey',
+  idempotencyKey: 'idempotencyKey',
+  metadataSnapshot: 'metadataSnapshot',
+  visibility: 'visibility',
+  apiProjectVerifiedSnapshot: 'apiProjectVerifiedSnapshot',
+  sourceLocalDatetime: 'sourceLocalDatetime',
+  sourceTimezone: 'sourceTimezone',
+  scheduleAtUtc: 'scheduleAtUtc',
+  state: 'state',
+  youtubeVideoId: 'youtubeVideoId',
+  youtubeUrl: 'youtubeUrl',
+  remoteVideoCreatedAt: 'remoteVideoCreatedAt',
+  thumbnailWarningCode: 'thumbnailWarningCode',
+  sanitizedErrorCode: 'sanitizedErrorCode',
+  sanitizedErrorMessage: 'sanitizedErrorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type PublicationScalarFieldEnum =
+  (typeof PublicationScalarFieldEnum)[keyof typeof PublicationScalarFieldEnum];
+
+export const PublicationAttemptScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  attemptNumber: 'attemptNumber',
+  idempotencyKey: 'idempotencyKey',
+  resumableSessionReference: 'resumableSessionReference',
+  acknowledgedBytes: 'acknowledgedBytes',
+  totalBytes: 'totalBytes',
+  stage: 'stage',
+  progressPercent: 'progressPercent',
+  finalChunkDispatchStartedAt: 'finalChunkDispatchStartedAt',
+  outcomeUncertainAt: 'outcomeUncertainAt',
+  reconciliationCheckedAt: 'reconciliationCheckedAt',
+  reconciliationResult: 'reconciliationResult',
+  duplicateRiskAcknowledgedAt: 'duplicateRiskAcknowledgedAt',
+  sanitizedErrorCode: 'sanitizedErrorCode',
+  sanitizedErrorMessage: 'sanitizedErrorMessage',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type PublicationAttemptScalarFieldEnum =
+  (typeof PublicationAttemptScalarFieldEnum)[keyof typeof PublicationAttemptScalarFieldEnum];
+
 export const RenderScalarFieldEnum = {
   id: 'id',
   projectId: 'projectId',
@@ -344,6 +435,28 @@ export const IdempotencyReceiptScalarFieldEnum = {
 
 export type IdempotencyReceiptScalarFieldEnum =
   (typeof IdempotencyReceiptScalarFieldEnum)[keyof typeof IdempotencyReceiptScalarFieldEnum];
+
+export const YouTubeConnectionScalarFieldEnum = {
+  id: 'id',
+  slot: 'slot',
+  channelId: 'channelId',
+  channelTitle: 'channelTitle',
+  channelHandle: 'channelHandle',
+  avatarUrl: 'avatarUrl',
+  grantedScopes: 'grantedScopes',
+  state: 'state',
+  oauthMode: 'oauthMode',
+  refreshTokenExpiresAt: 'refreshTokenExpiresAt',
+  healthCheckedAt: 'healthCheckedAt',
+  connectedAt: 'connectedAt',
+  disconnectedAt: 'disconnectedAt',
+  revocationUncertain: 'revocationUncertain',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type YouTubeConnectionScalarFieldEnum =
+  (typeof YouTubeConnectionScalarFieldEnum)[keyof typeof YouTubeConnectionScalarFieldEnum];
 
 export const SortOrder = {
   asc: 'asc',

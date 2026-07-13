@@ -1,36 +1,57 @@
 import {
+  aiModeCopy,
   models,
+  type AiAssistedMode,
   type CatalogView,
   type ModelId,
 } from './new-project.presentation';
 export function AnalysisSettings({
-  discover,
+  mode,
   model,
   reasoning,
   catalog,
-  onDiscover,
+  onMode,
   onModel,
   onReasoning,
+  openAiApiKeyConfigured = true,
 }: {
-  discover: boolean;
+  mode: AiAssistedMode;
   model: ModelId;
   reasoning: string;
   catalog: CatalogView;
-  onDiscover: (value: boolean) => void;
+  onMode: (value: AiAssistedMode) => void;
   onModel: (value: ModelId) => void;
   onReasoning: (value: string) => void;
+  openAiApiKeyConfigured?: boolean;
 }) {
   return (
     <section aria-label="Analysis settings">
+      {!openAiApiKeyConfigured ? (
+        <p role="alert">
+          OpenAI API KEY is missing, AI Assisted Mode is disabled
+        </p>
+      ) : null}
       <label>
-        <input
-          type="checkbox"
-          checked={discover}
-          onChange={(e) => onDiscover(e.target.checked)}
-        />{' '}
-        Discover highlights with OpenAI
+        AI-assisted mode
+        <select
+          aria-label="AI-assisted mode"
+          value={openAiApiKeyConfigured ? mode : 'MANUAL'}
+          onChange={(e) => onMode(e.target.value as AiAssistedMode)}
+        >
+          <option value="MANUAL">Manual</option>
+          <option value="PARTIAL" disabled={!openAiApiKeyConfigured}>
+            Partial
+          </option>
+          <option value="ADVANCED" disabled={!openAiApiKeyConfigured}>
+            Advanced
+          </option>
+          <option value="COMPLETE" disabled={!openAiApiKeyConfigured}>
+            Complete
+          </option>
+        </select>
       </label>
-      {discover ? (
+      <p>{aiModeCopy[openAiApiKeyConfigured ? mode : 'MANUAL']}</p>
+      {openAiApiKeyConfigured && mode !== 'MANUAL' ? (
         <>
           <label>
             Model
@@ -69,9 +90,7 @@ export function AnalysisSettings({
             Generated-token ceiling includes reasoning and visible output.
           </small>
         </>
-      ) : (
-        <p>No cloud AI / no API cost</p>
-      )}
+      ) : null}
     </section>
   );
 }

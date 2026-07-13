@@ -8,6 +8,7 @@ const defaults: SettingsEntity = {
   defaultPlatform: 'youtube',
   captionProfile: 'default',
   catalogVersion: 'local',
+  openAiApiKey: '',
 };
 
 export class LocalSettingsStoreAdapter implements SettingsStore {

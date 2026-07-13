@@ -12,6 +12,7 @@ import transcript from '../schema/transcript.schema.json';
 import workerHealth from '../schema/worker-health.schema.json';
 import workflowInput from '../schema/workflow-input.schema.json';
 import workflowResult from '../schema/workflow-result.schema.json';
+import youtubePublishing from '../schema/youtube-publishing.schema.json';
 
 const ajv = new Ajv2020({ allErrors: true, strict: true });
 addFormats(ajv);
@@ -27,7 +28,9 @@ const entries = {
   'worker-health': workerHealth,
   'workflow-input': workflowInput,
   'workflow-result': workflowResult,
+  'youtube-publishing': youtubePublishing,
 } as const;
+for (const schema of Object.values(entries)) ajv.addSchema(schema as AnySchema);
 const validators = new Map(
   Object.entries(entries).map(([name, schema]) => [
     name,
@@ -41,4 +44,38 @@ export function validateContract(name: string, value: unknown): unknown {
   if (!validate(value))
     throw new Error(ajv.errorsText(validate.errors, { separator: '; ' }));
   return value;
+}
+
+export class ContractValidationError extends Error {
+  constructor(errors: Parameters<typeof ajv.errorsText>[0]) {
+    super(ajv.errorsText(errors, { separator: '; ' }));
+    this.name = 'ContractValidationError';
+  }
+}
+
+export function validateContractDefinition<T>(
+  schemaName: string,
+  definitionName: string,
+  value: unknown,
+): T {
+  const validate = ajv.getSchema(
+    `https://clip-factory.local/contracts/${schemaName}/1.0.0#/$defs/${definitionName}`,
+  );
+  if (!validate)
+    throw new Error(
+      `unknown contract definition ${schemaName}.${definitionName}`,
+    );
+  if (!validate(value)) {
+    if (
+      schemaName === 'youtube-publishing' &&
+      definitionName === 'publicationWorkflowInputV1' &&
+      (value as { visibility?: unknown }).visibility === 'SCHEDULED'
+    ) {
+      throw new Error(
+        'scheduled publication requires scheduleAtUtc and sourceTimezone',
+      );
+    }
+    throw new ContractValidationError(validate.errors ?? []);
+  }
+  return value as T;
 }

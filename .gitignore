@@ -5,6 +5,7 @@
 .superpowers/
 node_modules/
 .next/
+apps/web/next-env.d.ts
 coverage/
 dist/
 build/
@@ -23,3 +24,6 @@ __pycache__/
 samples/
 .artifacts/media-fixtures/
 .artifacts/acceptance/
+envs/.local.env
+envs/.dev.env
+envs/.prod.env

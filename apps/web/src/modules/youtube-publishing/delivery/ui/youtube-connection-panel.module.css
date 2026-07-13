@@ -1,0 +1,176 @@
+.panel {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+}
+
+.header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.header h2 {
+  margin: var(--space-1) 0 0;
+  font-size: 1.15rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status {
+  margin: 0;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  color: var(--color-text);
+  background: var(--color-canvas);
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--space-3);
+}
+
+.avatar {
+  display: grid;
+  flex: 0 0 2.6rem;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  place-items: center;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: 50%;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+  font-weight: 900;
+}
+
+.channelTitle,
+.channelHandle,
+.empty,
+.warning,
+.error,
+.dialog p {
+  overflow-wrap: anywhere;
+}
+
+.channelTitle {
+  margin: 0;
+  font-weight: 800;
+}
+
+.channelHandle,
+.empty {
+  margin: 0.2rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.warning,
+.error {
+  margin: 0;
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+  background: var(--color-canvas);
+  font-size: 0.86rem;
+}
+
+.warning {
+  color: var(--color-warning);
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.actions,
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.actions button,
+.dialogActions button {
+  min-block-size: 2.5rem;
+  border: 0;
+  border-radius: var(--radius-control);
+  padding: 0.65rem 0.85rem;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.actions button:disabled,
+.dialogActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.secondary {
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-surface-raised) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-surface-raised) 70%,
+    transparent
+  ) !important;
+}
+
+.dialog {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-surface-raised);
+  border-radius: var(--radius-panel);
+  background: var(--color-canvas);
+}
+
+.dialog h3,
+.dialog p {
+  margin: 0;
+}
+
+.dialog p {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 640px) {
+  .panel {
+    padding: var(--space-4);
+  }
+
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .status {
+    width: fit-content;
+    white-space: normal;
+  }
+
+  .actions button,
+  .dialogActions button {
+    flex: 1 1 100%;
+  }
+}

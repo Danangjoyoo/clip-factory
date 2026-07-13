@@ -4,6 +4,14 @@ const outer = '(?:^|/)(?:adapters|delivery|converters)(?:/|$)';
 module.exports = {
   forbidden: [
     {
+      name: 'youtube-publishing-domain-is-inner',
+      severity: 'error',
+      from: { path: '(?:^|/)youtube-publishing/domain(?:/|$)' },
+      to: {
+        path: '(?:^|/)(?:application|adapters|delivery|converters|composition)(?:/|$)',
+      },
+    },
+    {
       name: 'no-circular-dependencies',
       comment:
         'Dependency cycles make the feature graph impossible to reason about.',

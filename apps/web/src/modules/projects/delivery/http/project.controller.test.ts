@@ -55,8 +55,14 @@ it('returns 400 for malformed JSON bodies', async () => {
   expect(await response.json()).toEqual({ code: 'INVALID_PROJECT' });
 });
 it('serializes a created project with string micro-USD', async () => {
+  const source = {
+    id: 'source-1',
+    kind: 'BROWSER_UPLOAD',
+    displayPath: 'demo.mp4',
+    health: 'UNKNOWN',
+  } as const;
   const controller = new ProjectController(
-    { execute: vi.fn().mockResolvedValue({ project, source: null }) } as never,
+    { execute: vi.fn().mockResolvedValue({ project, source }) } as never,
     {} as never,
     {} as never,
     {} as never,
@@ -75,5 +81,8 @@ it('serializes a created project with string micro-USD', async () => {
     }),
   );
   expect(response.status).toBe(201);
-  expect((await response.json()).openaiSpendMicrousd).toBe('0');
+  expect(await response.json()).toMatchObject({
+    openaiSpendMicrousd: '0',
+    source: { id: 'source-1' },
+  });
 });

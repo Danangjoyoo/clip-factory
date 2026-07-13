@@ -5,4 +5,5 @@ minimumReleaseAge: 0
 allowBuilds:
   '@prisma/engines': true
   prisma: true
+  protobufjs: false
   sharp: true

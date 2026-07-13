@@ -1,6 +1,7 @@
 export const defaults = {
   sourceMethod: 'FILEPATH',
-  discoverHighlights: true,
+  name: '',
+  aiMode: 'PARTIAL',
   language: 'en',
   model: 'gpt-5.6-sol',
   reasoning: 'high',
@@ -10,6 +11,18 @@ export const defaults = {
   instruction: '',
   platform: 'YOUTUBE_SHORTS',
 } as const;
+export type AiAssistedMode = 'MANUAL' | 'PARTIAL' | 'ADVANCED' | 'COMPLETE';
+export const aiModeCopy = {
+  MANUAL:
+    'No OpenAI calls. Clip selection, metadata, and publishing details are manual.',
+  PARTIAL:
+    'AI suggests highlight candidates for clip editing. Captions and publishing stay manual.',
+  ADVANCED: 'AI suggests highlights and drafts YouTube metadata for review.',
+  COMPLETE:
+    'AI suggests highlights, metadata, and publishing times. You must still confirm every schedule and upload.',
+} as const;
+export const projectModeFor = (mode: AiAssistedMode) =>
+  mode === 'MANUAL' ? 'MANUAL' : 'AI_HIGHLIGHTS';
 export const models = {
   'gpt-5.6-sol': ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
   'gpt-5.5': ['none', 'low', 'medium', 'high', 'xhigh'],

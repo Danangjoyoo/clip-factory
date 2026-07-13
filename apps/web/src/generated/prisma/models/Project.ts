@@ -294,6 +294,8 @@ export type ProjectWhereInput = {
   jobProjections?: Prisma.JobProjectionListRelationFilter;
   timingObservations?: Prisma.StageTimingObservationListRelationFilter;
   uploadSessions?: Prisma.UploadSessionListRelationFilter;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftListRelationFilter;
+  publications?: Prisma.PublicationListRelationFilter;
 };
 
 export type ProjectOrderByWithRelationInput = {
@@ -318,6 +320,8 @@ export type ProjectOrderByWithRelationInput = {
   jobProjections?: Prisma.JobProjectionOrderByRelationAggregateInput;
   timingObservations?: Prisma.StageTimingObservationOrderByRelationAggregateInput;
   uploadSessions?: Prisma.UploadSessionOrderByRelationAggregateInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftOrderByRelationAggregateInput;
+  publications?: Prisma.PublicationOrderByRelationAggregateInput;
 };
 
 export type ProjectWhereUniqueInput = Prisma.AtLeast<
@@ -358,6 +362,8 @@ export type ProjectWhereUniqueInput = Prisma.AtLeast<
     jobProjections?: Prisma.JobProjectionListRelationFilter;
     timingObservations?: Prisma.StageTimingObservationListRelationFilter;
     uploadSessions?: Prisma.UploadSessionListRelationFilter;
+    publishingMetadataDrafts?: Prisma.PublishingMetadataDraftListRelationFilter;
+    publications?: Prisma.PublicationListRelationFilter;
   },
   'id'
 >;
@@ -436,6 +442,8 @@ export type ProjectCreateInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateInput = {
@@ -460,6 +468,8 @@ export type ProjectUncheckedCreateInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUpdateInput = {
@@ -496,6 +506,8 @@ export type ProjectUpdateInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateInput = {
@@ -532,6 +544,8 @@ export type ProjectUncheckedUpdateInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateManyInput = {
@@ -853,6 +867,59 @@ export type ProjectUpdateOneRequiredWithoutClipsNestedInput = {
   >;
 };
 
+export type ProjectCreateNestedOneWithoutPublishingMetadataDraftsInput = {
+  create?: Prisma.XOR<
+    Prisma.ProjectCreateWithoutPublishingMetadataDraftsInput,
+    Prisma.ProjectUncheckedCreateWithoutPublishingMetadataDraftsInput
+  >;
+  connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutPublishingMetadataDraftsInput;
+  connect?: Prisma.ProjectWhereUniqueInput;
+};
+
+export type ProjectUpdateOneRequiredWithoutPublishingMetadataDraftsNestedInput =
+  {
+    create?: Prisma.XOR<
+      Prisma.ProjectCreateWithoutPublishingMetadataDraftsInput,
+      Prisma.ProjectUncheckedCreateWithoutPublishingMetadataDraftsInput
+    >;
+    connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutPublishingMetadataDraftsInput;
+    upsert?: Prisma.ProjectUpsertWithoutPublishingMetadataDraftsInput;
+    connect?: Prisma.ProjectWhereUniqueInput;
+    update?: Prisma.XOR<
+      Prisma.XOR<
+        Prisma.ProjectUpdateToOneWithWhereWithoutPublishingMetadataDraftsInput,
+        Prisma.ProjectUpdateWithoutPublishingMetadataDraftsInput
+      >,
+      Prisma.ProjectUncheckedUpdateWithoutPublishingMetadataDraftsInput
+    >;
+  };
+
+export type ProjectCreateNestedOneWithoutPublicationsInput = {
+  create?: Prisma.XOR<
+    Prisma.ProjectCreateWithoutPublicationsInput,
+    Prisma.ProjectUncheckedCreateWithoutPublicationsInput
+  >;
+  connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutPublicationsInput;
+  connect?: Prisma.ProjectWhereUniqueInput;
+};
+
+export type ProjectUpdateOneRequiredWithoutPublicationsNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.ProjectCreateWithoutPublicationsInput,
+    Prisma.ProjectUncheckedCreateWithoutPublicationsInput
+  >;
+  connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutPublicationsInput;
+  upsert?: Prisma.ProjectUpsertWithoutPublicationsInput;
+  connect?: Prisma.ProjectWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.ProjectUpdateToOneWithWhereWithoutPublicationsInput,
+      Prisma.ProjectUpdateWithoutPublicationsInput
+    >,
+    Prisma.ProjectUncheckedUpdateWithoutPublicationsInput
+  >;
+};
+
 export type ProjectCreateNestedOneWithoutRendersInput = {
   create?: Prisma.XOR<
     Prisma.ProjectCreateWithoutRendersInput,
@@ -978,6 +1045,8 @@ export type ProjectCreateWithoutSourceAssetInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutSourceAssetInput = {
@@ -1001,6 +1070,8 @@ export type ProjectUncheckedCreateWithoutSourceAssetInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutSourceAssetInput = {
@@ -1064,6 +1135,8 @@ export type ProjectUpdateWithoutSourceAssetInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutSourceAssetInput = {
@@ -1099,6 +1172,8 @@ export type ProjectUncheckedUpdateWithoutSourceAssetInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutTranscriptInput = {
@@ -1122,6 +1197,8 @@ export type ProjectCreateWithoutTranscriptInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutTranscriptInput = {
@@ -1145,6 +1222,8 @@ export type ProjectUncheckedCreateWithoutTranscriptInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutTranscriptInput = {
@@ -1208,6 +1287,8 @@ export type ProjectUpdateWithoutTranscriptInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutTranscriptInput = {
@@ -1243,6 +1324,8 @@ export type ProjectUncheckedUpdateWithoutTranscriptInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutAnalysisRunsInput = {
@@ -1266,6 +1349,8 @@ export type ProjectCreateWithoutAnalysisRunsInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutAnalysisRunsInput = {
@@ -1289,6 +1374,8 @@ export type ProjectUncheckedCreateWithoutAnalysisRunsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutAnalysisRunsInput = {
@@ -1352,6 +1439,8 @@ export type ProjectUpdateWithoutAnalysisRunsInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutAnalysisRunsInput = {
@@ -1387,6 +1476,8 @@ export type ProjectUncheckedUpdateWithoutAnalysisRunsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutUsageEventsInput = {
@@ -1410,6 +1501,8 @@ export type ProjectCreateWithoutUsageEventsInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutUsageEventsInput = {
@@ -1433,6 +1526,8 @@ export type ProjectUncheckedCreateWithoutUsageEventsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutUsageEventsInput = {
@@ -1496,6 +1591,8 @@ export type ProjectUpdateWithoutUsageEventsInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutUsageEventsInput = {
@@ -1531,6 +1628,8 @@ export type ProjectUncheckedUpdateWithoutUsageEventsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutPaidCallReservationsInput = {
@@ -1554,6 +1653,8 @@ export type ProjectCreateWithoutPaidCallReservationsInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutPaidCallReservationsInput = {
@@ -1577,6 +1678,8 @@ export type ProjectUncheckedCreateWithoutPaidCallReservationsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutPaidCallReservationsInput = {
@@ -1640,6 +1743,8 @@ export type ProjectUpdateWithoutPaidCallReservationsInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutPaidCallReservationsInput = {
@@ -1675,6 +1780,8 @@ export type ProjectUncheckedUpdateWithoutPaidCallReservationsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutClipsInput = {
@@ -1698,6 +1805,8 @@ export type ProjectCreateWithoutClipsInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutClipsInput = {
@@ -1721,6 +1830,8 @@ export type ProjectUncheckedCreateWithoutClipsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutClipsInput = {
@@ -1784,6 +1895,8 @@ export type ProjectUpdateWithoutClipsInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutClipsInput = {
@@ -1819,6 +1932,312 @@ export type ProjectUncheckedUpdateWithoutClipsInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectCreateWithoutPublishingMetadataDraftsInput = {
+  id?: string;
+  name: string;
+  mode: $Enums.ProjectModeRecord;
+  languageTag: string;
+  defaultMaxClipSeconds: number;
+  defaultPlatformPreset: $Enums.PlatformPresetRecord;
+  status?: $Enums.ProjectStatusRecord;
+  activeWorkflowId?: string | null;
+  openaiSpendMicrousd?: bigint | number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  sourceAsset?: Prisma.SourceAssetCreateNestedOneWithoutProjectInput;
+  transcript?: Prisma.TranscriptCreateNestedOneWithoutProjectInput;
+  analysisRuns?: Prisma.AnalysisRunCreateNestedManyWithoutProjectInput;
+  usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutProjectInput;
+  paidCallReservations?: Prisma.PaidCallReservationCreateNestedManyWithoutProjectInput;
+  clips?: Prisma.ClipCreateNestedManyWithoutProjectInput;
+  renders?: Prisma.RenderCreateNestedManyWithoutProjectInput;
+  jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
+  timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
+  uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectUncheckedCreateWithoutPublishingMetadataDraftsInput = {
+  id?: string;
+  name: string;
+  mode: $Enums.ProjectModeRecord;
+  languageTag: string;
+  defaultMaxClipSeconds: number;
+  defaultPlatformPreset: $Enums.PlatformPresetRecord;
+  status?: $Enums.ProjectStatusRecord;
+  activeWorkflowId?: string | null;
+  openaiSpendMicrousd?: bigint | number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  sourceAsset?: Prisma.SourceAssetUncheckedCreateNestedOneWithoutProjectInput;
+  transcript?: Prisma.TranscriptUncheckedCreateNestedOneWithoutProjectInput;
+  analysisRuns?: Prisma.AnalysisRunUncheckedCreateNestedManyWithoutProjectInput;
+  usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutProjectInput;
+  paidCallReservations?: Prisma.PaidCallReservationUncheckedCreateNestedManyWithoutProjectInput;
+  clips?: Prisma.ClipUncheckedCreateNestedManyWithoutProjectInput;
+  renders?: Prisma.RenderUncheckedCreateNestedManyWithoutProjectInput;
+  jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
+  timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
+  uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectCreateOrConnectWithoutPublishingMetadataDraftsInput = {
+  where: Prisma.ProjectWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutPublishingMetadataDraftsInput,
+    Prisma.ProjectUncheckedCreateWithoutPublishingMetadataDraftsInput
+  >;
+};
+
+export type ProjectUpsertWithoutPublishingMetadataDraftsInput = {
+  update: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutPublishingMetadataDraftsInput,
+    Prisma.ProjectUncheckedUpdateWithoutPublishingMetadataDraftsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutPublishingMetadataDraftsInput,
+    Prisma.ProjectUncheckedCreateWithoutPublishingMetadataDraftsInput
+  >;
+  where?: Prisma.ProjectWhereInput;
+};
+
+export type ProjectUpdateToOneWithWhereWithoutPublishingMetadataDraftsInput = {
+  where?: Prisma.ProjectWhereInput;
+  data: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutPublishingMetadataDraftsInput,
+    Prisma.ProjectUncheckedUpdateWithoutPublishingMetadataDraftsInput
+  >;
+};
+
+export type ProjectUpdateWithoutPublishingMetadataDraftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  name?: Prisma.StringFieldUpdateOperationsInput | string;
+  mode?:
+    | Prisma.EnumProjectModeRecordFieldUpdateOperationsInput
+    | $Enums.ProjectModeRecord;
+  languageTag?: Prisma.StringFieldUpdateOperationsInput | string;
+  defaultMaxClipSeconds?: Prisma.IntFieldUpdateOperationsInput | number;
+  defaultPlatformPreset?:
+    | Prisma.EnumPlatformPresetRecordFieldUpdateOperationsInput
+    | $Enums.PlatformPresetRecord;
+  status?:
+    | Prisma.EnumProjectStatusRecordFieldUpdateOperationsInput
+    | $Enums.ProjectStatusRecord;
+  activeWorkflowId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  openaiSpendMicrousd?:
+    | Prisma.BigIntFieldUpdateOperationsInput
+    | bigint
+    | number;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  sourceAsset?: Prisma.SourceAssetUpdateOneWithoutProjectNestedInput;
+  transcript?: Prisma.TranscriptUpdateOneWithoutProjectNestedInput;
+  analysisRuns?: Prisma.AnalysisRunUpdateManyWithoutProjectNestedInput;
+  usageEvents?: Prisma.AIUsageEventUpdateManyWithoutProjectNestedInput;
+  paidCallReservations?: Prisma.PaidCallReservationUpdateManyWithoutProjectNestedInput;
+  clips?: Prisma.ClipUpdateManyWithoutProjectNestedInput;
+  renders?: Prisma.RenderUpdateManyWithoutProjectNestedInput;
+  jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
+  timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
+  uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectUncheckedUpdateWithoutPublishingMetadataDraftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  name?: Prisma.StringFieldUpdateOperationsInput | string;
+  mode?:
+    | Prisma.EnumProjectModeRecordFieldUpdateOperationsInput
+    | $Enums.ProjectModeRecord;
+  languageTag?: Prisma.StringFieldUpdateOperationsInput | string;
+  defaultMaxClipSeconds?: Prisma.IntFieldUpdateOperationsInput | number;
+  defaultPlatformPreset?:
+    | Prisma.EnumPlatformPresetRecordFieldUpdateOperationsInput
+    | $Enums.PlatformPresetRecord;
+  status?:
+    | Prisma.EnumProjectStatusRecordFieldUpdateOperationsInput
+    | $Enums.ProjectStatusRecord;
+  activeWorkflowId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  openaiSpendMicrousd?:
+    | Prisma.BigIntFieldUpdateOperationsInput
+    | bigint
+    | number;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  sourceAsset?: Prisma.SourceAssetUncheckedUpdateOneWithoutProjectNestedInput;
+  transcript?: Prisma.TranscriptUncheckedUpdateOneWithoutProjectNestedInput;
+  analysisRuns?: Prisma.AnalysisRunUncheckedUpdateManyWithoutProjectNestedInput;
+  usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutProjectNestedInput;
+  paidCallReservations?: Prisma.PaidCallReservationUncheckedUpdateManyWithoutProjectNestedInput;
+  clips?: Prisma.ClipUncheckedUpdateManyWithoutProjectNestedInput;
+  renders?: Prisma.RenderUncheckedUpdateManyWithoutProjectNestedInput;
+  jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
+  timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
+  uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectCreateWithoutPublicationsInput = {
+  id?: string;
+  name: string;
+  mode: $Enums.ProjectModeRecord;
+  languageTag: string;
+  defaultMaxClipSeconds: number;
+  defaultPlatformPreset: $Enums.PlatformPresetRecord;
+  status?: $Enums.ProjectStatusRecord;
+  activeWorkflowId?: string | null;
+  openaiSpendMicrousd?: bigint | number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  sourceAsset?: Prisma.SourceAssetCreateNestedOneWithoutProjectInput;
+  transcript?: Prisma.TranscriptCreateNestedOneWithoutProjectInput;
+  analysisRuns?: Prisma.AnalysisRunCreateNestedManyWithoutProjectInput;
+  usageEvents?: Prisma.AIUsageEventCreateNestedManyWithoutProjectInput;
+  paidCallReservations?: Prisma.PaidCallReservationCreateNestedManyWithoutProjectInput;
+  clips?: Prisma.ClipCreateNestedManyWithoutProjectInput;
+  renders?: Prisma.RenderCreateNestedManyWithoutProjectInput;
+  jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
+  timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
+  uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectUncheckedCreateWithoutPublicationsInput = {
+  id?: string;
+  name: string;
+  mode: $Enums.ProjectModeRecord;
+  languageTag: string;
+  defaultMaxClipSeconds: number;
+  defaultPlatformPreset: $Enums.PlatformPresetRecord;
+  status?: $Enums.ProjectStatusRecord;
+  activeWorkflowId?: string | null;
+  openaiSpendMicrousd?: bigint | number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  sourceAsset?: Prisma.SourceAssetUncheckedCreateNestedOneWithoutProjectInput;
+  transcript?: Prisma.TranscriptUncheckedCreateNestedOneWithoutProjectInput;
+  analysisRuns?: Prisma.AnalysisRunUncheckedCreateNestedManyWithoutProjectInput;
+  usageEvents?: Prisma.AIUsageEventUncheckedCreateNestedManyWithoutProjectInput;
+  paidCallReservations?: Prisma.PaidCallReservationUncheckedCreateNestedManyWithoutProjectInput;
+  clips?: Prisma.ClipUncheckedCreateNestedManyWithoutProjectInput;
+  renders?: Prisma.RenderUncheckedCreateNestedManyWithoutProjectInput;
+  jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
+  timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
+  uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectCreateOrConnectWithoutPublicationsInput = {
+  where: Prisma.ProjectWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutPublicationsInput,
+    Prisma.ProjectUncheckedCreateWithoutPublicationsInput
+  >;
+};
+
+export type ProjectUpsertWithoutPublicationsInput = {
+  update: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutPublicationsInput,
+    Prisma.ProjectUncheckedUpdateWithoutPublicationsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutPublicationsInput,
+    Prisma.ProjectUncheckedCreateWithoutPublicationsInput
+  >;
+  where?: Prisma.ProjectWhereInput;
+};
+
+export type ProjectUpdateToOneWithWhereWithoutPublicationsInput = {
+  where?: Prisma.ProjectWhereInput;
+  data: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutPublicationsInput,
+    Prisma.ProjectUncheckedUpdateWithoutPublicationsInput
+  >;
+};
+
+export type ProjectUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  name?: Prisma.StringFieldUpdateOperationsInput | string;
+  mode?:
+    | Prisma.EnumProjectModeRecordFieldUpdateOperationsInput
+    | $Enums.ProjectModeRecord;
+  languageTag?: Prisma.StringFieldUpdateOperationsInput | string;
+  defaultMaxClipSeconds?: Prisma.IntFieldUpdateOperationsInput | number;
+  defaultPlatformPreset?:
+    | Prisma.EnumPlatformPresetRecordFieldUpdateOperationsInput
+    | $Enums.PlatformPresetRecord;
+  status?:
+    | Prisma.EnumProjectStatusRecordFieldUpdateOperationsInput
+    | $Enums.ProjectStatusRecord;
+  activeWorkflowId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  openaiSpendMicrousd?:
+    | Prisma.BigIntFieldUpdateOperationsInput
+    | bigint
+    | number;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  sourceAsset?: Prisma.SourceAssetUpdateOneWithoutProjectNestedInput;
+  transcript?: Prisma.TranscriptUpdateOneWithoutProjectNestedInput;
+  analysisRuns?: Prisma.AnalysisRunUpdateManyWithoutProjectNestedInput;
+  usageEvents?: Prisma.AIUsageEventUpdateManyWithoutProjectNestedInput;
+  paidCallReservations?: Prisma.PaidCallReservationUpdateManyWithoutProjectNestedInput;
+  clips?: Prisma.ClipUpdateManyWithoutProjectNestedInput;
+  renders?: Prisma.RenderUpdateManyWithoutProjectNestedInput;
+  jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
+  timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
+  uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectUncheckedUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  name?: Prisma.StringFieldUpdateOperationsInput | string;
+  mode?:
+    | Prisma.EnumProjectModeRecordFieldUpdateOperationsInput
+    | $Enums.ProjectModeRecord;
+  languageTag?: Prisma.StringFieldUpdateOperationsInput | string;
+  defaultMaxClipSeconds?: Prisma.IntFieldUpdateOperationsInput | number;
+  defaultPlatformPreset?:
+    | Prisma.EnumPlatformPresetRecordFieldUpdateOperationsInput
+    | $Enums.PlatformPresetRecord;
+  status?:
+    | Prisma.EnumProjectStatusRecordFieldUpdateOperationsInput
+    | $Enums.ProjectStatusRecord;
+  activeWorkflowId?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  openaiSpendMicrousd?:
+    | Prisma.BigIntFieldUpdateOperationsInput
+    | bigint
+    | number;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  sourceAsset?: Prisma.SourceAssetUncheckedUpdateOneWithoutProjectNestedInput;
+  transcript?: Prisma.TranscriptUncheckedUpdateOneWithoutProjectNestedInput;
+  analysisRuns?: Prisma.AnalysisRunUncheckedUpdateManyWithoutProjectNestedInput;
+  usageEvents?: Prisma.AIUsageEventUncheckedUpdateManyWithoutProjectNestedInput;
+  paidCallReservations?: Prisma.PaidCallReservationUncheckedUpdateManyWithoutProjectNestedInput;
+  clips?: Prisma.ClipUncheckedUpdateManyWithoutProjectNestedInput;
+  renders?: Prisma.RenderUncheckedUpdateManyWithoutProjectNestedInput;
+  jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
+  timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
+  uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutRendersInput = {
@@ -1842,6 +2261,8 @@ export type ProjectCreateWithoutRendersInput = {
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutRendersInput = {
@@ -1865,6 +2286,8 @@ export type ProjectUncheckedCreateWithoutRendersInput = {
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutRendersInput = {
@@ -1928,6 +2351,8 @@ export type ProjectUpdateWithoutRendersInput = {
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutRendersInput = {
@@ -1963,6 +2388,8 @@ export type ProjectUncheckedUpdateWithoutRendersInput = {
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutJobProjectionsInput = {
@@ -1986,6 +2413,8 @@ export type ProjectCreateWithoutJobProjectionsInput = {
   renders?: Prisma.RenderCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutJobProjectionsInput = {
@@ -2009,6 +2438,8 @@ export type ProjectUncheckedCreateWithoutJobProjectionsInput = {
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutJobProjectionsInput = {
@@ -2072,6 +2503,8 @@ export type ProjectUpdateWithoutJobProjectionsInput = {
   renders?: Prisma.RenderUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutJobProjectionsInput = {
@@ -2107,6 +2540,8 @@ export type ProjectUncheckedUpdateWithoutJobProjectionsInput = {
   renders?: Prisma.RenderUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutTimingObservationsInput = {
@@ -2130,6 +2565,8 @@ export type ProjectCreateWithoutTimingObservationsInput = {
   renders?: Prisma.RenderCreateNestedManyWithoutProjectInput;
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutTimingObservationsInput = {
@@ -2153,6 +2590,8 @@ export type ProjectUncheckedCreateWithoutTimingObservationsInput = {
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutProjectInput;
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   uploadSessions?: Prisma.UploadSessionUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutTimingObservationsInput = {
@@ -2216,6 +2655,8 @@ export type ProjectUpdateWithoutTimingObservationsInput = {
   renders?: Prisma.RenderUpdateManyWithoutProjectNestedInput;
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutTimingObservationsInput = {
@@ -2251,6 +2692,8 @@ export type ProjectUncheckedUpdateWithoutTimingObservationsInput = {
   renders?: Prisma.RenderUncheckedUpdateManyWithoutProjectNestedInput;
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   uploadSessions?: Prisma.UploadSessionUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutUploadSessionsInput = {
@@ -2274,6 +2717,8 @@ export type ProjectCreateWithoutUploadSessionsInput = {
   renders?: Prisma.RenderCreateNestedManyWithoutProjectInput;
   jobProjections?: Prisma.JobProjectionCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutUploadSessionsInput = {
@@ -2297,6 +2742,8 @@ export type ProjectUncheckedCreateWithoutUploadSessionsInput = {
   renders?: Prisma.RenderUncheckedCreateNestedManyWithoutProjectInput;
   jobProjections?: Prisma.JobProjectionUncheckedCreateNestedManyWithoutProjectInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedCreateNestedManyWithoutProjectInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedCreateNestedManyWithoutProjectInput;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutUploadSessionsInput = {
@@ -2360,6 +2807,8 @@ export type ProjectUpdateWithoutUploadSessionsInput = {
   renders?: Prisma.RenderUpdateManyWithoutProjectNestedInput;
   jobProjections?: Prisma.JobProjectionUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutUploadSessionsInput = {
@@ -2395,6 +2844,8 @@ export type ProjectUncheckedUpdateWithoutUploadSessionsInput = {
   renders?: Prisma.RenderUncheckedUpdateManyWithoutProjectNestedInput;
   jobProjections?: Prisma.JobProjectionUncheckedUpdateManyWithoutProjectNestedInput;
   timingObservations?: Prisma.StageTimingObservationUncheckedUpdateManyWithoutProjectNestedInput;
+  publishingMetadataDrafts?: Prisma.PublishingMetadataDraftUncheckedUpdateManyWithoutProjectNestedInput;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 /**
@@ -2410,6 +2861,8 @@ export type ProjectCountOutputType = {
   jobProjections: number;
   timingObservations: number;
   uploadSessions: number;
+  publishingMetadataDrafts: number;
+  publications: number;
 };
 
 export type ProjectCountOutputTypeSelect<
@@ -2428,6 +2881,10 @@ export type ProjectCountOutputTypeSelect<
     | boolean
     | ProjectCountOutputTypeCountTimingObservationsArgs;
   uploadSessions?: boolean | ProjectCountOutputTypeCountUploadSessionsArgs;
+  publishingMetadataDrafts?:
+    | boolean
+    | ProjectCountOutputTypeCountPublishingMetadataDraftsArgs;
+  publications?: boolean | ProjectCountOutputTypeCountPublicationsArgs;
 };
 
 /**
@@ -2523,6 +2980,26 @@ export type ProjectCountOutputTypeCountUploadSessionsArgs<
   where?: Prisma.UploadSessionWhereInput;
 };
 
+/**
+ * ProjectCountOutputType without action
+ */
+export type ProjectCountOutputTypeCountPublishingMetadataDraftsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.PublishingMetadataDraftWhereInput;
+};
+
+/**
+ * ProjectCountOutputType without action
+ */
+export type ProjectCountOutputTypeCountPublicationsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.PublicationWhereInput;
+};
+
 export type ProjectSelect<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
     runtime.Types.Extensions.DefaultArgs,
@@ -2553,6 +3030,10 @@ export type ProjectSelect<
       | boolean
       | Prisma.Project$timingObservationsArgs<ExtArgs>;
     uploadSessions?: boolean | Prisma.Project$uploadSessionsArgs<ExtArgs>;
+    publishingMetadataDrafts?:
+      | boolean
+      | Prisma.Project$publishingMetadataDraftsArgs<ExtArgs>;
+    publications?: boolean | Prisma.Project$publicationsArgs<ExtArgs>;
     _count?: boolean | Prisma.ProjectCountOutputTypeDefaultArgs<ExtArgs>;
   },
   ExtArgs['result']['project']
@@ -2645,6 +3126,10 @@ export type ProjectInclude<
   jobProjections?: boolean | Prisma.Project$jobProjectionsArgs<ExtArgs>;
   timingObservations?: boolean | Prisma.Project$timingObservationsArgs<ExtArgs>;
   uploadSessions?: boolean | Prisma.Project$uploadSessionsArgs<ExtArgs>;
+  publishingMetadataDrafts?:
+    | boolean
+    | Prisma.Project$publishingMetadataDraftsArgs<ExtArgs>;
+  publications?: boolean | Prisma.Project$publicationsArgs<ExtArgs>;
   _count?: boolean | Prisma.ProjectCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type ProjectIncludeCreateManyAndReturn<
@@ -2672,6 +3157,8 @@ export type $ProjectPayload<
     jobProjections: Prisma.$JobProjectionPayload<ExtArgs>[];
     timingObservations: Prisma.$StageTimingObservationPayload<ExtArgs>[];
     uploadSessions: Prisma.$UploadSessionPayload<ExtArgs>[];
+    publishingMetadataDrafts: Prisma.$PublishingMetadataDraftPayload<ExtArgs>[];
+    publications: Prisma.$PublicationPayload<ExtArgs>[];
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -3348,6 +3835,33 @@ export interface Prisma__ProjectClient<
   ): Prisma.PrismaPromise<
     | runtime.Types.Result.GetResult<
         Prisma.$UploadSessionPayload<ExtArgs>,
+        T,
+        'findMany',
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  publishingMetadataDrafts<
+    T extends Prisma.Project$publishingMetadataDraftsArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.Project$publishingMetadataDraftsArgs<ExtArgs>
+    >,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$PublishingMetadataDraftPayload<ExtArgs>,
+        T,
+        'findMany',
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  publications<T extends Prisma.Project$publicationsArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Project$publicationsArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$PublicationPayload<ExtArgs>,
         T,
         'findMany',
         GlobalOmitOptions
@@ -4148,6 +4662,68 @@ export type Project$uploadSessionsArgs<
   distinct?:
     | Prisma.UploadSessionScalarFieldEnum
     | Prisma.UploadSessionScalarFieldEnum[];
+};
+
+/**
+ * Project.publishingMetadataDrafts
+ */
+export type Project$publishingMetadataDraftsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the PublishingMetadataDraft
+   */
+  select?: Prisma.PublishingMetadataDraftSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the PublishingMetadataDraft
+   */
+  omit?: Prisma.PublishingMetadataDraftOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PublishingMetadataDraftInclude<ExtArgs> | null;
+  where?: Prisma.PublishingMetadataDraftWhereInput;
+  orderBy?:
+    | Prisma.PublishingMetadataDraftOrderByWithRelationInput
+    | Prisma.PublishingMetadataDraftOrderByWithRelationInput[];
+  cursor?: Prisma.PublishingMetadataDraftWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.PublishingMetadataDraftScalarFieldEnum
+    | Prisma.PublishingMetadataDraftScalarFieldEnum[];
+};
+
+/**
+ * Project.publications
+ */
+export type Project$publicationsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the Publication
+   */
+  select?: Prisma.PublicationSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the Publication
+   */
+  omit?: Prisma.PublicationOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PublicationInclude<ExtArgs> | null;
+  where?: Prisma.PublicationWhereInput;
+  orderBy?:
+    | Prisma.PublicationOrderByWithRelationInput
+    | Prisma.PublicationOrderByWithRelationInput[];
+  cursor?: Prisma.PublicationWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.PublicationScalarFieldEnum
+    | Prisma.PublicationScalarFieldEnum[];
 };
 
 /**

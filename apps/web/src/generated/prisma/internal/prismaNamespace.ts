@@ -420,11 +420,15 @@ export const ModelName = {
   PaidCallReservation: 'PaidCallReservation',
   CostAllocation: 'CostAllocation',
   Clip: 'Clip',
+  PublishingMetadataDraft: 'PublishingMetadataDraft',
+  Publication: 'Publication',
+  PublicationAttempt: 'PublicationAttempt',
   Render: 'Render',
   JobProjection: 'JobProjection',
   StageTimingObservation: 'StageTimingObservation',
   UploadSession: 'UploadSession',
   IdempotencyReceipt: 'IdempotencyReceipt',
+  YouTubeConnection: 'YouTubeConnection',
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -455,11 +459,15 @@ export type TypeMap<
       | 'paidCallReservation'
       | 'costAllocation'
       | 'clip'
+      | 'publishingMetadataDraft'
+      | 'publication'
+      | 'publicationAttempt'
       | 'render'
       | 'jobProjection'
       | 'stageTimingObservation'
       | 'uploadSession'
-      | 'idempotencyReceipt';
+      | 'idempotencyReceipt'
+      | 'youTubeConnection';
     txIsolationLevel: TransactionIsolationLevel;
   };
   model: {
@@ -1071,6 +1079,234 @@ export type TypeMap<
         };
       };
     };
+    PublishingMetadataDraft: {
+      payload: Prisma.$PublishingMetadataDraftPayload<ExtArgs>;
+      fields: Prisma.PublishingMetadataDraftFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.PublishingMetadataDraftFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.PublishingMetadataDraftFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>;
+        };
+        findFirst: {
+          args: Prisma.PublishingMetadataDraftFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.PublishingMetadataDraftFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>;
+        };
+        findMany: {
+          args: Prisma.PublishingMetadataDraftFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>[];
+        };
+        create: {
+          args: Prisma.PublishingMetadataDraftCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>;
+        };
+        createMany: {
+          args: Prisma.PublishingMetadataDraftCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        createManyAndReturn: {
+          args: Prisma.PublishingMetadataDraftCreateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>[];
+        };
+        delete: {
+          args: Prisma.PublishingMetadataDraftDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>;
+        };
+        update: {
+          args: Prisma.PublishingMetadataDraftUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>;
+        };
+        deleteMany: {
+          args: Prisma.PublishingMetadataDraftDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.PublishingMetadataDraftUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateManyAndReturn: {
+          args: Prisma.PublishingMetadataDraftUpdateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>[];
+        };
+        upsert: {
+          args: Prisma.PublishingMetadataDraftUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublishingMetadataDraftPayload>;
+        };
+        aggregate: {
+          args: Prisma.PublishingMetadataDraftAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePublishingMetadataDraft>;
+        };
+        groupBy: {
+          args: Prisma.PublishingMetadataDraftGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.PublishingMetadataDraftGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.PublishingMetadataDraftCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.PublishingMetadataDraftCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    Publication: {
+      payload: Prisma.$PublicationPayload<ExtArgs>;
+      fields: Prisma.PublicationFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.PublicationFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.PublicationFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>;
+        };
+        findFirst: {
+          args: Prisma.PublicationFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.PublicationFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>;
+        };
+        findMany: {
+          args: Prisma.PublicationFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>[];
+        };
+        create: {
+          args: Prisma.PublicationCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>;
+        };
+        createMany: {
+          args: Prisma.PublicationCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        createManyAndReturn: {
+          args: Prisma.PublicationCreateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>[];
+        };
+        delete: {
+          args: Prisma.PublicationDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>;
+        };
+        update: {
+          args: Prisma.PublicationUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>;
+        };
+        deleteMany: {
+          args: Prisma.PublicationDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.PublicationUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateManyAndReturn: {
+          args: Prisma.PublicationUpdateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>[];
+        };
+        upsert: {
+          args: Prisma.PublicationUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationPayload>;
+        };
+        aggregate: {
+          args: Prisma.PublicationAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePublication>;
+        };
+        groupBy: {
+          args: Prisma.PublicationGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.PublicationGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.PublicationCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.PublicationCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    PublicationAttempt: {
+      payload: Prisma.$PublicationAttemptPayload<ExtArgs>;
+      fields: Prisma.PublicationAttemptFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.PublicationAttemptFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.PublicationAttemptFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>;
+        };
+        findFirst: {
+          args: Prisma.PublicationAttemptFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.PublicationAttemptFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>;
+        };
+        findMany: {
+          args: Prisma.PublicationAttemptFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>[];
+        };
+        create: {
+          args: Prisma.PublicationAttemptCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>;
+        };
+        createMany: {
+          args: Prisma.PublicationAttemptCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        createManyAndReturn: {
+          args: Prisma.PublicationAttemptCreateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>[];
+        };
+        delete: {
+          args: Prisma.PublicationAttemptDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>;
+        };
+        update: {
+          args: Prisma.PublicationAttemptUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>;
+        };
+        deleteMany: {
+          args: Prisma.PublicationAttemptDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.PublicationAttemptUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateManyAndReturn: {
+          args: Prisma.PublicationAttemptUpdateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>[];
+        };
+        upsert: {
+          args: Prisma.PublicationAttemptUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicationAttemptPayload>;
+        };
+        aggregate: {
+          args: Prisma.PublicationAttemptAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePublicationAttempt>;
+        };
+        groupBy: {
+          args: Prisma.PublicationAttemptGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.PublicationAttemptGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.PublicationAttemptCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.PublicationAttemptCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
     Render: {
       payload: Prisma.$RenderPayload<ExtArgs>;
       fields: Prisma.RenderFieldRefs;
@@ -1451,6 +1687,82 @@ export type TypeMap<
         };
       };
     };
+    YouTubeConnection: {
+      payload: Prisma.$YouTubeConnectionPayload<ExtArgs>;
+      fields: Prisma.YouTubeConnectionFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.YouTubeConnectionFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.YouTubeConnectionFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        findFirst: {
+          args: Prisma.YouTubeConnectionFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.YouTubeConnectionFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        findMany: {
+          args: Prisma.YouTubeConnectionFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>[];
+        };
+        create: {
+          args: Prisma.YouTubeConnectionCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        createMany: {
+          args: Prisma.YouTubeConnectionCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        createManyAndReturn: {
+          args: Prisma.YouTubeConnectionCreateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>[];
+        };
+        delete: {
+          args: Prisma.YouTubeConnectionDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        update: {
+          args: Prisma.YouTubeConnectionUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        deleteMany: {
+          args: Prisma.YouTubeConnectionDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.YouTubeConnectionUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateManyAndReturn: {
+          args: Prisma.YouTubeConnectionUpdateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>[];
+        };
+        upsert: {
+          args: Prisma.YouTubeConnectionUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$YouTubeConnectionPayload>;
+        };
+        aggregate: {
+          args: Prisma.YouTubeConnectionAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateYouTubeConnection>;
+        };
+        groupBy: {
+          args: Prisma.YouTubeConnectionGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.YouTubeConnectionGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.YouTubeConnectionCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.YouTubeConnectionCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
   };
 } & {
   other: {
@@ -1658,6 +1970,93 @@ export const ClipScalarFieldEnum = {
 export type ClipScalarFieldEnum =
   (typeof ClipScalarFieldEnum)[keyof typeof ClipScalarFieldEnum];
 
+export const PublishingMetadataDraftScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  clipId: 'clipId',
+  version: 'version',
+  revision: 'revision',
+  state: 'state',
+  source: 'source',
+  title: 'title',
+  description: 'description',
+  hashtags: 'hashtags',
+  keywordTags: 'keywordTags',
+  categoryId: 'categoryId',
+  defaultLanguage: 'defaultLanguage',
+  madeForKids: 'madeForKids',
+  containsSyntheticMedia: 'containsSyntheticMedia',
+  publishingInstruction: 'publishingInstruction',
+  modelId: 'modelId',
+  reasoningLevel: 'reasoningLevel',
+  maxCostMicrousd: 'maxCostMicrousd',
+  estimatedCostMicrousd: 'estimatedCostMicrousd',
+  actualCostMicrousd: 'actualCostMicrousd',
+  aiUsageEventId: 'aiUsageEventId',
+  approvedAt: 'approvedAt',
+  supersededAt: 'supersededAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type PublishingMetadataDraftScalarFieldEnum =
+  (typeof PublishingMetadataDraftScalarFieldEnum)[keyof typeof PublishingMetadataDraftScalarFieldEnum];
+
+export const PublicationScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  clipId: 'clipId',
+  renderId: 'renderId',
+  connectionId: 'connectionId',
+  metadataDraftId: 'metadataDraftId',
+  workflowId: 'workflowId',
+  intentKey: 'intentKey',
+  idempotencyKey: 'idempotencyKey',
+  metadataSnapshot: 'metadataSnapshot',
+  visibility: 'visibility',
+  apiProjectVerifiedSnapshot: 'apiProjectVerifiedSnapshot',
+  sourceLocalDatetime: 'sourceLocalDatetime',
+  sourceTimezone: 'sourceTimezone',
+  scheduleAtUtc: 'scheduleAtUtc',
+  state: 'state',
+  youtubeVideoId: 'youtubeVideoId',
+  youtubeUrl: 'youtubeUrl',
+  remoteVideoCreatedAt: 'remoteVideoCreatedAt',
+  thumbnailWarningCode: 'thumbnailWarningCode',
+  sanitizedErrorCode: 'sanitizedErrorCode',
+  sanitizedErrorMessage: 'sanitizedErrorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type PublicationScalarFieldEnum =
+  (typeof PublicationScalarFieldEnum)[keyof typeof PublicationScalarFieldEnum];
+
+export const PublicationAttemptScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  attemptNumber: 'attemptNumber',
+  idempotencyKey: 'idempotencyKey',
+  resumableSessionReference: 'resumableSessionReference',
+  acknowledgedBytes: 'acknowledgedBytes',
+  totalBytes: 'totalBytes',
+  stage: 'stage',
+  progressPercent: 'progressPercent',
+  finalChunkDispatchStartedAt: 'finalChunkDispatchStartedAt',
+  outcomeUncertainAt: 'outcomeUncertainAt',
+  reconciliationCheckedAt: 'reconciliationCheckedAt',
+  reconciliationResult: 'reconciliationResult',
+  duplicateRiskAcknowledgedAt: 'duplicateRiskAcknowledgedAt',
+  sanitizedErrorCode: 'sanitizedErrorCode',
+  sanitizedErrorMessage: 'sanitizedErrorMessage',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type PublicationAttemptScalarFieldEnum =
+  (typeof PublicationAttemptScalarFieldEnum)[keyof typeof PublicationAttemptScalarFieldEnum];
+
 export const RenderScalarFieldEnum = {
   id: 'id',
   projectId: 'projectId',
@@ -1749,6 +2148,28 @@ export const IdempotencyReceiptScalarFieldEnum = {
 
 export type IdempotencyReceiptScalarFieldEnum =
   (typeof IdempotencyReceiptScalarFieldEnum)[keyof typeof IdempotencyReceiptScalarFieldEnum];
+
+export const YouTubeConnectionScalarFieldEnum = {
+  id: 'id',
+  slot: 'slot',
+  channelId: 'channelId',
+  channelTitle: 'channelTitle',
+  channelHandle: 'channelHandle',
+  avatarUrl: 'avatarUrl',
+  grantedScopes: 'grantedScopes',
+  state: 'state',
+  oauthMode: 'oauthMode',
+  refreshTokenExpiresAt: 'refreshTokenExpiresAt',
+  healthCheckedAt: 'healthCheckedAt',
+  connectedAt: 'connectedAt',
+  disconnectedAt: 'disconnectedAt',
+  revocationUncertain: 'revocationUncertain',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type YouTubeConnectionScalarFieldEnum =
+  (typeof YouTubeConnectionScalarFieldEnum)[keyof typeof YouTubeConnectionScalarFieldEnum];
 
 export const SortOrder = {
   asc: 'asc',
@@ -2020,6 +2441,14 @@ export type ListEnumClipStateRecordFieldRefInput<$PrismaModel> =
   FieldRefInputType<$PrismaModel, 'ClipStateRecord[]'>;
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Boolean'
+>;
+
+/**
  * Reference to a field of type 'RenderStatusRecord'
  */
 export type EnumRenderStatusRecordFieldRefInput<$PrismaModel> =
@@ -2168,11 +2597,15 @@ export type GlobalOmitConfig = {
   paidCallReservation?: Prisma.PaidCallReservationOmit;
   costAllocation?: Prisma.CostAllocationOmit;
   clip?: Prisma.ClipOmit;
+  publishingMetadataDraft?: Prisma.PublishingMetadataDraftOmit;
+  publication?: Prisma.PublicationOmit;
+  publicationAttempt?: Prisma.PublicationAttemptOmit;
   render?: Prisma.RenderOmit;
   jobProjection?: Prisma.JobProjectionOmit;
   stageTimingObservation?: Prisma.StageTimingObservationOmit;
   uploadSession?: Prisma.UploadSessionOmit;
   idempotencyReceipt?: Prisma.IdempotencyReceiptOmit;
+  youTubeConnection?: Prisma.YouTubeConnectionOmit;
 };
 
 /* Types for Logging */

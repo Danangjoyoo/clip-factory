@@ -3,6 +3,7 @@ import type { ResumeUploadService } from '../../application/services/resume-uplo
 import type { CompleteUploadService } from '../../application/services/complete-upload.service';
 import {
   CompleteUploadApiSchema,
+  PresignUploadPartsApiSchema,
   StartUploadApiSchema,
 } from './dto/api/upload-api.dto';
 import { UploadError } from '../../application/services/upload-policy';
@@ -20,21 +21,30 @@ export class UploadController {
       sizeBytes: BigInt(input.sizeBytes),
     });
   }
-  async resumeUpload(projectId: string, sessionId: string, totalParts: number) {
+  async resumeUpload(projectId: string, sessionId: string, body: unknown) {
     if (!this.resume) throw new Error('UPLOAD_RESUME_UNAVAILABLE');
-    return this.resume.execute({ projectId, sessionId, totalParts });
+    const input = PresignUploadPartsApiSchema.parse(body);
+    return this.resume.execute({
+      projectId,
+      sessionId,
+      totalParts: input.totalParts,
+      checksums: input.parts,
+    });
   }
   async completeUpload(projectId: string, sessionId: string, body: unknown) {
     if (!this.complete) throw new Error('UPLOAD_COMPLETE_UNAVAILABLE');
     const input = CompleteUploadApiSchema.parse(body);
-    return this.complete.execute({
+    await this.complete.execute({
       projectId,
       sessionId,
-      parts: input.parts.map((part) => ({
+      sha256: input.sha256,
+      parts: input.parts.map(({ checksumSha256, sizeBytes, ...part }) => ({
         ...part,
-        sizeBytes: BigInt(part.sizeBytes),
+        sizeBytes: BigInt(sizeBytes),
+        ...(checksumSha256 ? { checksumSha256 } : {}),
       })),
     });
+    return { ok: true };
   }
   static error(error: unknown) {
     if (error instanceof UploadError)

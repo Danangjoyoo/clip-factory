@@ -9,7 +9,7 @@ test('compose is localhost-only and never receives the OpenAI key', () => {
     [
       'compose',
       '--env-file',
-      '.env.example',
+      'envs/.env.example',
       '-f',
       'infra/compose/docker-compose.yml',
       'config',
@@ -36,6 +36,14 @@ test('compose is localhost-only and never receives the OpenAI key', () => {
     'postgres-data',
     'redis-data',
   ]);
+  const compose = readFileSync('infra/compose/docker-compose.yml', 'utf8');
+  assert.equal(
+    config.services.web.environment.MINIO_PUBLIC_ENDPOINT,
+    'http://127.0.0.1:9000',
+  );
+  assert.match(compose, /mc mb --ignore-existing local\/clip-factory/u);
+  assert.match(compose, /mc anonymous set none local\/clip-factory/u);
+  assert.doesNotMatch(compose, /mc cors set/u);
   const lock = JSON.parse(
     readFileSync('infra/compose/image-lock.json', 'utf8'),
   );

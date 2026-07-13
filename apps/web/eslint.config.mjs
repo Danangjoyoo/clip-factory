@@ -5,9 +5,17 @@ const providerModules = [
   'redis',
   'ioredis',
   'openai',
+  'googleapis',
+  'google-auth-library',
 ];
 
-const providerPatterns = ['@aws-sdk/**', '@temporalio/**', 'openai/**'];
+const providerPatterns = [
+  '@aws-sdk/**',
+  '@temporalio/**',
+  'openai/**',
+  'googleapis/**',
+  'google-auth-library/**',
+];
 
 const boundaryPatterns = [
   '**/generated/**',

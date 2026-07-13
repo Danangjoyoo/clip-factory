@@ -18,6 +18,22 @@ def run(command: list[str | Path]) -> None:
     subprocess.run([str(item) for item in command], check=True, capture_output=True)
 
 
+def has_ffmpeg_filter(name: str) -> bool:
+    if not shutil.which("ffmpeg"):
+        return False
+    result = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-filters"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return any(
+        len(parts) >= 2 and parts[1] == name
+        for line in result.stdout.splitlines()
+        for parts in [line.split()]
+    )
+
+
 def probe(path: Path) -> dict[str, Any]:
     result = subprocess.run(
         [
@@ -38,7 +54,8 @@ def probe(path: Path) -> dict[str, Any]:
 
 
 @pytest.mark.skipif(
-    not shutil.which("ffmpeg") or not shutil.which("ffprobe"), reason="ffmpeg required"
+    not shutil.which("ffprobe") or not has_ffmpeg_filter("ass"),
+    reason="ffmpeg with ass filter required",
 )
 def test_synthetic_source_renders_vertical_captioned_clip(tmp_path: Path) -> None:
     source = tmp_path / "talking-head.mp4"
@@ -73,7 +90,7 @@ def test_synthetic_source_renders_vertical_captioned_clip(tmp_path: Path) -> Non
     details = probe(output)
     video = next(item for item in details["streams"] if item["codec_type"] == "video")
     audio = next(item for item in details["streams"] if item["codec_type"] == "audio")
-    assert details["format"]["format_name"].split(",")[0] == "mp4"
+    assert "mp4" in details["format"]["format_name"].split(",")
     assert (video["width"], video["height"], video["codec_name"]) == (
         1080,
         1920,

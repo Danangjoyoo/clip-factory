@@ -1,3 +1,8 @@
+import { createRequire } from 'node:module';
+
+const requireFromWeb = createRequire(
+  new URL('../../../apps/web/package.json', import.meta.url),
+);
 type Redis = {
   isOpen: boolean;
   connect: () => Promise<void>;
@@ -10,10 +15,12 @@ export const redis = {
     return instance?.isOpen ?? false;
   },
   connect: async () => {
-    const { createClient } = await import('redis');
+    const { createClient } = requireFromWeb('redis') as {
+      createClient: (options: { url: string }) => Redis;
+    };
     instance ??= createClient({
       url: process.env.REDIS_URL ?? 'redis://127.0.0.1:6379/0',
-    }) as unknown as Redis;
+    });
     await instance.connect();
   },
   ping: async () => (instance as Redis).ping(),

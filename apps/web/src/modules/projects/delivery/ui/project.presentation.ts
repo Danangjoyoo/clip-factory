@@ -7,8 +7,20 @@ export type ProjectCardView = Readonly<{
   modeLabel: string;
   progressLabel: string;
   etaLabel: string | null;
-  candidateCount: number;
-  renderCount: number;
+  candidateCount: number | null;
+  renderCount: number | null;
   spendLabel: string;
   updatedLabel: string;
+}>;
+
+export type ProjectSettingsViewModel = Readonly<{
+  projectId: string;
+  projectTitle: string;
+  instruction: string;
+  sourceHealthLabel: string;
+  sourceLabel: string;
+  outputFrameLabel: string;
+  platformLabel: string;
+  maxDurationLabel: string;
+  captionStyleLabel: string;
 }>;

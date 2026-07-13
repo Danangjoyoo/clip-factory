@@ -1,0 +1,46 @@
+<style>
+  .source-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:22px 0; }
+  .source-card { padding:20px; border:1px solid var(--border); border-radius:17px; background:var(--surface); }
+  .source-card.default { border-color:#65c995; box-shadow:inset 0 3px 0 #65c995; }
+  .source-icon { width:40px; height:40px; display:grid; place-items:center; border-radius:12px; background:rgba(104,120,232,.12); color:#6878e8; font-size:19px; }
+  .default .source-icon { color:#319c65; background:rgba(101,201,149,.14); }
+  .source-card h3 { margin:12px 0 6px; }
+  .source-card p { margin:0 0 14px; color:var(--muted); line-height:1.45; }
+  .drop { min-height:76px; display:grid; place-items:center; border:2px dashed var(--border); border-radius:12px; color:var(--muted); text-align:center; }
+  .path { display:flex; gap:7px; }
+  .path input { min-width:0; flex:1; border:1px solid var(--border); border-radius:9px; padding:10px; color:var(--text); background:var(--bg); }
+  .path button { border:0; border-radius:9px; padding:0 13px; color:white; background:#319c65; font-weight:800; }
+  .flow { display:grid; grid-template-columns:1fr 45px 1fr 45px 1fr; align-items:center; gap:7px; }
+  .step { padding:14px; border:1px solid var(--border); border-radius:13px; background:var(--surface); text-align:center; }
+  .step strong { display:block; margin-bottom:5px; }
+  .step span { color:var(--muted); font-size:12px; }
+  .arrow { text-align:center; color:var(--muted); font-size:20px; }
+  .states { display:flex; flex-wrap:wrap; gap:7px; margin-top:15px; }
+  .state { padding:6px 9px; border:1px solid var(--border); border-radius:999px; background:var(--surface); font-size:11px; font-weight:800; }
+  .state.warn { color:#9a6612; border-color:#e4b55d; background:rgba(228,181,93,.12); }
+  @media(max-width:800px){.source-grid{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}}
+</style>
+
+<h2>Workflow update · Two source-input methods</h2>
+<p class="subtitle">Both paths converge on the same validation and analysis workflow. A project records exactly how its source was supplied.</p>
+
+<div class="source-grid">
+  <section class="source-card default">
+    <div class="source-icon">⌘</div><h3>Local filepath · default</h3>
+    <p>Reference an existing file without copying the original. The native worker reads it in place and never modifies it.</p>
+    <div class="path"><input value="/Users/mac/Videos/podcast.mp4" readonly><button>Validate</button></div>
+  </section>
+  <section class="source-card">
+    <div class="source-icon">↑</div><h3>Browser upload · fallback</h3>
+    <p>Resumable multipart upload directly to MinIO. Useful when the source is outside an allowed local directory.</p>
+    <div class="drop">Drop a video here<br><small>or choose a file · up to 10 GB</small></div>
+  </section>
+</div>
+
+<div class="flow">
+  <div class="step"><strong>Source selected</strong><span><code>LOCAL_PATH</code> or <code>MINIO_UPLOAD</code></span></div><div class="arrow">→</div>
+  <div class="step"><strong>Native validation</strong><span>Resolve path, probe media, enforce 3-hour / 10-GB limits, store fingerprint.</span></div><div class="arrow">→</div>
+  <div class="step"><strong>Shared analysis</strong><span>Audio, proxy, transcript, budget gate, candidates, preview, review, and render.</span></div>
+</div>
+
+<div class="states"><span class="state">VALIDATING_SOURCE</span><span class="state warn">SOURCE_MISSING</span><span class="state warn">SOURCE_CHANGED</span><span class="state warn">SOURCE_NOT_ALLOWED</span><span class="state">RELINKING_SOURCE</span></div>

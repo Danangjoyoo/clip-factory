@@ -1,0 +1,22 @@
+<style>
+  .studio { overflow:hidden; border:1px solid #304156; border-radius:18px; background:#101827; color:#e7fbff; box-shadow:0 24px 70px rgba(0,0,0,.35); }
+  .bar { display:flex; align-items:center; gap:20px; min-height:52px; padding:0 18px; border-bottom:1px solid #26384f; background:#142035; }
+  .brand { color:#98f0ff; font-size:12px; font-weight:900; letter-spacing:.12em; }
+  .nav { display:flex; gap:15px; color:#8faabd; font-size:11px; }
+  .nav b { color:white; }
+  .ready { margin-left:auto; color:#b2d0da; font-size:10px; }.ready i{display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:#8ee6b6}
+  .theme { padding:6px 8px; border:1px solid #3b5670; border-radius:7px; color:#c9e7ee; font-size:10px; }
+  .main { padding:26px; background:radial-gradient(circle at 76% 5%,rgba(52,120,149,.25),transparent 30%),#101827; }
+  .eyebrow { color:#8fddeb; font-size:10px; font-weight:800; letter-spacing:.12em; }.headline{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:7px 0 22px}.headline h3{margin:0;font-size:27px;letter-spacing:-.04em}.headline p{max-width:290px;margin:0;color:#9bb7c5;font-size:12px;line-height:1.5}
+  .new { padding:10px 13px; border-radius:8px; color:#07212a; background:#98f0ff; font-size:11px; font-weight:900; }
+  .workspace { display:grid; grid-template-columns:1.4fr .8fr; gap:15px; }.projects{display:grid;gap:9px}.project{display:grid;grid-template-columns:60px 1fr auto;align-items:center;gap:12px;padding:12px;border:1px solid #2a4058;border-radius:10px;background:rgba(17,31,49,.9)}.thumb{height:42px;border-radius:6px;background:linear-gradient(135deg,#466a86,#1e2a3c)}.project strong{font-size:12px}.project small{display:block;margin-top:5px;color:#9cb5c3;font-size:10px}.status{padding:5px 7px;border-radius:999px;color:#aef0d3;background:rgba(71,192,134,.12);font-size:9px;font-weight:800}.status.queue{color:#f3d693;background:rgba(235,178,74,.12)}
+  .side{display:grid;gap:12px}.metric,.guide{padding:14px;border:1px solid #2a4058;border-radius:10px;background:#132036}.metric span,.guide span{display:block;color:#9db7c7;font-size:10px}.metric b{display:block;margin:8px 0 5px;font-size:25px}.meter{height:6px;border-radius:6px;background:#223951}.meter i{display:block;width:58%;height:100%;border-radius:inherit;background:#98f0ff}.guide ul{margin:9px 0 0;padding-left:16px;color:#bdd4dd;font-size:10px;line-height:1.7}
+  @media(max-width:760px){.workspace{grid-template-columns:1fr}.headline{align-items:start;flex-direction:column}.nav{display:none}.main{padding:18px}}
+</style>
+<h2>E2E review 1/5 — Home and project library</h2>
+<p class="subtitle">The journey starts as a calm workbench: your current work is visible, and creating a new source is one clear action.</p>
+<div class="studio">
+  <header class="bar"><span class="brand">CLIP FACTORY</span><nav class="nav"><b>Projects</b><span>Usage</span><span>Settings</span></nav><span class="ready"><i></i>Worker ready</span><span class="theme">Midnight Signal ▾</span></header>
+  <main class="main"><span class="eyebrow">PROJECT LIBRARY</span><div class="headline"><div><h3>Work in motion.</h3><p>Every source, candidate, and export—kept in one place.</p></div><span class="new">+ New project</span></div><div class="workspace"><section class="projects"><article class="project"><div class="thumb"></div><div><strong>What is branding?</strong><small>4 candidates · 1 rendered · $0.014 spent</small></div><span class="status">READY TO REVIEW</span></article><article class="project"><div class="thumb"></div><div><strong>Founder interview · episode 8</strong><small>Transcribing · 68% · 4–7 min remaining</small></div><span class="status queue">PROCESSING</span></article><article class="project"><div class="thumb"></div><div><strong>Product launch walkthrough</strong><small>Source needs relinking · no spend recorded</small></div><span class="status queue">ACTION NEEDED</span></article></section><aside class="side"><section class="metric"><span>MONTHLY CREATIVE SPEND</span><b>$12.84</b><div class="meter"><i></i></div><span style="margin-top:7px">58% of $22.00 limit</span></section><section class="guide"><span>START A PROJECT</span><ul><li>Add a video file or local path</li><li>Set quality and budget limits</li><li>Review clips before rendering</li></ul></section></aside></div></main>
+</div>
+<p class="subtitle" style="margin-top:18px">Does this feel like the right opening screen for the product? Reply with feedback before we move to source intake.</p>

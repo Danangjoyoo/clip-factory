@@ -8,18 +8,25 @@ const defaultSample =
   process.env.CLIP_FACTORY_ACCEPTANCE_SAMPLE ??
   '/Users/mac/dev/projects/clipper/clip-factory/samples/what-is-branding.mp4';
 const terminalStates = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
+const browserConsoleTypes = new Set(['error', 'warning']);
 
 export function parseArgs(argv) {
   const options = {
-    mode: 'fake',
+    mode: 'manual',
     sample: defaultSample,
     baseUrl: 'http://127.0.0.1:3000',
   };
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
-    if (value === '--live' || value === '--mode=live') options.mode = 'live';
-    else if (value === '--fake' || value === '--mode=fake')
-      options.mode = 'fake';
+    if (value === '--manual' || value === '--mode=manual')
+      options.mode = 'manual';
+    else if (
+      value === '--live' ||
+      value === '--mode=live' ||
+      value === '--fake' ||
+      value === '--mode=fake'
+    )
+      options.mode = value.includes('live') ? 'live' : 'fake';
     else if (value === '--sample') options.sample = resolve(argv[++index]);
     else if (value.startsWith('--sample='))
       options.sample = resolve(value.slice(9));
@@ -30,13 +37,17 @@ export function parseArgs(argv) {
   return options;
 }
 
-export function assertFakeMode(
+export function assertManualMode(
   env = process.env,
-  requestedMode = env.OPENAI_ADAPTER ?? 'fake',
+  requestedMode = 'manual',
 ) {
-  if (requestedMode !== 'fake' || env.OPENAI_ADAPTER === 'live')
+  if (
+    requestedMode !== 'manual' ||
+    env.OPENAI_ADAPTER === 'fake' ||
+    env.OPENAI_ADAPTER === 'live'
+  )
     throw new Error(
-      'Integration gate is fake mode only; refusing live OpenAI mode before network requests',
+      'Integration gate is manual mode only; refusing fake/live highlight mode before network requests',
     );
 }
 
@@ -80,6 +91,22 @@ export function assertTerminalState(job) {
     throw new Error('job did not reach a terminal state');
 }
 
+export function assertProjectAccepted(project) {
+  if (!project?.id || project.status !== 'DRAFT')
+    throw new Error('project submission did not return an accepted draft');
+  if (project.source?.kind !== 'LOCAL_FILE')
+    throw new Error('project submission did not retain local-file source');
+}
+
+export function assertWorkflowCompleted(workflow) {
+  if (workflow?.status !== 'COMPLETED')
+    throw new Error('workflow did not complete');
+  if (!Array.isArray(workflow.clipIds))
+    throw new Error('workflow did not return clip ids');
+  if (!workflow.editorHref || !workflow.resultsHref)
+    throw new Error('workflow did not return editor and results links');
+}
+
 async function request(baseUrl, path, init) {
   const response = await fetch(new URL(path, baseUrl), init);
   const text = await response.text();
@@ -93,41 +120,141 @@ async function request(baseUrl, path, init) {
   return body;
 }
 
+async function launchChromium() {
+  const { chromium } = await import('@playwright/test');
+  return chromium.launch();
+}
+
+function assertBrowserClean(issues) {
+  if (issues.length)
+    throw new Error(
+      `browser UI check failed: ${issues.slice(0, 5).join('; ')}`,
+    );
+}
+
+function watchBrowser(page, baseUrl, issues) {
+  const appOrigin = new URL(baseUrl).origin;
+  page.on('console', (message) => {
+    if (browserConsoleTypes.has(message.type()))
+      issues.push(`${message.type()}: ${message.text()}`);
+  });
+  page.on('requestfailed', (request) => {
+    if (request.url().includes(':9000/')) return;
+    issues.push(
+      `request failed: ${request.url()} ${request.failure()?.errorText ?? ''}`,
+    );
+  });
+  page.on('response', (response) => {
+    const url = response.url();
+    const isAppApi =
+      url.startsWith(appOrigin) && new URL(url).pathname.startsWith('/api/');
+    const isObjectStore = url.includes(':9000/');
+    if ((isAppApi || isObjectStore) && response.status() >= 400)
+      issues.push(`HTTP ${response.status()}: ${url}`);
+  });
+}
+
+export async function runUiChecks(options, launchBrowser = launchChromium) {
+  const browser = await launchBrowser();
+  const issues = [];
+  try {
+    const context = await browser.newContext({ acceptDownloads: true });
+    const page = await context.newPage();
+    watchBrowser(page, options.baseUrl, issues);
+    await page.goto(new URL('/projects/new', options.baseUrl).href, {
+      waitUntil: 'networkidle',
+    });
+    if (
+      (await page
+        .getByRole('tab', { name: 'Local filepath' })
+        .getAttribute('aria-selected')) !== 'true'
+    )
+      throw new Error('local filepath tab is not selected by default');
+    await page.getByLabel('Project name').fill('integration-ui-localpath');
+    await page.getByLabel('Video filepath').fill(options.sample);
+    if (
+      !(await page.getByRole('button', { name: 'Create project' }).isEnabled())
+    )
+      throw new Error('local filepath create button is disabled');
+    await page.getByRole('button', { name: 'Create project' }).click();
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/processing/u);
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/editor/u, {
+      timeout: 20 * 60_000,
+    });
+    const localProjectId = page.url().match(/\/projects\/([^/]+)\/editor/u)?.[1];
+    if (!localProjectId) throw new Error('editor URL did not include project id');
+    await page.getByRole('tab', { name: 'Transcript' }).click();
+    await page.getByText(/transcript/i).first().waitFor();
+    const transcriptDownload = page.getByRole('link', {
+      name: 'Download transcript',
+    });
+    if (!(await transcriptDownload.isVisible()))
+      throw new Error('transcript download link is not visible');
+    await Promise.all([
+      page.waitForEvent('download'),
+      transcriptDownload.click(),
+    ]);
+    await page.getByRole('tab', { name: 'Clip editor' }).click();
+    await page.getByRole('button', { name: 'Add Clip' }).click();
+    await page.getByRole('button', { name: 'Add clip' }).click();
+    await page.goto(
+      new URL(`/projects/${localProjectId}/clips`, options.baseUrl).href,
+      { waitUntil: 'networkidle' },
+    );
+    const mp4Download = page.getByRole('link', { name: /Download MP4:/u }).first();
+    await mp4Download.waitFor({ state: 'visible' });
+    const mp4Href = await mp4Download.getAttribute('href');
+    if (!mp4Href) throw new Error('manual clip download href is missing');
+    const mp4Response = await page.request.get(
+      new URL(mp4Href, options.baseUrl).href,
+    );
+    if (!mp4Response.ok())
+      throw new Error(`manual clip download returned HTTP ${mp4Response.status()}`);
+
+    await page.goto(new URL('/projects/new', options.baseUrl).href, {
+      waitUntil: 'networkidle',
+    });
+    await page.getByRole('tab', { name: 'Upload file' }).click();
+    await page.getByLabel('Project name').fill('integration-ui-upload');
+    await page.getByLabel('Video file').setInputFiles(options.sample);
+    if (
+      !(await page.getByRole('button', { name: 'Create project' }).isEnabled())
+    )
+      throw new Error('upload create button is disabled');
+    await page.getByRole('button', { name: 'Create project' }).click();
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/processing/u);
+    await page.waitForURL(/\/projects\/[0-9a-f-]+\/editor/u, {
+      timeout: 20 * 60_000,
+    });
+    if (!(await page.getByRole('tab', { name: 'Transcript' }).isVisible()))
+      throw new Error('upload flow did not reach editor transcript tabs');
+    assertBrowserClean(issues);
+    return [
+      'ui-new-project-localpath-editor',
+      'ui-transcript-download',
+      'ui-manual-clip-download',
+      'ui-new-project-upload-editor',
+    ];
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function run(
   options = parseArgs(process.argv.slice(2)),
   env = process.env,
+  dependencies = {},
 ) {
-  assertFakeMode(env, options.mode);
+  const http = dependencies.request ?? request;
+  const uiChecks = dependencies.uiChecks ?? runUiChecks;
+  assertManualMode(env, options.mode);
   await validateSample(options.sample);
-  const report = { mode: 'fake', sample: basename(options.sample), checks: [] };
-  const health = await request(options.baseUrl, '/api/health');
+  const report = { mode: 'manual', sample: basename(options.sample), checks: [] };
+  const health = await http(options.baseUrl, '/api/health');
   if (health.status !== 'HEALTHY')
     throw new Error('service health is not HEALTHY');
   report.checks.push('service-health');
-  await request(options.baseUrl, '/api/test-control', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action: 'reset' }),
-  });
-  const highlight = await request(options.baseUrl, '/api/test-control', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      action: 'highlight',
-      request: {
-        transcript: 'fixture transcript',
-        instruction: 'find highlights',
-        mediaPath: options.sample,
-      },
-    }),
-  });
-  if (
-    highlight.model !== 'fake-highlights-v1' ||
-    !Array.isArray(highlight.candidates)
-  )
-    throw new Error('fake highlight contract failed');
-  report.checks.push('fake-highlights');
-  const project = await request(options.baseUrl, '/api/projects', {
+  const project = await http(options.baseUrl, '/api/projects', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -139,14 +266,28 @@ export async function run(
       source: { type: 'FILEPATH', path: options.sample },
     }),
   });
-  if (!project.id) throw new Error('project submission did not return an id');
+  assertProjectAccepted(project);
   report.checks.push('project-submission');
+  const workflow = await http(
+    options.baseUrl,
+    `/api/projects/${project.id}/workflow`,
+    { method: 'POST' },
+  );
+  assertWorkflowCompleted(workflow);
+  report.checks.push('workflow-complete');
+  const projects = await http(options.baseUrl, '/api/projects');
+  if (
+    !Array.isArray(projects) ||
+    !projects.some((item) => item.id === project.id)
+  )
+    throw new Error('submitted project did not appear in project list');
+  report.checks.push('project-list');
+  report.checks.push(...(await uiChecks(options)));
   const safe = redactReport({
     projectId: project.id,
-    model: highlight.model,
+    model: 'mlx-community/whisper-large-v3-mlx',
     costMicrousd: '0',
     source: options.sample,
-    transcript: 'fixture transcript',
   });
   report.result = safe;
   return report;

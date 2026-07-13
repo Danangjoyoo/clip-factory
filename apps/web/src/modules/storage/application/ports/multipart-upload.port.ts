@@ -2,6 +2,7 @@ export type CompletedPart = Readonly<{
   partNumber: number;
   etag: string;
   sizeBytes: bigint;
+  checksumSha256?: string;
 }>;
 
 export interface MultipartUploadPort {
@@ -10,6 +11,7 @@ export interface MultipartUploadPort {
     key: string,
     uploadId: string,
     partNumber: number,
+    checksumSha256: string,
     expiresSeconds: 900,
   ): Promise<string>;
   listParts(key: string, uploadId: string): Promise<readonly CompletedPart[]>;

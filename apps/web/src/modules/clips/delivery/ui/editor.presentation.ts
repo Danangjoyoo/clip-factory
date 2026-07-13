@@ -6,7 +6,17 @@ export type EditorClip = {
   sourceDurationMs?: number;
   origin?: string;
   rank?: number | null;
+  model?: string;
+  reasoning?: string;
+  score?: number | null;
+  costMicrousd?: bigint;
+  language?: string;
+  inheritedFrame?: string;
+  outputFrame?: string;
   state?: string;
+  previewState?: 'READY' | 'UPDATING' | 'FAILED';
+  previewPercent?: number;
+  previewEtaLabel?: string;
   previewUrl?: string;
 };
 

@@ -22,24 +22,25 @@ export function SourceMethodFields({
         <button
           type="button"
           role="tab"
-          aria-selected={method === 'FILEPATH'}
-          onClick={() => onMethod('FILEPATH')}
-        >
-          Local filepath
-        </button>
-        <button
-          type="button"
-          role="tab"
           aria-selected={method === 'UPLOAD'}
           onClick={() => onMethod('UPLOAD')}
         >
           Upload file
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={method === 'FILEPATH'}
+          onClick={() => onMethod('FILEPATH')}
+        >
+          Local filepath
         </button>
       </div>
       {method === 'FILEPATH' ? (
         <label>
           Video filepath
           <input
+            key="filepath"
             aria-label="Video filepath"
             value={path}
             onChange={(e) => onPath(e.target.value)}
@@ -50,6 +51,7 @@ export function SourceMethodFields({
         <label>
           Video file
           <input
+            key="upload"
             aria-label="Video file"
             type="file"
             accept="video/*"

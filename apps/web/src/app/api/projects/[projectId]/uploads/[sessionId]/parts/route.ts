@@ -1,19 +1,16 @@
 import { storageComposition } from '../../../../../../../modules/storage/composition/storage.composition';
 import { UploadController } from '../../../../../../../modules/storage/delivery/http/upload.controller';
-export async function GET(
+export async function POST(
   request: Request,
   context: { params: Promise<{ projectId: string; sessionId: string }> },
 ) {
   try {
     const { projectId, sessionId } = await context.params;
-    const totalParts = Number(
-      new URL(request.url).searchParams.get('totalParts'),
-    );
     return Response.json(
       await storageComposition().controller.resumeUpload(
         projectId,
         sessionId,
-        totalParts,
+        await request.json(),
       ),
     );
   } catch (error) {

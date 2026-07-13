@@ -151,6 +151,8 @@ model Project {
   jobProjections        JobProjection[]
   timingObservations    StageTimingObservation[]
   uploadSessions        UploadSession[]
+  publishingMetadataDrafts PublishingMetadataDraft[]
+  publications          Publication[]
 
   @@index([status, createdAt])
   @@map("projects")
@@ -264,6 +266,7 @@ model AIUsageEvent {
   analysisRun           AnalysisRun          @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
   clip                  Clip?                @relation(fields: [clipId], references: [id], onDelete: SetNull)
   paidCallReservation   PaidCallReservation?
+  publishingMetadataDraft PublishingMetadataDraft?
 
   @@index([analysisRunId, occurredAt])
   @@map("ai_usage_events")
@@ -327,9 +330,112 @@ model Clip {
   usageEvents   AIUsageEvent[]
   allocations   CostAllocation[]
   renders       Render[]
+  publishingMetadataDrafts PublishingMetadataDraft[]
+  publications  Publication[]
 
   @@index([projectId, state])
   @@map("clips")
+}
+
+model PublishingMetadataDraft {
+  id                       String       @id @db.Uuid
+  projectId                String       @map("project_id") @db.Uuid
+  clipId                   String       @map("clip_id") @db.Uuid
+  version                  Int
+  revision                 Int          @default(1)
+  state                    String
+  source                   String
+  title                    String
+  description              String
+  hashtags                 Json
+  keywordTags              Json         @map("keyword_tags")
+  categoryId               String       @map("category_id")
+  defaultLanguage          String       @map("default_language")
+  madeForKids              Boolean      @map("made_for_kids")
+  containsSyntheticMedia   Boolean      @map("contains_synthetic_media")
+  publishingInstruction    String?      @map("publishing_instruction")
+  modelId                  String?      @map("model_id")
+  reasoningLevel           String?      @map("reasoning_level")
+  maxCostMicrousd          BigInt       @default(0) @map("max_cost_microusd")
+  estimatedCostMicrousd    BigInt       @default(0) @map("estimated_cost_microusd")
+  actualCostMicrousd       BigInt       @default(0) @map("actual_cost_microusd")
+  aiUsageEventId           String?      @unique @map("ai_usage_event_id") @db.Uuid
+  approvedAt               DateTime?    @map("approved_at") @db.Timestamptz(3)
+  supersededAt             DateTime?    @map("superseded_at") @db.Timestamptz(3)
+  createdAt                DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  project                  Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clip                     Clip         @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  aiUsageEvent             AIUsageEvent? @relation(fields: [aiUsageEventId], references: [id], onDelete: Restrict)
+  publications             Publication[]
+
+  @@unique([clipId, version], map: "publishing_metadata_drafts_clip_version_key")
+  @@index([projectId, clipId, createdAt(sort: Desc)], map: "publishing_metadata_drafts_project_clip_created_idx")
+  @@map("publishing_metadata_drafts")
+}
+
+model Publication {
+  id                         String   @id @db.Uuid
+  projectId                  String   @map("project_id") @db.Uuid
+  clipId                     String   @map("clip_id") @db.Uuid
+  renderId                   String   @map("render_id") @db.Uuid
+  connectionId               String   @map("connection_id") @db.Uuid
+  metadataDraftId            String   @map("metadata_draft_id") @db.Uuid
+  workflowId                 String   @unique(map: "publications_workflow_id_key") @map("workflow_id")
+  intentKey                  String   @map("intent_key")
+  idempotencyKey             String   @unique(map: "publications_idempotency_key") @map("idempotency_key")
+  metadataSnapshot           Json     @map("metadata_snapshot")
+  visibility                 String
+  apiProjectVerifiedSnapshot Boolean  @map("api_project_verified_snapshot")
+  sourceLocalDatetime        String?  @map("source_local_datetime")
+  sourceTimezone             String?  @map("source_timezone")
+  scheduleAtUtc              DateTime? @map("schedule_at_utc") @db.Timestamptz(6)
+  state                      String
+  youtubeVideoId             String?  @map("youtube_video_id")
+  youtubeUrl                 String?  @map("youtube_url")
+  remoteVideoCreatedAt       DateTime? @map("remote_video_created_at") @db.Timestamptz(6)
+  thumbnailWarningCode       String?  @map("thumbnail_warning_code")
+  sanitizedErrorCode         String?  @map("sanitized_error_code")
+  sanitizedErrorMessage      String?  @map("sanitized_error_message")
+  createdAt                  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  project                    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clip                       Clip @relation(fields: [clipId], references: [id], onDelete: Restrict)
+  render                     Render @relation(fields: [renderId], references: [id], onDelete: Restrict)
+  connection                 YouTubeConnection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  metadataDraft              PublishingMetadataDraft @relation(fields: [metadataDraftId], references: [id], onDelete: Restrict)
+  attempts                   PublicationAttempt[]
+
+  @@unique([connectionId, intentKey], map: "publications_connection_intent_key")
+  @@index([projectId, createdAt(sort: Desc)], map: "publications_project_created_idx")
+  @@map("publications")
+}
+
+model PublicationAttempt {
+  id                           String   @id @db.Uuid
+  publicationId                String   @map("publication_id") @db.Uuid
+  attemptNumber                Int      @map("attempt_number")
+  idempotencyKey               String   @unique(map: "publication_attempts_idempotency_key") @map("idempotency_key")
+  resumableSessionReference    String?  @map("resumable_session_reference")
+  acknowledgedBytes            BigInt   @default(0) @map("acknowledged_bytes")
+  totalBytes                   BigInt   @map("total_bytes")
+  stage                        String
+  progressPercent              Int      @default(0) @map("progress_percent")
+  finalChunkDispatchStartedAt  DateTime? @map("final_chunk_dispatch_started_at") @db.Timestamptz(6)
+  outcomeUncertainAt           DateTime? @map("outcome_uncertain_at") @db.Timestamptz(6)
+  reconciliationCheckedAt      DateTime? @map("reconciliation_checked_at") @db.Timestamptz(6)
+  reconciliationResult         String?  @map("reconciliation_result")
+  duplicateRiskAcknowledgedAt  DateTime? @map("duplicate_risk_acknowledged_at") @db.Timestamptz(6)
+  sanitizedErrorCode           String?  @map("sanitized_error_code")
+  sanitizedErrorMessage        String?  @map("sanitized_error_message")
+  startedAt                    DateTime @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt                  DateTime? @map("completed_at") @db.Timestamptz(6)
+  updatedAt                    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  publication                  Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, attemptNumber], map: "publication_attempts_publication_number_key")
+  @@index([publicationId, startedAt(sort: Desc)], map: "publication_attempts_publication_started_idx")
+  @@map("publication_attempts")
 }
 
 model Render {
@@ -350,6 +456,7 @@ model Render {
   createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   clip              Clip               @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  publications      Publication[]
 
   @@index([clipId, createdAt])
   @@index([status])
@@ -429,4 +536,29 @@ model IdempotencyReceipt {
   completedAt  DateTime? @map("completed_at") @db.Timestamptz(3)
 
   @@map("idempotency_receipts")
+}
+
+model YouTubeConnection {
+  id                     String   @id @db.Uuid
+  slot                   String   @default("PRIMARY") @db.Text
+  channelId              String   @map("channel_id") @db.Text
+  channelTitle           String   @map("channel_title") @db.Text
+  channelHandle          String?  @map("channel_handle") @db.Text
+  avatarUrl              String?  @map("avatar_url") @db.Text
+  grantedScopes          Json     @map("granted_scopes") @db.JsonB
+  state                  String   @db.Text
+  oauthMode              String   @map("oauth_mode") @db.Text
+  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  healthCheckedAt        DateTime? @map("health_checked_at") @db.Timestamptz(6)
+  connectedAt            DateTime? @map("connected_at") @db.Timestamptz(6)
+  disconnectedAt         DateTime? @map("disconnected_at") @db.Timestamptz(6)
+  revocationUncertain    Boolean  @default(false) @map("revocation_uncertain")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  publications           Publication[]
+
+  @@unique([slot])
+  @@unique([channelId])
+  @@index([state, healthCheckedAt(sort: Desc)])
+  @@map("youtube_connections")
 }

@@ -6,7 +6,6 @@ import { join } from 'node:path';
 export type E2EApp = {
   seedLocalSource(name: string): Promise<void>;
   localSourcePath(name: string): string;
-  openAIUsageCount(): Promise<number>;
 };
 
 export const test = base.extend<{ app: E2EApp }>({
@@ -25,9 +24,6 @@ export const test = base.extend<{ app: E2EApp }>({
         if (!sources.has(name))
           throw new Error(`Source was not seeded: ${name}`);
         return join(root, name);
-      },
-      async openAIUsageCount() {
-        return 0;
       },
     };
     try {

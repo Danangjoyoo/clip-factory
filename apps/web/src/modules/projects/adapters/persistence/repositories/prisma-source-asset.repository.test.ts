@@ -3,6 +3,7 @@ vi.hoisted(() => {
   process.env.DATABASE_URL = 'postgresql://localhost/test';
   process.env.REDIS_URL = 'redis://localhost';
   process.env.MINIO_ENDPOINT = 'http://localhost:9000';
+  process.env.MINIO_PUBLIC_ENDPOINT = 'http://localhost:9000';
   process.env.MINIO_ACCESS_KEY = 'minio';
   process.env.MINIO_SECRET_KEY = 'miniosecret';
   process.env.TEMPORAL_ADDRESS = 'localhost:7233';

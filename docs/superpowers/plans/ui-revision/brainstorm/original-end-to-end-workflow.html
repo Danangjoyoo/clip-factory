@@ -1,0 +1,43 @@
+<style>
+  .phase-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:11px; margin:22px 0; }
+  .phase { position:relative; min-height:190px; padding:15px 13px; border:1px solid var(--border); border-radius:15px; background:var(--surface); }
+  .phase:not(:last-child):after { content:"→"; position:absolute; right:-12px; top:48%; z-index:2; color:var(--muted); font-size:19px; }
+  .phase .n { width:27px; height:27px; display:grid; place-items:center; border-radius:8px; color:white; background:#6878e8; font-size:12px; font-weight:900; }
+  .phase h3 { margin:10px 0 7px; }
+  .phase p { margin:0 0 9px; color:var(--muted); font-size:13px; line-height:1.4; }
+  .phase ul { margin:0; padding-left:17px; color:var(--muted); font-size:12px; line-height:1.5; }
+  .phase.local .n { background:#3eae74; }
+  .phase.review .n { background:#c58a27; }
+  .phase.output .n { background:#9b68d6; }
+  .state-row { display:flex; flex-wrap:wrap; gap:7px; padding:15px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+  .state { padding:6px 9px; border-radius:999px; font-size:11px; font-weight:800; background:var(--bg); border:1px solid var(--border); }
+  .state.pause { color:#9a6612; border-color:#e4b55d; background:rgba(228,181,93,.12); }
+  .state.good { color:#277850; border-color:#71ce9b; background:rgba(113,206,155,.12); }
+  .state.bad { color:#a13f49; border-color:#e4939b; background:rgba(228,147,155,.12); }
+  .progress-box { display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-top:14px; }
+  .progress-card { padding:14px; border-radius:13px; background:var(--surface); border:1px solid var(--border); }
+  .bar { height:9px; margin:9px 0 6px; overflow:hidden; border-radius:999px; background:var(--bg); }
+  .fill { height:100%; width:68%; border-radius:inherit; background:linear-gradient(90deg,#6878e8,#64d39a); }
+  .progress-card small { color:var(--muted); }
+  @media(max-width:950px){.phase-grid{grid-template-columns:1fr}.phase:not(:last-child):after{content:"↓";right:50%;top:auto;bottom:-17px}.progress-box{grid-template-columns:1fr}}
+</style>
+
+<h2>Design 2 of 5 · Upload-to-download workflow</h2>
+<p class="subtitle">One guided pipeline, split into an analysis phase and a user-triggered render phase.</p>
+
+<div class="phase-grid">
+  <section class="phase"><div class="n">1</div><h3>Create project</h3><p>Direct multipart upload to MinIO, then probe the source.</p><ul><li>MP4, MOV, MKV, WebM</li><li>Up to 3 hours / 10 GB</li><li>Resumable upload</li></ul></section>
+  <section class="phase"><div class="n">2</div><h3>Configure analysis</h3><p>Review a conservative preflight estimate before spending.</p><ul><li>Language</li><li>Model + reasoning</li><li>USD cap + 1.5× reserve</li><li>Max clips + max seconds</li><li>Optional creative instruction</li></ul></section>
+  <section class="phase local"><div class="n">3</div><h3>Analyze locally</h3><p>Temporal coordinates resumable stages on the native Mac worker.</p><ul><li>Extract audio + proxy</li><li>Local transcription</li><li>Verified budget gate</li><li>OpenAI transcript ranking</li><li>Face tracking + previews</li></ul></section>
+  <section class="phase review"><div class="n">4</div><h3>Review and edit</h3><p>Filmstrip, vertical preview, inspector, and trim timeline.</p><ul><li>Accept / reject candidates</li><li>Adjust boundaries + focal point</li><li>Edit caption text + styling</li><li>Choose platform safe-area preset</li></ul></section>
+  <section class="phase output"><div class="n">5</div><h3>Render and download</h3><p>Render selected clips only, with audio and captions stitched.</p><ul><li>1080 × 1920 MP4</li><li>H.264 + AAC</li><li>Individual downloads</li><li>Download-all archive</li></ul></section>
+</div>
+
+<div class="state-row">
+  <span class="state">DRAFT</span><span class="state">UPLOADING</span><span class="state">QUEUED</span><span class="state">TRANSCRIBING</span><span class="state">VERIFYING_BUDGET</span><span class="state pause">AWAITING_BUDGET</span><span class="state">ANALYZING</span><span class="state">GENERATING_PREVIEWS</span><span class="state pause">AWAITING_REVIEW</span><span class="state">RENDERING</span><span class="state good">COMPLETED</span><span class="state bad">FAILED</span><span class="state bad">CANCELLED</span>
+</div>
+
+<div class="progress-box">
+  <div class="progress-card"><strong>Analysis · 68%</strong><div class="bar"><div class="fill"></div></div><small>Generating preview 3 of 5 · estimated 4–7 minutes remaining</small></div>
+  <div class="progress-card"><strong>Render batch · per-clip progress</strong><div class="bar"><div class="fill" style="width:42%"></div></div><small>Clip 2 of 4 · each export can finish and download independently</small></div>
+</div>

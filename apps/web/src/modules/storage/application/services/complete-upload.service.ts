@@ -23,6 +23,7 @@ export class CompleteUploadService {
     input: Readonly<{
       projectId: string;
       sessionId: string;
+      sha256: string;
       parts: readonly CompletedPart[];
     }>,
   ) {
@@ -36,6 +37,11 @@ export class CompleteUploadService {
     const unique = new Set(parts.map((part) => part.partNumber));
     if (unique.size !== parts.length) throw new UploadError('INVALID_PART');
     if (
+      parts.length !== session.totalParts ||
+      parts.some((part, index) => part.partNumber !== index + 1)
+    )
+      throw new UploadError('INVALID_PART');
+    if (
       parts.reduce((sum, part) => sum + part.sizeBytes, 0n) !==
       session.declaredSizeBytes
     )
@@ -48,7 +54,10 @@ export class CompleteUploadService {
       )
       .digest('hex');
     if (session.status === 'COMPLETED') {
-      if (session.completedPartsHash === partsHash && session.objectReference)
+      if (
+        session.completedPartsHash === partsHash &&
+        session.objectReference?.sha256 === input.sha256
+      )
         return {
           session,
           reference: session.objectReference,
@@ -79,7 +88,8 @@ export class CompleteUploadService {
       await this.artifacts.deleteMany([session.objectKey]);
       throw new UploadError('UPLOAD_SIZE_MISMATCH');
     }
-    if (!head.sha256 || !/^[0-9a-f]{64}$/u.test(head.sha256)) {
+    const actualSha256 = await this.artifacts.sha256(session.objectKey);
+    if (actualSha256 !== input.sha256) {
       await this.artifacts.deleteMany([session.objectKey]);
       throw new UploadError('INVALID_SHA256');
     }
@@ -94,7 +104,7 @@ export class CompleteUploadService {
     const reference: ImmutableObjectReference = {
       key: session.objectKey,
       versionId: head.versionId ?? completed.versionId,
-      sha256: head.sha256,
+      sha256: actualSha256,
       sizeBytes: head.sizeBytes,
     };
     const result = await this.uow.execute(async (tx) => {

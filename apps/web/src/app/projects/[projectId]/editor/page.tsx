@@ -1,12 +1,11 @@
-import { EditorShell } from '../../../../modules/clips/delivery/ui/EditorShell';
-export default async function EditorPage() {
-  return (
-    <EditorShell
-      clips={[]}
-      onSelect={() => undefined}
-      onAddClip={() => undefined}
-      onRenderSelected={() => undefined}
-      onRenderAll={() => undefined}
-    />
-  );
+import { EditorLocalPage } from '../../../../modules/clips/delivery/ui/EditorLocalPage';
+import { editorView } from '../../../../modules/clips/composition/clip-views.composition';
+
+export default async function EditorPage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+  return <EditorLocalPage {...(await editorView(projectId))} />;
 }

@@ -7,7 +7,7 @@ import type {
 } from '../application/ports/multipart-upload.port';
 import { UploadSessionDataService } from '../application/data-services/upload-session.data-service';
 export function uploadHarness(
-  input: { completed?: readonly CompletedPart[] } = {},
+  input: { completed?: readonly CompletedPart[]; totalParts?: number } = {},
 ) {
   const projectId = randomUUID();
   const sessionId = randomUUID();
@@ -21,7 +21,7 @@ export function uploadHarness(
     fileName: 'source.mp4',
     contentType: 'video/mp4',
     declaredSizeBytes: 16n,
-    totalParts: 3,
+    totalParts: input.totalParts ?? 3,
     status: 'ACTIVE',
     completedPartsHash: null,
     objectReference: null,
@@ -51,11 +51,13 @@ export function uploadHarness(
   };
   const multipart = {
     presigned: [] as number[],
+    checksums: [] as string[],
     async create() {
       return { uploadId: 'upload' };
     },
-    async presignPart(_k: string, _u: string, n: number) {
+    async presignPart(_k: string, _u: string, n: number, checksum: string) {
       multipart.presigned.push(n);
+      multipart.checksums.push(checksum);
       return `url-${n}`;
     },
     async listParts() {
@@ -65,7 +67,7 @@ export function uploadHarness(
       return { versionId: null };
     },
     async abort() {},
-  } as MultipartUploadPort & { presigned: number[] };
+  } as MultipartUploadPort & { presigned: number[]; checksums: string[] };
   return {
     projectId,
     sessionId,

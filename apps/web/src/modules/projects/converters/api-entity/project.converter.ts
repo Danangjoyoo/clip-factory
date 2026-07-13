@@ -51,7 +51,12 @@ export const createProjectApiToEntity = (
 });
 export const projectEntityToApi = (value: {
   project: ProjectEntityDto;
-  source?: { kind: string; displayPath: string; health: string } | null;
+  source?: {
+    id: string;
+    kind: string;
+    displayPath: string;
+    health: string;
+  } | null;
 }) => ({
   id: value.project.id,
   name: value.project.name,
@@ -62,6 +67,7 @@ export const projectEntityToApi = (value: {
   status: value.project.status,
   openaiSpendMicrousd: value.project.openaiSpendMicrousd.toString(),
   source: value.source && {
+    id: value.source.id,
     kind: value.source.kind,
     displayLabel: (() => {
       const label =

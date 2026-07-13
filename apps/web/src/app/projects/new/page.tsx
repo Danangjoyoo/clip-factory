@@ -1,4 +1,5 @@
-import { NewProjectForm } from '../../../modules/projects/delivery/ui/NewProjectForm';
+import { NewProjectPage as NewProjectView } from '../../../modules/projects/delivery/ui/NewProjectPage';
+
 export default function NewProjectPage() {
-  return <NewProjectForm />;
+  return <NewProjectView />;
 }

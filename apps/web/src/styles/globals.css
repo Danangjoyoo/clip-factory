@@ -12,12 +12,34 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--color-canvas);
+  color: var(--color-text);
 }
 button,
 input,
 select,
 textarea {
   font: inherit;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  overflow-wrap: anywhere;
+}
+
+button,
+select,
+input[type='file'] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
 }
 :focus-visible {
   outline: 2px solid var(--color-focus);

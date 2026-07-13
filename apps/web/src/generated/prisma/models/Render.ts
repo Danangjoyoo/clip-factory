@@ -299,6 +299,7 @@ export type RenderWhereInput = {
     Prisma.ProjectWhereInput
   >;
   clip?: Prisma.XOR<Prisma.ClipScalarRelationFilter, Prisma.ClipWhereInput>;
+  publications?: Prisma.PublicationListRelationFilter;
 };
 
 export type RenderOrderByWithRelationInput = {
@@ -319,6 +320,7 @@ export type RenderOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder;
   project?: Prisma.ProjectOrderByWithRelationInput;
   clip?: Prisma.ClipOrderByWithRelationInput;
+  publications?: Prisma.PublicationOrderByRelationAggregateInput;
 };
 
 export type RenderWhereUniqueInput = Prisma.AtLeast<
@@ -348,6 +350,7 @@ export type RenderWhereUniqueInput = Prisma.AtLeast<
       Prisma.ProjectWhereInput
     >;
     clip?: Prisma.XOR<Prisma.ClipScalarRelationFilter, Prisma.ClipWhereInput>;
+    publications?: Prisma.PublicationListRelationFilter;
   },
   'id'
 >;
@@ -438,6 +441,7 @@ export type RenderCreateInput = {
   createdAt?: Date | string;
   project: Prisma.ProjectCreateNestedOneWithoutRendersInput;
   clip: Prisma.ClipCreateNestedOneWithoutRendersInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutRenderInput;
 };
 
 export type RenderUncheckedCreateInput = {
@@ -456,6 +460,7 @@ export type RenderUncheckedCreateInput = {
   errorCode?: string | null;
   errorMessage?: string | null;
   createdAt?: Date | string;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutRenderInput;
 };
 
 export type RenderUpdateInput = {
@@ -493,6 +498,7 @@ export type RenderUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   project?: Prisma.ProjectUpdateOneRequiredWithoutRendersNestedInput;
   clip?: Prisma.ClipUpdateOneRequiredWithoutRendersNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutRenderNestedInput;
 };
 
 export type RenderUncheckedUpdateInput = {
@@ -530,6 +536,7 @@ export type RenderUncheckedUpdateInput = {
     | string
     | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutRenderNestedInput;
 };
 
 export type RenderCreateManyInput = {
@@ -630,6 +637,11 @@ export type RenderListRelationFilter = {
 
 export type RenderOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder;
+};
+
+export type RenderScalarRelationFilter = {
+  is?: Prisma.RenderWhereInput;
+  isNot?: Prisma.RenderWhereInput;
 };
 
 export type RenderCountOrderByAggregateInput = {
@@ -862,6 +874,32 @@ export type RenderUncheckedUpdateManyWithoutClipNestedInput = {
   deleteMany?: Prisma.RenderScalarWhereInput | Prisma.RenderScalarWhereInput[];
 };
 
+export type RenderCreateNestedOneWithoutPublicationsInput = {
+  create?: Prisma.XOR<
+    Prisma.RenderCreateWithoutPublicationsInput,
+    Prisma.RenderUncheckedCreateWithoutPublicationsInput
+  >;
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutPublicationsInput;
+  connect?: Prisma.RenderWhereUniqueInput;
+};
+
+export type RenderUpdateOneRequiredWithoutPublicationsNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.RenderCreateWithoutPublicationsInput,
+    Prisma.RenderUncheckedCreateWithoutPublicationsInput
+  >;
+  connectOrCreate?: Prisma.RenderCreateOrConnectWithoutPublicationsInput;
+  upsert?: Prisma.RenderUpsertWithoutPublicationsInput;
+  connect?: Prisma.RenderWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.RenderUpdateToOneWithWhereWithoutPublicationsInput,
+      Prisma.RenderUpdateWithoutPublicationsInput
+    >,
+    Prisma.RenderUncheckedUpdateWithoutPublicationsInput
+  >;
+};
+
 export type EnumRenderStatusRecordFieldUpdateOperationsInput = {
   set?: $Enums.RenderStatusRecord;
 };
@@ -881,6 +919,7 @@ export type RenderCreateWithoutProjectInput = {
   errorMessage?: string | null;
   createdAt?: Date | string;
   clip: Prisma.ClipCreateNestedOneWithoutRendersInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutRenderInput;
 };
 
 export type RenderUncheckedCreateWithoutProjectInput = {
@@ -898,6 +937,7 @@ export type RenderUncheckedCreateWithoutProjectInput = {
   errorCode?: string | null;
   errorMessage?: string | null;
   createdAt?: Date | string;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutRenderInput;
 };
 
 export type RenderCreateOrConnectWithoutProjectInput = {
@@ -981,6 +1021,7 @@ export type RenderCreateWithoutClipInput = {
   errorMessage?: string | null;
   createdAt?: Date | string;
   project: Prisma.ProjectCreateNestedOneWithoutRendersInput;
+  publications?: Prisma.PublicationCreateNestedManyWithoutRenderInput;
 };
 
 export type RenderUncheckedCreateWithoutClipInput = {
@@ -998,6 +1039,7 @@ export type RenderUncheckedCreateWithoutClipInput = {
   errorCode?: string | null;
   errorMessage?: string | null;
   createdAt?: Date | string;
+  publications?: Prisma.PublicationUncheckedCreateNestedManyWithoutRenderInput;
 };
 
 export type RenderCreateOrConnectWithoutClipInput = {
@@ -1039,6 +1081,144 @@ export type RenderUpdateManyWithWhereWithoutClipInput = {
     Prisma.RenderUpdateManyMutationInput,
     Prisma.RenderUncheckedUpdateManyWithoutClipInput
   >;
+};
+
+export type RenderCreateWithoutPublicationsInput = {
+  id?: string;
+  status?: $Enums.RenderStatusRecord;
+  inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  outputObjectKey?: string | null;
+  srtObjectKey?: string | null;
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  encoder: string;
+  startedAt?: Date | string | null;
+  finishedAt?: Date | string | null;
+  durationMs?: number | null;
+  errorCode?: string | null;
+  errorMessage?: string | null;
+  createdAt?: Date | string;
+  project: Prisma.ProjectCreateNestedOneWithoutRendersInput;
+  clip: Prisma.ClipCreateNestedOneWithoutRendersInput;
+};
+
+export type RenderUncheckedCreateWithoutPublicationsInput = {
+  id?: string;
+  projectId: string;
+  clipId: string;
+  status?: $Enums.RenderStatusRecord;
+  inputSnapshotJson: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  outputObjectKey?: string | null;
+  srtObjectKey?: string | null;
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  encoder: string;
+  startedAt?: Date | string | null;
+  finishedAt?: Date | string | null;
+  durationMs?: number | null;
+  errorCode?: string | null;
+  errorMessage?: string | null;
+  createdAt?: Date | string;
+};
+
+export type RenderCreateOrConnectWithoutPublicationsInput = {
+  where: Prisma.RenderWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.RenderCreateWithoutPublicationsInput,
+    Prisma.RenderUncheckedCreateWithoutPublicationsInput
+  >;
+};
+
+export type RenderUpsertWithoutPublicationsInput = {
+  update: Prisma.XOR<
+    Prisma.RenderUpdateWithoutPublicationsInput,
+    Prisma.RenderUncheckedUpdateWithoutPublicationsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.RenderCreateWithoutPublicationsInput,
+    Prisma.RenderUncheckedCreateWithoutPublicationsInput
+  >;
+  where?: Prisma.RenderWhereInput;
+};
+
+export type RenderUpdateToOneWithWhereWithoutPublicationsInput = {
+  where?: Prisma.RenderWhereInput;
+  data: Prisma.XOR<
+    Prisma.RenderUpdateWithoutPublicationsInput,
+    Prisma.RenderUncheckedUpdateWithoutPublicationsInput
+  >;
+};
+
+export type RenderUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  status?:
+    | Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput
+    | $Enums.RenderStatusRecord;
+  inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  outputObjectKey?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  srtObjectKey?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  encoder?: Prisma.StringFieldUpdateOperationsInput | string;
+  startedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  finishedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  errorMessage?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRendersNestedInput;
+  clip?: Prisma.ClipUpdateOneRequiredWithoutRendersNestedInput;
+};
+
+export type RenderUncheckedUpdateWithoutPublicationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string;
+  clipId?: Prisma.StringFieldUpdateOperationsInput | string;
+  status?:
+    | Prisma.EnumRenderStatusRecordFieldUpdateOperationsInput
+    | $Enums.RenderStatusRecord;
+  inputSnapshotJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue;
+  outputObjectKey?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  srtObjectKey?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  probeJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  encoder?: Prisma.StringFieldUpdateOperationsInput | string;
+  startedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  finishedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  errorMessage?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 
 export type RenderCreateManyProjectInput = {
@@ -1092,6 +1272,7 @@ export type RenderUpdateWithoutProjectInput = {
     | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   clip?: Prisma.ClipUpdateOneRequiredWithoutRendersNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutRenderNestedInput;
 };
 
 export type RenderUncheckedUpdateWithoutProjectInput = {
@@ -1128,6 +1309,7 @@ export type RenderUncheckedUpdateWithoutProjectInput = {
     | string
     | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutRenderNestedInput;
 };
 
 export type RenderUncheckedUpdateManyWithoutProjectInput = {
@@ -1217,6 +1399,7 @@ export type RenderUpdateWithoutClipInput = {
     | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   project?: Prisma.ProjectUpdateOneRequiredWithoutRendersNestedInput;
+  publications?: Prisma.PublicationUpdateManyWithoutRenderNestedInput;
 };
 
 export type RenderUncheckedUpdateWithoutClipInput = {
@@ -1253,6 +1436,7 @@ export type RenderUncheckedUpdateWithoutClipInput = {
     | string
     | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  publications?: Prisma.PublicationUncheckedUpdateManyWithoutRenderNestedInput;
 };
 
 export type RenderUncheckedUpdateManyWithoutClipInput = {
@@ -1291,6 +1475,44 @@ export type RenderUncheckedUpdateManyWithoutClipInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 
+/**
+ * Count Type RenderCountOutputType
+ */
+
+export type RenderCountOutputType = {
+  publications: number;
+};
+
+export type RenderCountOutputTypeSelect<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  publications?: boolean | RenderCountOutputTypeCountPublicationsArgs;
+};
+
+/**
+ * RenderCountOutputType without action
+ */
+export type RenderCountOutputTypeDefaultArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the RenderCountOutputType
+   */
+  select?: Prisma.RenderCountOutputTypeSelect<ExtArgs> | null;
+};
+
+/**
+ * RenderCountOutputType without action
+ */
+export type RenderCountOutputTypeCountPublicationsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.PublicationWhereInput;
+};
+
 export type RenderSelect<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
     runtime.Types.Extensions.DefaultArgs,
@@ -1313,6 +1535,8 @@ export type RenderSelect<
     createdAt?: boolean;
     project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>;
     clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>;
+    publications?: boolean | Prisma.Render$publicationsArgs<ExtArgs>;
+    _count?: boolean | Prisma.RenderCountOutputTypeDefaultArgs<ExtArgs>;
   },
   ExtArgs['result']['render']
 >;
@@ -1414,6 +1638,8 @@ export type RenderInclude<
 > = {
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>;
   clip?: boolean | Prisma.ClipDefaultArgs<ExtArgs>;
+  publications?: boolean | Prisma.Render$publicationsArgs<ExtArgs>;
+  _count?: boolean | Prisma.RenderCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type RenderIncludeCreateManyAndReturn<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
@@ -1438,6 +1664,7 @@ export type $RenderPayload<
   objects: {
     project: Prisma.$ProjectPayload<ExtArgs>;
     clip: Prisma.$ClipPayload<ExtArgs>;
+    publications: Prisma.$PublicationPayload<ExtArgs>[];
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -2034,6 +2261,17 @@ export interface Prisma__RenderClient<
     ExtArgs,
     GlobalOmitOptions
   >;
+  publications<T extends Prisma.Render$publicationsArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Render$publicationsArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$PublicationPayload<ExtArgs>,
+        T,
+        'findMany',
+        GlobalOmitOptions
+      >
+    | Null
+  >;
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2543,6 +2781,37 @@ export type RenderDeleteManyArgs<
    * Limit how many Renders to delete.
    */
   limit?: number;
+};
+
+/**
+ * Render.publications
+ */
+export type Render$publicationsArgs<
+  ExtArgs extends runtime.Types.Extensions.InternalArgs =
+    runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the Publication
+   */
+  select?: Prisma.PublicationSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the Publication
+   */
+  omit?: Prisma.PublicationOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PublicationInclude<ExtArgs> | null;
+  where?: Prisma.PublicationWhereInput;
+  orderBy?:
+    | Prisma.PublicationOrderByWithRelationInput
+    | Prisma.PublicationOrderByWithRelationInput[];
+  cursor?: Prisma.PublicationWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.PublicationScalarFieldEnum
+    | Prisma.PublicationScalarFieldEnum[];
 };
 
 /**

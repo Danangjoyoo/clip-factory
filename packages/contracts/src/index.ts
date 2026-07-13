@@ -1,6 +1,13 @@
 export {};
 export const CONTRACTS_PACKAGE = true;
-export { validateContract } from './validate';
+export { validateContract, validateContractDefinition } from './validate';
+export {
+  parseOAuthConnectionWorkflowInputV1,
+  parseOAuthConnectionWorkflowResultV1,
+  parsePublicationProgressEventV1,
+  parsePublicationWorkflowInputV1,
+  parseYouTubeConnectionEventV1,
+} from './youtube-publishing';
 export type { WorkflowInput } from './generated/workflow-input';
 export type { WorkflowResult } from './generated/workflow-result';
 export type { ProgressEvent } from './generated/progress-event';
@@ -11,3 +18,11 @@ export type { HighlightResponse } from './generated/highlight-response';
 export type { RenderSpec } from './generated/render-spec';
 export type { CostData } from './generated/cost-data';
 export type { ErrorEnvelope } from './generated/error';
+export type {
+  MetadataGenerationWorkflowInputV1,
+  OAuthConnectionWorkflowInputV1,
+  OAuthConnectionWorkflowResultV1,
+  PublicationProgressEventV1,
+  PublicationWorkflowInputV1,
+  YouTubeConnectionEventV1,
+} from './generated/youtube-publishing';

@@ -14,7 +14,7 @@ Local-first video clipping: upload or reference a video, generate transcript/cap
 ## First-time setup
 
 ```bash
-cp .env.example .env   # keep the existing .env if you already configured it
+cp envs/.env.example .env   # keep the existing .env if you already configured it
 corepack enable
 corepack prepare pnpm@11.11.0 --activate
 pnpm install
@@ -41,6 +41,7 @@ This starts PostgreSQL, Redis, MinIO, Temporal, Temporal UI, and the web contain
 Useful URLs:
 
 - Web: <http://127.0.0.1:3000>
+- MinIO API: <http://127.0.0.1:9000> (browser upload/download URLs)
 - MinIO console: <http://127.0.0.1:9001>
 - Temporal UI: <http://127.0.0.1:8233>
 

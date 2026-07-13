@@ -57,6 +57,21 @@ export type CostAllocation = Prisma.CostAllocationModel;
  */
 export type Clip = Prisma.ClipModel;
 /**
+ * Model PublishingMetadataDraft
+ *
+ */
+export type PublishingMetadataDraft = Prisma.PublishingMetadataDraftModel;
+/**
+ * Model Publication
+ *
+ */
+export type Publication = Prisma.PublicationModel;
+/**
+ * Model PublicationAttempt
+ *
+ */
+export type PublicationAttempt = Prisma.PublicationAttemptModel;
+/**
  * Model Render
  *
  */
@@ -81,3 +96,8 @@ export type UploadSession = Prisma.UploadSessionModel;
  *
  */
 export type IdempotencyReceipt = Prisma.IdempotencyReceiptModel;
+/**
+ * Model YouTubeConnection
+ *
+ */
+export type YouTubeConnection = Prisma.YouTubeConnectionModel;

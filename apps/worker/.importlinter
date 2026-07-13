@@ -1,5 +1,6 @@
 [importlinter]
 root_package = clip_factory
+include_external_packages = True
 
 [importlinter:contract:domain]
 name = domain-has-no-outer-imports
@@ -26,3 +27,15 @@ source_modules = clip_factory.domain
     clip_factory.application
     clip_factory.ports
 forbidden_modules = clip_factory.entrypoints.temporal
+
+[importlinter:contract:youtube-publishing-inner]
+name = youtube-publishing-inner-layers-have-no-provider-imports
+type = forbidden
+source_modules = clip_factory.domain.youtube_publishing
+    clip_factory.application.youtube_publishing
+    clip_factory.ports.youtube_publishing
+forbidden_modules = keyring
+    httpx
+    openai
+    temporalio
+    clip_factory.adapters.youtube
