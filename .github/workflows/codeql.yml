@@ -17,6 +17,6 @@ jobs:
       }
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9
+      - uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a
         with: { languages: '${{ matrix.language }}', build-mode: none }
-      - uses: github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9
+      - uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a
